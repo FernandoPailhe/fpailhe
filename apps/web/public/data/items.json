@@ -1,0 +1,5 @@
+[
+  { "id": "item-1", "name": "Item de ejemplo 1", "description": "Descripción del primer item." },
+  { "id": "item-2", "name": "Item de ejemplo 2", "description": "Descripción del segundo item." },
+  { "id": "item-3", "name": "Item de ejemplo 3", "description": "Descripción del tercer item." }
+]
