@@ -9,6 +9,24 @@
     "featured": true
   },
   {
+    "id": "tune-up",
+    "name": "Tune-Up",
+    "context": "Personal",
+    "tech": ["React Native", "Expo", "TypeScript"],
+    "description": "Mobile App to understand training metrics easy",
+    "status": "in-progress",
+    "featured": true
+  },
+  {
+    "id": "hang-app",
+    "name": "HangApp",
+    "context": "Freelance",
+    "tech": ["React Native", "Expo", "TypeScript"],
+    "description": "Took a beta MVP to a production-ready public release, with a complete UI/UX redesign and architecture overhaul.",
+    "status": "live",
+    "featured": true
+  },
+  {
     "id": "be-soul",
     "name": "Be Soul",
     "context": "Sitio Uno",
@@ -33,33 +51,6 @@
     "tech": ["React Native", "Expo"],
     "description": "Built from scratch with a continuous-integration workflow on Expo, integrating AI functionality to enhance user interaction.",
     "status": "live",
-    "featured": true
-  },
-  {
-    "id": "hang-app",
-    "name": "HangApp",
-    "context": "Freelance",
-    "tech": ["React Native", "Expo", "TypeScript"],
-    "description": "Took a beta MVP to a production-ready public release, with a complete UI/UX redesign and architecture overhaul.",
-    "status": "live",
-    "featured": true
-  },
-  {
-    "id": "board-game",
-    "name": "[Strategy board game — name TBD]",
-    "context": "Personal",
-    "tech": [],
-    "description": "A small strategy board game, built for the sake of building it.",
-    "status": "in-progress",
-    "featured": true
-  },
-  {
-    "id": "flight-sim-fan-page",
-    "name": "[Flight-sim fan page — name TBD]",
-    "context": "Personal",
-    "tech": [],
-    "description": "A fan page for flight-simulation enthusiasts.",
-    "status": "in-progress",
     "featured": true
   }
 ]
