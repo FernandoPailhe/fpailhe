@@ -1,0 +1,13 @@
+{
+  "panels": [
+    {
+      "heading": "Starting from zero",
+      "body": "El Puma Contigo, Machine Stock, a handful of personal apps — built from a blank screen, with the architecture and an AI-assisted workflow decided from day one, working directly with whoever's paying for it to keep the roadmap honest."
+    },
+    {
+      "heading": "Starting from someone else's mess",
+      "body": "Techint's internal app, PassApp, Be Soul — codebases with years of decisions already baked in, sometimes no tests at all. Same method: understand what's there before touching it, build the safety net, then change what needs changing."
+    }
+  ],
+  "closingNote": "Either way, I document as I go and build the kind of test coverage that makes AI-assisted changes safe instead of risky — which is also how I ended up leading the first AI agent shipped inside a real product, not the kind you just use to write one."
+}

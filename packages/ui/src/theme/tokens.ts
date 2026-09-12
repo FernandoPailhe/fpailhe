@@ -14,53 +14,53 @@
 
 export const themeTokens = {
   color: {
-    // Base
-    canvas: "#0a0c10",
-    surface: "#12151b",
-    surfaceRaised: "#181c24",
-    line: "#262b35",
-    lineSoft: "#1c2029",
+    // Base — monocromo cálido, light-first (hue 75)
+    canvas: "oklch(97% 0.012 75)",
+    surface: "oklch(99% 0.006 75)",
+    surfaceRaised: "oklch(99% 0.006 75)",
+    line: "oklch(86% 0.010 75)",
+    lineSoft: "oklch(88% 0.010 75)",
 
     // Texto
-    ink: "#ece8de",
-    inkDim: "#9aa0ac",
-    inkFaint: "#5b616d",
+    ink: "oklch(17% 0.010 75)",
+    inkDim: "oklch(45% 0.010 75)",
+    inkFaint: "oklch(48% 0.010 75)",
 
-    // Acento principal
-    gold: "#cba135",
-    goldBright: "#e6c568",
-    goldSoft: "rgba(203,161,53,0.14)",
+    // Acento principal — terracotta
+    gold: "#C1502E",
+    goldBright: "#B2472C",
+    goldSoft: "rgba(193, 80, 46, 0.14)",
 
     // Alertas / error
     crimson: "#b3271f",
     crimsonBright: "#d84a3d",
 
     // Acentos secundarios
-    silver: "#a9adb4",
-    silverSoft: "rgba(169,173,180,0.12)",
-    bronze: "#a5723f",
-    bronzeSoft: "rgba(165,114,63,0.14)",
-    bronzeBright: "#d0a578",
+    silver: "oklch(45% 0.010 75)",
+    silverSoft: "rgba(69, 69, 69, 0.08)",
+    bronze: "oklch(45% 0.010 75)",
+    bronzeSoft: "rgba(69, 69, 69, 0.08)",
+    bronzeBright: "oklch(17% 0.010 75)",
 
-    // Superficie clara (modales, overlays, etc.)
-    parchment: "#efe6cc",
-    parchmentRaised: "#f6efdb",
-    parchmentInk: "#2a2013",
-    parchmentInkDim: "#6b5c3c",
-    parchmentLine: "#cfbd8c",
+    // Superficie invertida (footer/contacto)
+    parchment: "oklch(17% 0.010 75)",
+    parchmentRaised: "oklch(20% 0.010 75)",
+    parchmentInk: "oklch(94% 0.010 75)",
+    parchmentInkDim: "oklch(80% 0.010 75)",
+    parchmentLine: "oklch(35% 0.010 75)",
   },
   font: {
     // Titulares
-    display: "'Fraunces', 'Iowan Old Style', Georgia, serif",
+    display: "'Spectral', Georgia, serif",
     // Interfaz, navegación, datos
-    ui: "'Titillium Web', 'Segoe UI', system-ui, sans-serif",
-    // Numérica, código
-    mono: "'JetBrains Mono', 'SFMono-Regular', Consolas, monospace",
+    ui: "'Work Sans', system-ui, sans-serif",
+    // Numérica, código, metadatos
+    mono: "'IBM Plex Mono', ui-monospace, 'SFMono-Regular', monospace",
   },
   radius: {
-    sm: "6px",
-    md: "10px",
-    lg: "14px",
+    sm: "0px",
+    md: "0px",
+    lg: "0px",
     pill: "999px",
   },
 } as const;

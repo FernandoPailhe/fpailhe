@@ -1,47 +1,82 @@
-import type { Item } from "@ferpa/data-model";
-import { useItemsQuery } from "../queries/useItemsQuery";
-import { LoadingState } from "../components/LoadingState";
-import { ErrorState } from "../components/ErrorState";
+import {
+  useAboutAsideQuery,
+  useContactQuery,
+  useHeroQuery,
+  useHowIWorkQuery,
+  useProfileQuery,
+  useProjectsQuery,
+  useStatsQuery,
+} from "../queries/useSiteData";
+import { useFeaturedProjects } from "../domain/useSiteDomain";
+import {
+  AboutSection,
+  ContactSection,
+  ErrorState,
+  HeroSection,
+  HowIWorkSection,
+  LoadingState,
+  Nav,
+  ProjectsSection,
+  StatsSection,
+} from "../components";
 
-/**
- * TEMPLATE: Página de inicio de ejemplo. Muestra una lista de items
- * obtenidos del servicio de datos. Reemplazá con tu contenido real.
- */
+const NAV_LINKS = [
+  { label: "Home", href: "/" },
+  { label: "Work", href: "#work" },
+  { label: "Projects", href: "#projects" },
+  { label: "CV", href: "/cv" },
+  { label: "Contact", href: "#contact" },
+];
+
 export function HomePage() {
-  const { data: items, isLoading, isError } = useItemsQuery();
+  const profile = useProfileQuery();
+  const hero = useHeroQuery();
+  const stats = useStatsQuery();
+  const howIWork = useHowIWorkQuery();
+  const aboutAside = useAboutAsideQuery();
+  const projects = useProjectsQuery();
+  const contact = useContactQuery();
 
-  if (isLoading) return <LoadingState />;
-  if (isError) return <ErrorState label="Error al cargar los datos." />;
+  const featuredProjects = useFeaturedProjects(projects.data);
+
+  const queries = [profile, hero, stats, howIWork, aboutAside, projects, contact];
+  if (queries.some((q) => q.isLoading)) return <LoadingState />;
+  if (
+    queries.some((q) => q.isError) ||
+    !profile.data ||
+    !hero.data ||
+    !stats.data ||
+    !howIWork.data ||
+    !aboutAside.data ||
+    !projects.data ||
+    !contact.data
+  ) {
+    return <ErrorState label="No se pudieron cargar los datos del sitio." />;
+  }
 
   return (
-    <section className="mx-auto max-w-3xl px-4 py-12">
-      <h1 className="mb-8 font-display text-3xl font-bold text-ink">
-        Template App
-      </h1>
-
-      <p className="mb-6 text-ink-dim">
-        Este es un monorepo template con Vite + React + TypeScript + TanStack Query + Zustand + Tailwind.
-        Editá los archivos en <code className="font-mono text-gold-bright">apps/web/src</code> para
-        empezar tu proyecto.
-      </p>
-
-      {items && items.length > 0 ? (
-        <ul className="space-y-3">
-          {items.map((item: Item) => (
-            <li
-              key={item.id}
-              className="rounded-md border border-line bg-surface p-4"
-            >
-              <strong className="font-ui text-sm font-bold text-ink">
-                {item.name}
-              </strong>
-              <p className="mt-1 text-sm text-ink-dim">{item.description}</p>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="text-ink-faint">No hay items cargados.</p>
-      )}
-    </section>
+    <>
+      <Nav links={NAV_LINKS} />
+      <main className="mx-auto max-w-[880px] px-[clamp(20px,5vw,32px)]">
+        <HeroSection
+          kicker={hero.data.kicker}
+          headlineLead={hero.data.headlineLead}
+          headlineEmphasis={hero.data.headlineEmphasis}
+          subhead={hero.data.subhead}
+          ctas={hero.data.ctas}
+        />
+      </main>
+      <StatsSection stats={stats.data} />
+      <main className="mx-auto max-w-[880px] px-[clamp(20px,5vw,32px)]">
+        <HowIWorkSection panels={howIWork.data.panels} closingNote={howIWork.data.closingNote} />
+        <AboutSection text={aboutAside.data.text} photo={aboutAside.data.photo} />
+        <ProjectsSection projects={featuredProjects} />
+      </main>
+      <ContactSection
+        heading={contact.data.heading}
+        body={contact.data.body}
+        email={profile.data.email}
+      />
+    </>
   );
 }

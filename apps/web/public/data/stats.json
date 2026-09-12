@@ -1,0 +1,6 @@
+[
+  { "value": "03", "label": "Releases in 3 months", "sublabel": "after a year with no updates" },
+  { "value": "1,100+", "label": "Automated tests", "sublabel": "built from zero coverage" },
+  { "value": "166", "label": "Files migrated JS→TS", "sublabel": "zero functional regressions" },
+  { "value": "10,000+", "label": "Active users", "sublabel": "maintained on PassApp" }
+]

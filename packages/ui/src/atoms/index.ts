@@ -6,3 +6,6 @@ export * from "./StatPill";
 export * from "./SealMark";
 export * from "./CheckerRule";
 export * from "./Button";
+export * from "./Kicker";
+export * from "./TextLink";
+export * from "./FilledButton";

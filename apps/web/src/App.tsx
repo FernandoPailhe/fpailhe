@@ -1,16 +1,13 @@
 import { Route, Routes } from "react-router-dom";
 import { HomePage } from "./routes/HomePage";
+import { CVPage } from "./routes/CVPage";
 import { NotFoundPage } from "./routes/NotFoundPage";
 
-/**
- * TEMPLATE: Agregá tus rutas acá. Para layouts anidados,
- * creá un componente layout con <Outlet /> y usalo como
- * elemento de una Route padre.
- */
 export function App() {
   return (
     <Routes>
       <Route index element={<HomePage />} />
+      <Route path="cv" element={<CVPage />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );

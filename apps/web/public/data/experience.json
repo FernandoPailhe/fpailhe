@@ -1,0 +1,85 @@
+[
+  {
+    "id": "techint",
+    "title": "React Native Developer",
+    "company": "Techint",
+    "startDate": "2025-08",
+    "endDate": null,
+    "bullets": [
+      "Stabilized EQM, a deprecated offline-first mobile app with no test coverage, publishing 3 releases in 3 months after a year with no updates.",
+      "Built a 1,100+ test suite from zero (>80% coverage) and used it to migrate 166 files from JavaScript to TypeScript with zero regressions.",
+      "Introduced 4 automated quality gates (lint, format, test, type-check) and led the first AI agent shipped inside the product itself.",
+      "Owned end-to-end release management on App Store Connect and Google Play; primary client liaison shaping the roadmap."
+    ],
+    "tech": ["React Native", "TypeScript", "Jest"],
+    "projectIds": ["eqm"]
+  },
+  {
+    "id": "sitio-uno",
+    "title": "Full Stack Developer",
+    "company": "Sitio Uno",
+    "location": "Remote",
+    "startDate": "2023-04",
+    "endDate": "2025-08",
+    "bullets": [
+      "Spearheaded El Puma Contigo from scratch: CI workflow on Expo, with AI functionality integrated to improve user interaction.",
+      "Led the re-architecture of Be Soul around Redux and SOLID principles for long-term scalability."
+    ],
+    "tech": ["React Native", "Expo", "TypeScript", "Redux"],
+    "projectIds": ["el-puma-contigo", "be-soul"]
+  },
+  {
+    "id": "freelance-fullstack",
+    "title": "Full Stack Developer",
+    "company": "Freelance",
+    "startDate": "2020-06",
+    "endDate": "2025-07",
+    "bullets": [
+      "HangApp: took a beta MVP to a production-ready public release, with a full UI/UX redesign and architecture overhaul.",
+      "PassApp: maintained and extended an Android app for 10,000+ active users (Kotlin, MVP architecture).",
+      "Developed Be Soul's mobile app and backend (React Native, TypeScript, NestJS, MongoDB), including OpenAI assistant integration.",
+      "Built a native Android prepaid-card app and migrated it to a multi-platform React Native codebase.",
+      "Integrated Sentry for error monitoring and Jest for automated testing across projects."
+    ],
+    "tech": ["React Native", "Kotlin", "TypeScript", "NestJS", "MongoDB", "Firebase", "GCP"],
+    "projectIds": ["hang-app", "pass-app"]
+  },
+  {
+    "id": "my-stadium-golf",
+    "title": "Full Stack Developer, Part-Time",
+    "company": "My Stadium Golf",
+    "location": "Remote",
+    "startDate": "2021-11",
+    "endDate": "2023-03",
+    "bullets": [
+      "Maintained and optimized an Android tablet app (Java, MVP architecture) for performance and stability.",
+      "Built student-app features on a hybrid React Native Expo + legacy Laravel + AWS serverless stack.",
+      "Extended a PHP/Laravel REST API with API Gateway, Lambda and DynamoDB; optimized image delivery via CloudFront."
+    ],
+    "tech": ["Java", "React Native", "Expo", "PHP/Laravel", "AWS"]
+  },
+  {
+    "id": "tres-de-febrero",
+    "title": "Filmmaker",
+    "company": "Municipalidad de Tres de Febrero",
+    "startDate": "2017-07",
+    "endDate": null,
+    "bullets": [
+      "Led video recording for municipal audiovisual communication — filming, structuring and scripting each piece.",
+      "Helped build and grow the communication team from its inception; the team became recognized as one of the best by peer institutions."
+    ],
+    "tech": []
+  },
+  {
+    "id": "freelance-photo-film",
+    "title": "Photographer & Filmmaker",
+    "company": "Freelance",
+    "startDate": "2011-01",
+    "endDate": "2020-01",
+    "bullets": [
+      "Planned shoots around available resources and adapted to last-minute changes in the field.",
+      "Managed client needs, schedules and small teams end to end."
+    ],
+    "tech": []
+  }
+]

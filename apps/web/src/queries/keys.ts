@@ -1,10 +1,16 @@
 /**
  * Claves centralizadas de TanStack Query.
  * Evita duplicar strings y facilita invalidaciones.
- *
- * TEMPLATE: Agregá las keys de tu dominio acá.
  */
 export const queryKeys = {
-  items: ["items"] as const,
-  appMeta: ["appMeta"] as const,
+  profile: ["profile"] as const,
+  hero: ["hero"] as const,
+  stats: ["stats"] as const,
+  howIWork: ["howIWork"] as const,
+  aboutAside: ["aboutAside"] as const,
+  projects: ["projects"] as const,
+  experience: ["experience"] as const,
+  education: ["education"] as const,
+  courses: ["courses"] as const,
+  contact: ["contact"] as const,
 };

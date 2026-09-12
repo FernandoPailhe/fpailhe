@@ -1,15 +1,30 @@
-import type { Item } from "./types";
+import type { Job, Project } from "./types";
 
 /**
- * Ejemplo de función de dominio pura.
+ * Lógica de dominio pura del sitio.
  *
- * TEMPLATE: Reemplazá con la lógica de cálculo de tu dominio.
  * Las funciones en este archivo deben ser puras (sin side-effects,
  * sin imports de React) para poder reutilizarse en cualquier contexto
- * (app, backend, tests, scripts).
+ * (app, backend, tests, scripts, futuro renderizado PDF).
  */
 
-/** Ordena items por nombre, alfabéticamente. */
-export function sortItemsByName(items: Item[]): Item[] {
-  return [...items].sort((a, b) => a.name.localeCompare(b.name));
+/** Filtra los proyectos marcados como `featured` (se muestran en Home). */
+export function getFeaturedProjects(projects: Project[]): Project[] {
+  return projects.filter((p) => p.featured);
+}
+
+/** Resuelve `job.projectIds` contra la lista canónica de proyectos. */
+export function getJobProjects(job: Job, projects: Project[]): Project[] {
+  const ids = new Set(job.projectIds ?? []);
+  return projects.filter((p) => ids.has(p.id));
+}
+
+/** Ordena jobs cronológicamente en reversa (`endDate` null = presente). */
+export function sortJobsByDateDesc(jobs: Job[]): Job[] {
+  return [...jobs].sort((a, b) => {
+    const aEnd = a.endDate ?? "9999-12";
+    const bEnd = b.endDate ?? "9999-12";
+    if (aEnd !== bEnd) return bEnd.localeCompare(aEnd);
+    return b.startDate.localeCompare(a.startDate);
+  });
 }

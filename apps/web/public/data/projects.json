@@ -1,0 +1,65 @@
+[
+  {
+    "id": "eqm",
+    "name": "EQM",
+    "context": "Techint",
+    "tech": ["React Native", "TypeScript"],
+    "description": "Stabilized a business-critical, offline-first internal app: 3 releases in 3 months, a full TypeScript migration, and the first AI agent shipped inside the product.",
+    "status": "live",
+    "featured": true
+  },
+  {
+    "id": "be-soul",
+    "name": "Be Soul",
+    "context": "Sitio Uno",
+    "tech": ["React Native", "TypeScript", "Redux"],
+    "description": "Led the re-architecture of a digital-legacy and in-memorial app around Redux and SOLID principles for long-term scalability.",
+    "status": "live",
+    "featured": true
+  },
+  {
+    "id": "pass-app",
+    "name": "PassApp",
+    "context": "Freelance",
+    "tech": ["Kotlin", "MVP architecture"],
+    "description": "Android app maintained and extended for 10,000+ active users, delivering consistent feature updates over several years.",
+    "status": "live",
+    "featured": true
+  },
+  {
+    "id": "el-puma-contigo",
+    "name": "El Puma Contigo",
+    "context": "Sitio Uno",
+    "tech": ["React Native", "Expo"],
+    "description": "Built from scratch with a continuous-integration workflow on Expo, integrating AI functionality to enhance user interaction.",
+    "status": "live",
+    "featured": true
+  },
+  {
+    "id": "hang-app",
+    "name": "HangApp",
+    "context": "Freelance",
+    "tech": ["React Native", "Expo", "TypeScript"],
+    "description": "Took a beta MVP to a production-ready public release, with a complete UI/UX redesign and architecture overhaul.",
+    "status": "live",
+    "featured": true
+  },
+  {
+    "id": "board-game",
+    "name": "[Strategy board game — name TBD]",
+    "context": "Personal",
+    "tech": [],
+    "description": "A small strategy board game, built for the sake of building it.",
+    "status": "in-progress",
+    "featured": true
+  },
+  {
+    "id": "flight-sim-fan-page",
+    "name": "[Flight-sim fan page — name TBD]",
+    "context": "Personal",
+    "tech": [],
+    "description": "A fan page for flight-simulation enthusiasts.",
+    "status": "in-progress",
+    "featured": true
+  }
+]

@@ -4,20 +4,18 @@
 
 @layer base {
   :root {
-    color-scheme: dark;
+    color-scheme: light;
   }
 
   body {
     @apply bg-canvas text-ink;
     font-family: var(--font-ui);
     -webkit-font-smoothing: antialiased;
-    background-image: radial-gradient(1200px 600px at 12% -10%, var(--color-gold-soft), transparent 60%);
-    background-repeat: no-repeat;
   }
 
   ::selection {
     background: var(--color-gold-soft);
-    color: var(--color-gold-bright);
+    color: var(--color-ink);
   }
 }
 
@@ -27,5 +25,42 @@
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+@media print {
+  :root {
+    --color-canvas: #ffffff !important;
+    --color-surface: #ffffff !important;
+    --color-surface-raised: #ffffff !important;
+    --color-ink: #000000 !important;
+    --color-ink-dim: #333333 !important;
+    --color-ink-faint: #555555 !important;
+    --color-line: #cccccc !important;
+    --color-line-soft: #cccccc !important;
+    --color-gold: #555555 !important;
+    --color-gold-bright: #555555 !important;
+    --color-parchment: #ffffff !important;
+    --color-parchment-ink: #000000 !important;
+    --color-parchment-ink-dim: #333333 !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 16px !important;
+  }
+
+  a {
+    color: black !important;
+    text-decoration: none !important;
+  }
+
+  section {
+    page-break-inside: avoid;
   }
 }
