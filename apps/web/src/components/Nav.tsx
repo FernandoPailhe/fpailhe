@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { DarkModeToggle } from "./DarkModeToggle";
 
 export interface NavProps {
   links: { label: string; href: string }[];
@@ -15,21 +16,24 @@ export function Nav({ links }: NavProps) {
   return (
     <nav className="no-print border-b border-line">
       <div className="mx-auto flex max-w-[880px] justify-end px-[clamp(20px,5vw,32px)] py-4">
-        <ul className="flex items-center gap-6">
-          {links.map((link) => (
-            <li key={link.label}>
-              {link.href.startsWith("/") ? (
-                <Link to={link.href} className={LINK_CLASS}>
-                  {link.label}
-                </Link>
-              ) : (
-                <a href={link.href} className={LINK_CLASS}>
-                  {link.label}
-                </a>
-              )}
-            </li>
-          ))}
-        </ul>
+        <div className="flex items-center gap-6">
+          <ul className="flex items-center gap-6">
+            {links.map((link) => (
+              <li key={link.label}>
+                {link.href.startsWith("/") ? (
+                  <Link to={link.href} className={LINK_CLASS}>
+                    {link.label}
+                  </Link>
+                ) : (
+                  <a href={link.href} className={LINK_CLASS}>
+                    {link.label}
+                  </a>
+                )}
+              </li>
+            ))}
+          </ul>
+          <DarkModeToggle />
+        </div>
       </div>
     </nav>
   );

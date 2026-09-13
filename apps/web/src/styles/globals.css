@@ -4,6 +4,16 @@
 
 @layer base {
   :root {
+    color-scheme: light dark;
+  }
+
+  /* ThemeProvider escribe data-theme en <html>; esto fuerza el
+     color-scheme de controles nativos según el tema resuelto. */
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+  }
+
+  :root[data-theme="light"] {
     color-scheme: light;
   }
 

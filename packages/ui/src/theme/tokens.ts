@@ -65,7 +65,17 @@ export const themeTokens = {
   },
 } as const;
 
-export type ThemeTokens = typeof themeTokens;
+/**
+ * `themeTokens` está `as const`, así que `typeof` produce tipos literales.
+ * `ThemeTokens` los amplía a `string` en las hojas para que un tema
+ * alternativo (ej. `darkTokens`) pueda declararse con otros valores
+ * manteniendo exactamente las mismas claves.
+ */
+type StringLeaves<T> = {
+  [K in keyof T]: T[K] extends string ? string : StringLeaves<T[K]>;
+};
+
+export type ThemeTokens = StringLeaves<typeof themeTokens>;
 export type ThemeColorToken = keyof ThemeTokens["color"];
 export type ThemeFontToken = keyof ThemeTokens["font"];
 export type ThemeRadiusToken = keyof ThemeTokens["radius"];
