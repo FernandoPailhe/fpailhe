@@ -40,7 +40,7 @@ export function CVPage() {
     !courses.data ||
     !projects.data
   ) {
-    return <ErrorState label="No se pudo cargar el CV." />;
+    return <ErrorState label="Could not load CV." />;
   }
 
   return (

@@ -21,10 +21,7 @@ import { fileURLToPath } from "node:url";
 
 // --- Espejo de @ferpa/data-model (mantener en sync) ---
 
-const MONTHS = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-];
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 function formatMonthYear(date) {
   const [year, month] = date.split("-");
@@ -84,7 +81,10 @@ const LINK_LABELS = {
 
 function projectLinks(project) {
   if (Array.isArray(project.links) && project.links.length > 0) {
-    return project.links.map((l) => ({ label: l.label ?? LINK_LABELS[l.type] ?? "Link", url: l.url }));
+    return project.links.map((l) => ({
+      label: l.label ?? LINK_LABELS[l.type] ?? "Link",
+      url: l.url,
+    }));
   }
   if (project.link) return [{ label: "Website", url: project.link }];
   return [];
@@ -184,14 +184,9 @@ function jobHtml(job, projects) {
   const dateRange = formatDateRange(job.startDate, job.endDate ?? null);
   const location = job.location ? ` · ${escapeHtml(job.location)}` : "";
   const bullets = (job.bullets ?? [])
-    .map(
-      (b) =>
-        `<li class="font-ui text-sm leading-relaxed text-ink-dim">${escapeHtml(b)}</li>`,
-    )
+    .map((b) => `<li class="font-ui text-sm leading-relaxed text-ink-dim">${escapeHtml(b)}</li>`)
     .join("");
-  const bulletsHtml = bullets
-    ? `<ul class="mt-3 list-disc space-y-1.5 pl-5">${bullets}</ul>`
-    : "";
+  const bulletsHtml = bullets ? `<ul class="mt-3 list-disc space-y-1.5 pl-5">${bullets}</ul>` : "";
   const tech = (job.tech ?? [])
     .map(
       (t) =>
@@ -209,7 +204,9 @@ function jobHtml(job, projects) {
 
 function renderCV(data) {
   const { profile, experience, education, courses, projects } = data;
-  const jobs = sortJobsByDateDesc(experience ?? []).map((j) => jobHtml(j, projects)).join("");
+  const jobs = sortJobsByDateDesc(experience ?? [])
+    .map((j) => jobHtml(j, projects))
+    .join("");
   const edu = (education ?? [])
     .map(
       (e) =>

@@ -51,7 +51,7 @@ export function HomePage() {
     !projects.data ||
     !contact.data
   ) {
-    return <ErrorState label="No se pudieron cargar los datos del sitio." />;
+    return <ErrorState label="Could not load site data." />;
   }
 
   return (

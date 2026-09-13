@@ -7,9 +7,9 @@
  * genera las clases de utilidad (`bg-canvas`, `text-gold`, `font-display`,
  * `rounded-lg`, ...) a partir del mismo objeto — ver `theme/cssVariables.ts`.
  *
- * TEMPLATE: Editá los valores de abajo para adaptar la estética a tu
- * proyecto. Los colores por-entidad de dominio NO van acá: son datos,
- * no parte del theme (ver @ferpa/data-model).
+ * Los colores por-entidad de dominio NO van acá: son datos, no parte
+ * del theme (ver @ferpa/data-model). El tema oscuro vive en
+ * `darkTokens.ts` con las mismas claves.
  */
 
 export const themeTokens = {
@@ -35,7 +35,7 @@ export const themeTokens = {
     crimson: "#b3271f",
     crimsonBright: "#d84a3d",
 
-    // Acentos secundarios
+    // Acentos secundarios (en uso por PositionChip: podios 2° y 3°)
     silver: "oklch(45% 0.010 75)",
     silverSoft: "rgba(69, 69, 69, 0.08)",
     bronze: "oklch(45% 0.010 75)",
