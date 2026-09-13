@@ -1,7 +1,7 @@
 {
   "name": "ferpa",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Monorepo template — pnpm workspaces + Vite + React + TypeScript + TanStack Query + Zustand + Tailwind.",
   "engines": {
     "node": ">=18.18.0",
