@@ -56,6 +56,12 @@ export interface AboutAside {
 
 export type ProjectStatus = "live" | "in-progress";
 
+export interface ProjectLink {
+  type: "appStore" | "playStore" | "github" | "website";
+  url: string;
+  label?: string;
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -63,7 +69,11 @@ export interface Project {
   tech: string[];
   description: string;
   status: ProjectStatus;
+  /** @deprecated use `links` instead. Kept for backward compatibility during migration. */
   link?: string;
+  links?: ProjectLink[];
+  /** Path to a screenshot under `/public/`, e.g. `/project-screenshots/tune-up.png`. */
+  screenshot?: string;
   featured: boolean;
 }
 
