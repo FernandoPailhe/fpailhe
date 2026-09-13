@@ -46,7 +46,11 @@ export function CVPage() {
   return (
     <>
       <Nav links={NAV_LINKS} />
-      <main className="mx-auto max-w-[760px] px-[clamp(20px,5vw,32px)] pb-16">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="mx-auto max-w-[760px] px-[clamp(20px,5vw,32px)] pb-16"
+      >
         <header className="border-b border-line py-12">
           <h1 className="font-display text-3xl font-medium text-ink">{profile.data.name}</h1>
           <p className="mt-2 font-ui text-base text-ink-dim">

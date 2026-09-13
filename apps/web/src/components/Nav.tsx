@@ -14,7 +14,7 @@ const LINK_CLASS =
  */
 export function Nav({ links }: NavProps) {
   return (
-    <nav className="no-print border-b border-line">
+    <nav aria-label="Main navigation" className="no-print border-b border-line">
       <div className="mx-auto flex max-w-[880px] justify-end px-[clamp(20px,5vw,32px)] py-4">
         <div className="flex items-center gap-6">
           <ul className="flex items-center gap-6">
