@@ -11,7 +11,9 @@ const PODIUM_CLASSES: Record<1 | 2 | 3, string> = {
 };
 
 export function PositionChip({ position, podium }: PositionChipProps) {
-  const podiumClass = podium ? PODIUM_CLASSES[podium] : "border-line bg-surface-raised text-ink-dim";
+  const podiumClass = podium
+    ? PODIUM_CLASSES[podium]
+    : "border-line bg-surface-raised text-ink-dim";
 
   return (
     <span

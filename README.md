@@ -17,11 +17,11 @@ ferpa/
 
 ## Paquetes
 
-| Paquete | Scope | Rol |
-|---|---|---|
-| `apps/web` | `@ferpa/web` | Composición: rutas, servicios, queries, componentes de página |
-| `packages/ui` | `@ferpa/ui` | Presentación pura: `ThemeProvider`, atoms, molecules |
-| `packages/data-model` | `@ferpa/data-model` | Dominio puro: tipos TS, funciones de cálculo, formatters |
+| Paquete               | Scope               | Rol                                                           |
+| --------------------- | ------------------- | ------------------------------------------------------------- |
+| `apps/web`            | `@ferpa/web`        | Composición: rutas, servicios, queries, componentes de página |
+| `packages/ui`         | `@ferpa/ui`         | Presentación pura: `ThemeProvider`, atoms, molecules          |
+| `packages/data-model` | `@ferpa/data-model` | Dominio puro: tipos TS, funciones de cálculo, formatters      |
 
 ## Cómo levantar
 
@@ -60,12 +60,12 @@ Para cambiar colores, tipografías o radios: editar `tokens.ts` y nada más.
 
 ## Estado
 
-| Tipo | Dónde vive |
-|---|---|
-| Servidor (datos remotos) | TanStack Query (`queries/`) |
-| Derivado (cálculos) | `useMemo` en hooks de `domain/` |
-| Navegación | URL (React Router) |
-| UI efímero | Zustand (`store/`) |
+| Tipo                     | Dónde vive                      |
+| ------------------------ | ------------------------------- |
+| Servidor (datos remotos) | TanStack Query (`queries/`)     |
+| Derivado (cálculos)      | `useMemo` en hooks de `domain/` |
+| Navegación               | URL (React Router)              |
+| UI efímero               | Zustand (`store/`)              |
 
 ## Componentes atómicos
 

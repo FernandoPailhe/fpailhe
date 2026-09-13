@@ -11,7 +11,8 @@ export interface BadgeProps {
 
 /** Chip circular con código corto sobre un color de fondo. */
 export function Badge({ shortCode, color, size = "sm", className = "" }: BadgeProps) {
-  const dimension = size === "lg" ? "h-[4.4rem] w-[4.4rem] text-[0.92rem]" : "h-10 w-10 text-[0.62rem]";
+  const dimension =
+    size === "lg" ? "h-[4.4rem] w-[4.4rem] text-[0.92rem]" : "h-10 w-10 text-[0.62rem]";
 
   const style: CSSProperties = {
     backgroundColor: color,

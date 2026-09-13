@@ -56,10 +56,20 @@ export function CVPage() {
             <a href={`mailto:${profile.data.email}`} className="hover:text-ink">
               {profile.data.email}
             </a>
-            <a href={profile.data.linkedin} target="_blank" rel="noreferrer" className="hover:text-ink">
+            <a
+              href={profile.data.linkedin}
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-ink"
+            >
               LinkedIn
             </a>
-            <a href={profile.data.github} target="_blank" rel="noreferrer" className="hover:text-ink">
+            <a
+              href={profile.data.github}
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-ink"
+            >
               GitHub
             </a>
             <span>{profile.data.domain}</span>

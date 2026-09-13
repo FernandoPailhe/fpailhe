@@ -18,47 +18,47 @@ Las entidades principales ya existen en `packages/data-model/src/types.ts`. Este
 
 ### `Project` (extendida)
 
-| Campo | Tipo | Notas |
-|-------|------|-------|
-| `id` | `string` | Identificador único. |
-| `name` | `string` | Nombre del proyecto. |
-| `context` | `string` (opcional) | Cliente/empresa. |
-| `tech` | `string[]` | Stack. |
-| `description` | `string` | Descripción con resultado medible. |
-| `status` | `ProjectStatus` (`"live" \| "in-progress"`) | Estado. |
-| `link` | `string` (opcional) | **DEPRECATED** — conservar para compatibilidad con `ProjectCard` mientras se migra a `links`. |
-| `links` | `ProjectLink[]` (opcional) | Lista de links públicos (App Store, Play Store, GitHub, web). Ver `ProjectLink`. |
-| `screenshot` | `string` (opcional) | Path de imagen relativo a `/public/` (ej. `/project-screenshots/tune-up.png`). Debe existir en `apps/web/public/` para renderizarse. |
-| `featured` | `boolean` | Aparece en Home. |
+| Campo         | Tipo                                        | Notas                                                                                                                                |
+| ------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`          | `string`                                    | Identificador único.                                                                                                                 |
+| `name`        | `string`                                    | Nombre del proyecto.                                                                                                                 |
+| `context`     | `string` (opcional)                         | Cliente/empresa.                                                                                                                     |
+| `tech`        | `string[]`                                  | Stack.                                                                                                                               |
+| `description` | `string`                                    | Descripción con resultado medible.                                                                                                   |
+| `status`      | `ProjectStatus` (`"live" \| "in-progress"`) | Estado.                                                                                                                              |
+| `link`        | `string` (opcional)                         | **DEPRECATED** — conservar para compatibilidad con `ProjectCard` mientras se migra a `links`.                                        |
+| `links`       | `ProjectLink[]` (opcional)                  | Lista de links públicos (App Store, Play Store, GitHub, web). Ver `ProjectLink`.                                                     |
+| `screenshot`  | `string` (opcional)                         | Path de imagen relativo a `/public/` (ej. `/project-screenshots/tune-up.png`). Debe existir en `apps/web/public/` para renderizarse. |
+| `featured`    | `boolean`                                   | Aparece en Home.                                                                                                                     |
 
 ### `ProjectLink` (nueva)
 
-| Campo | Tipo | Notas |
-|-------|------|-------|
-| `type` | `"appStore" \| "playStore" \| "github" \| "website"` | Tipo de destino. |
-| `url` | `string` | URL pública verificada. Solo incluir si se puede verificar. |
-| `label` | `string` (opcional) | Texto alternativo; si no se provee, el componente usa el label por tipo. |
+| Campo   | Tipo                                                 | Notas                                                                    |
+| ------- | ---------------------------------------------------- | ------------------------------------------------------------------------ |
+| `type`  | `"appStore" \| "playStore" \| "github" \| "website"` | Tipo de destino.                                                         |
+| `url`   | `string`                                             | URL pública verificada. Solo incluir si se puede verificar.              |
+| `label` | `string` (opcional)                                  | Texto alternativo; si no se provee, el componente usa el label por tipo. |
 
 ### `AboutAside` (sin cambios de schema)
 
-| Campo | Tipo | Notas |
-|-------|------|-------|
-| `text` | `string` | Texto del aside. |
+| Campo   | Tipo     | Notas                                                                                                                                                               |
+| ------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `text`  | `string` | Texto del aside.                                                                                                                                                    |
 | `photo` | `string` | Path relativo a `/public/` (actualmente `fernando-photo.jpg`). El archivo es responsabilidad del operador; el componente debe mostrar un fallback si falta o falla. |
 
 ### `Job` (sin cambios de schema)
 
-| Campo | Tipo | Notas |
-|-------|------|-------|
-| `id` | `string` | Identificador único. |
-| `title` | `string` | Rol. |
-| `company` | `string` | Empresa. |
-| `location` | `string` (opcional) | Ubicación. |
-| `startDate` | `string` (`YYYY-MM`) | Inicio. |
-| `endDate` | `string \| null` | Fin; `null` significa "Present". Debe revisarse que no haya errores de datos. |
-| `bullets` | `string[]` | Logros. |
-| `tech` | `string[]` | Stack. |
-| `projectIds` | `string[]` (opcional) | Proyectos relacionados. |
+| Campo        | Tipo                  | Notas                                                                         |
+| ------------ | --------------------- | ----------------------------------------------------------------------------- |
+| `id`         | `string`              | Identificador único.                                                          |
+| `title`      | `string`              | Rol.                                                                          |
+| `company`    | `string`              | Empresa.                                                                      |
+| `location`   | `string` (opcional)   | Ubicación.                                                                    |
+| `startDate`  | `string` (`YYYY-MM`)  | Inicio.                                                                       |
+| `endDate`    | `string \| null`      | Fin; `null` significa "Present". Debe revisarse que no haya errores de datos. |
+| `bullets`    | `string[]`            | Logros.                                                                       |
+| `tech`       | `string[]`            | Stack.                                                                        |
+| `projectIds` | `string[]` (opcional) | Proyectos relacionados.                                                       |
 
 ### `Profile`, `Hero`, `Stat`, `HowIWork`, `ContactSection`, `EducationEntry`, `CourseEntry`
 
@@ -70,14 +70,14 @@ Formatters: `packages/data-model/src/format.ts`.
 
 ## Fuente de Datos
 
-| Recurso | Tipo | Path / Endpoint | Shape |
-|---------|------|-----------------|-------|
-| Todos los datos de contenido | JSON estático | `apps/web/public/data/*.json` | Interfaces de `@ferpa/data-model` |
-| `about-aside.json` | JSON estático | `/data/about-aside.json` | `AboutAside` |
-| `experience.json` | JSON estático | `/data/experience.json` | `Job[]` |
-| `projects.json` | JSON estático | `/data/projects.json` | `Project[]` |
-| `profile.json` | JSON estático | `/data/profile.json` | `Profile` |
-| Assets visuales (foto, OG, favicon, capturas) | Archivos estáticos en `apps/web/public/` | Paths referenciados desde JSON/HTML | JPG/PNG/SVG/ICO |
+| Recurso                                       | Tipo                                     | Path / Endpoint                     | Shape                             |
+| --------------------------------------------- | ---------------------------------------- | ----------------------------------- | --------------------------------- |
+| Todos los datos de contenido                  | JSON estático                            | `apps/web/public/data/*.json`       | Interfaces de `@ferpa/data-model` |
+| `about-aside.json`                            | JSON estático                            | `/data/about-aside.json`            | `AboutAside`                      |
+| `experience.json`                             | JSON estático                            | `/data/experience.json`             | `Job[]`                           |
+| `projects.json`                               | JSON estático                            | `/data/projects.json`               | `Project[]`                       |
+| `profile.json`                                | JSON estático                            | `/data/profile.json`                | `Profile`                         |
+| Assets visuales (foto, OG, favicon, capturas) | Archivos estáticos en `apps/web/public/` | Paths referenciados desde JSON/HTML | JPG/PNG/SVG/ICO                   |
 
 Los assets visuales son provistos por el operador; este plan solo referencia sus paths. No se generan imágenes.
 
@@ -91,40 +91,40 @@ Los assets visuales son provistos por el operador; este plan solo referencia sus
 
 ## Componentes / Pantallas
 
-| Componente | Nivel | Ubicación | Cambio |
-|------------|-------|-----------|--------|
-| `InitialsAvatar` | Atom | `packages/ui/src/atoms/InitialsAvatar.tsx` | Nuevo. Fallback visual genérico con iniciales. |
-| `ProjectCard` | Molecule | `packages/ui/src/molecules/ProjectCard.tsx` | Modificar: aceptar `links` y `screenshot` opcionales, mostrar links con iconos/labels genéricos, sin romper prop `link` existente. |
-| `AboutSection` | Organismo | `apps/web/src/components/AboutSection.tsx` | Modificar: usar `InitialsAvatar` como fallback si `photo` falta o falla. |
-| `Nav` | Organismo | `apps/web/src/components/Nav.tsx` | Modificar: agregar `aria-label`, skip-link al contenido. |
-| `Dialog` | Molecule | `packages/ui/src/molecules/Dialog.tsx` | Revisar foco, overlay click, devolución de foco. |
-| `ThemeProvider` | Theme | `packages/ui/src/theme/ThemeProvider.tsx` | Modificar: soportar tokens de tema oscuro y persistir preferencia del usuario. |
-| `globals.css` | Estilos globales | `apps/web/src/styles/globals.css` | Modificar: `color-scheme: light dark`, media query `prefers-color-scheme`, mantener print intacto. |
-| `index.html` | HTML entry | `apps/web/index.html` | Modificar: lang, title, description, canonical, OG, Twitter, favicon, theme-color. |
-| `App.tsx` | Rutas | `apps/web/src/App.tsx` | Sin cambios de ruta (sigue `/` y `/cv`). |
-| `HomePage`, `CVPage` | Routes | `apps/web/src/routes/` | Sin cambios de estructura; consumen datos actualizados. |
+| Componente           | Nivel            | Ubicación                                   | Cambio                                                                                                                             |
+| -------------------- | ---------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `InitialsAvatar`     | Atom             | `packages/ui/src/atoms/InitialsAvatar.tsx`  | Nuevo. Fallback visual genérico con iniciales.                                                                                     |
+| `ProjectCard`        | Molecule         | `packages/ui/src/molecules/ProjectCard.tsx` | Modificar: aceptar `links` y `screenshot` opcionales, mostrar links con iconos/labels genéricos, sin romper prop `link` existente. |
+| `AboutSection`       | Organismo        | `apps/web/src/components/AboutSection.tsx`  | Modificar: usar `InitialsAvatar` como fallback si `photo` falta o falla.                                                           |
+| `Nav`                | Organismo        | `apps/web/src/components/Nav.tsx`           | Modificar: agregar `aria-label`, skip-link al contenido.                                                                           |
+| `Dialog`             | Molecule         | `packages/ui/src/molecules/Dialog.tsx`      | Revisar foco, overlay click, devolución de foco.                                                                                   |
+| `ThemeProvider`      | Theme            | `packages/ui/src/theme/ThemeProvider.tsx`   | Modificar: soportar tokens de tema oscuro y persistir preferencia del usuario.                                                     |
+| `globals.css`        | Estilos globales | `apps/web/src/styles/globals.css`           | Modificar: `color-scheme: light dark`, media query `prefers-color-scheme`, mantener print intacto.                                 |
+| `index.html`         | HTML entry       | `apps/web/index.html`                       | Modificar: lang, title, description, canonical, OG, Twitter, favicon, theme-color.                                                 |
+| `App.tsx`            | Rutas            | `apps/web/src/App.tsx`                      | Sin cambios de ruta (sigue `/` y `/cv`).                                                                                           |
+| `HomePage`, `CVPage` | Routes           | `apps/web/src/routes/`                      | Sin cambios de estructura; consumen datos actualizados.                                                                            |
 
 ## Secuencia de Implementación
 
-| # | Task file | Capa / Skill | Depende de | Etapa |
-|---|-----------|--------------|------------|-------|
-| 1 | `tasks/01-corregir-datos-de-contenido.md` | Edición de datos JSON | — | 1 |
-| 2 | `tasks/02-corregir-metadatos-base-en-index-html.md` | HTML estático | — | 1 |
-| 3 | `tasks/03-implementar-fallback-de-foto.md` | `add-ui-component` (atom) + organismo | — | 1 |
-| 4 | `tasks/04-agregar-open-graph-y-twitter-cards.md` | HTML estático | 2 | 1 |
-| 5 | `tasks/05-agregar-favicon-e-iconos.md` | HTML estático + assets | 2 | 1 |
-| 6 | `tasks/06-agregar-robots-txt-y-sitemap-xml.md` | Archivos estáticos + deploy | 2 | 1 |
-| 7 | `tasks/07-configurar-eslint-prettier-editorconfig-y-scripts.md` | Infra / tooling | — | 2 |
-| 8 | `tasks/08-configurar-github-actions-workflow.md` | CI/CD | 7 | 2 |
-| 9 | `tasks/09-configurar-vitest-testing-library-y-tests-base.md` | Tests | 7 | 2 |
-| 10 | `tasks/10-extender-modelo-de-datos-de-proyectos.md` | `add-feature` (paso 1) | — | 2 |
-| 11 | `tasks/11-mostrar-links-y-capturas-en-proyectos.md` | `add-ui-component` (molecule) + `add-feature` (UI) | 1, 10 | 2 |
-| 12 | `tasks/12-implementar-dark-mode.md` | `theming` | — | 2 |
-| 13 | `tasks/13-mejorar-accesibilidad-skip-link-aria-focus-dialog.md` | `add-ui-component` / a11y | — | 2 |
-| 14 | `tasks/14-implementar-prerender-de-rutas.md` | Build / SSR manual | 7, 9 | 2 |
-| 15 | `tasks/15-ajustar-infraestructura-cloudflare-y-headers.md` | Deploy / wrangler.toml | 6, 14 | 2 |
-| 16 | `tasks/16-limpiar-residuos-del-template-y-actualizar-readme.md` | Limpieza | 7 | 2 |
-| 17 | `tasks/17-verificacion-final-integracion.md` | Verificación | all | 2 |
+| #   | Task file                                                       | Capa / Skill                                       | Depende de | Etapa |
+| --- | --------------------------------------------------------------- | -------------------------------------------------- | ---------- | ----- |
+| 1   | `tasks/01-corregir-datos-de-contenido.md`                       | Edición de datos JSON                              | —          | 1     |
+| 2   | `tasks/02-corregir-metadatos-base-en-index-html.md`             | HTML estático                                      | —          | 1     |
+| 3   | `tasks/03-implementar-fallback-de-foto.md`                      | `add-ui-component` (atom) + organismo              | —          | 1     |
+| 4   | `tasks/04-agregar-open-graph-y-twitter-cards.md`                | HTML estático                                      | 2          | 1     |
+| 5   | `tasks/05-agregar-favicon-e-iconos.md`                          | HTML estático + assets                             | 2          | 1     |
+| 6   | `tasks/06-agregar-robots-txt-y-sitemap-xml.md`                  | Archivos estáticos + deploy                        | 2          | 1     |
+| 7   | `tasks/07-configurar-eslint-prettier-editorconfig-y-scripts.md` | Infra / tooling                                    | —          | 2     |
+| 8   | `tasks/08-configurar-github-actions-workflow.md`                | CI/CD                                              | 7          | 2     |
+| 9   | `tasks/09-configurar-vitest-testing-library-y-tests-base.md`    | Tests                                              | 7          | 2     |
+| 10  | `tasks/10-extender-modelo-de-datos-de-proyectos.md`             | `add-feature` (paso 1)                             | —          | 2     |
+| 11  | `tasks/11-mostrar-links-y-capturas-en-proyectos.md`             | `add-ui-component` (molecule) + `add-feature` (UI) | 1, 10      | 2     |
+| 12  | `tasks/12-implementar-dark-mode.md`                             | `theming`                                          | —          | 2     |
+| 13  | `tasks/13-mejorar-accesibilidad-skip-link-aria-focus-dialog.md` | `add-ui-component` / a11y                          | —          | 2     |
+| 14  | `tasks/14-implementar-prerender-de-rutas.md`                    | Build / SSR manual                                 | 7, 9       | 2     |
+| 15  | `tasks/15-ajustar-infraestructura-cloudflare-y-headers.md`      | Deploy / wrangler.toml                             | 6, 14      | 2     |
+| 16  | `tasks/16-limpiar-residuos-del-template-y-actualizar-readme.md` | Limpieza                                           | 7          | 2     |
+| 17  | `tasks/17-verificacion-final-integracion.md`                    | Verificación                                       | all        | 2     |
 
 Notas de paralelismo:
 
