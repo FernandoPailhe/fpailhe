@@ -9,7 +9,8 @@ const BASE =
   "inline-flex items-center gap-2 rounded-pill font-ui text-xs font-bold uppercase tracking-wide transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-bright disabled:cursor-default disabled:opacity-40";
 
 const VARIANTS: Record<NonNullable<ButtonProps["variant"]>, (active?: boolean) => string> = {
-  "ghost-gold": () => "border border-gold bg-transparent px-3 py-1.5 text-gold-bright hover:bg-gold-soft",
+  "ghost-gold": () =>
+    "border border-gold bg-transparent px-3 py-1.5 text-gold-bright hover:bg-gold-soft",
   tab: (active) =>
     active
       ? "border border-gold bg-gold-soft px-4 py-2.5 text-gold-bright"

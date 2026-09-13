@@ -7,9 +7,7 @@ export interface CoursesSectionProps {
 export function CoursesSection({ courses }: CoursesSectionProps) {
   return (
     <section className="py-16">
-      <h2 className="font-display text-[clamp(1.6rem,3vw,2.1rem)] font-medium text-ink">
-        Courses
-      </h2>
+      <h2 className="font-display text-[clamp(1.6rem,3vw,2.1rem)] font-medium text-ink">Courses</h2>
       <ul className="mt-6">
         {courses.map((course) => (
           <li

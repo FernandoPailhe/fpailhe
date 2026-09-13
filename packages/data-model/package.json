@@ -1,13 +1,13 @@
 {
   "name": "@ferpa/data-model",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Modelo de datos y lógica de dominio pura (tipos, cálculos, formatters). Sin dependencias de React ni UI.",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {

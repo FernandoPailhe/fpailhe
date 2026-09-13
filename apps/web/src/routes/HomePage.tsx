@@ -51,13 +51,17 @@ export function HomePage() {
     !projects.data ||
     !contact.data
   ) {
-    return <ErrorState label="No se pudieron cargar los datos del sitio." />;
+    return <ErrorState label="Could not load site data." />;
   }
 
   return (
     <>
       <Nav links={NAV_LINKS} />
-      <main className="mx-auto max-w-[880px] px-[clamp(20px,5vw,32px)]">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="mx-auto max-w-[880px] px-[clamp(20px,5vw,32px)]"
+      >
         <HeroSection
           kicker={hero.data.kicker}
           headlineLead={hero.data.headlineLead}

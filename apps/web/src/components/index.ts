@@ -1,6 +1,7 @@
 export * from "./LoadingState";
 export * from "./ErrorState";
 export * from "./Nav";
+export * from "./DarkModeToggle";
 export * from "./HeroSection";
 export * from "./StatsSection";
 export * from "./HowIWorkSection";

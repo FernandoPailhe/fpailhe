@@ -9,7 +9,7 @@ import "./styles/globals.css";
 
 const container = document.getElementById("root");
 if (!container) {
-  throw new Error("No se encontró el elemento #root");
+  throw new Error("Root element not found");
 }
 
 createRoot(container).render(

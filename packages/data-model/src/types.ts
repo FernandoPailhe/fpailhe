@@ -1,5 +1,5 @@
 /**
- * Modelo de datos del sitio Ferpa (fpailhe.dev).
+ * Modelo de datos del sitio Ferpa (fpailhe.com).
  *
  * Estas interfaces son el contrato entre los JSON que hoy viven en
  * `apps/web/public/data/*.json` y el resto de la app. El día que haya un
@@ -56,6 +56,12 @@ export interface AboutAside {
 
 export type ProjectStatus = "live" | "in-progress";
 
+export interface ProjectLink {
+  type: "appStore" | "playStore" | "github" | "website";
+  url: string;
+  label?: string;
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -63,7 +69,11 @@ export interface Project {
   tech: string[];
   description: string;
   status: ProjectStatus;
+  /** @deprecated use `links` instead. Kept for backward compatibility during migration. */
   link?: string;
+  links?: ProjectLink[];
+  /** Path to a screenshot under `/public/`, e.g. `/project-screenshots/tune-up.png`. */
+  screenshot?: string;
   featured: boolean;
 }
 

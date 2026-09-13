@@ -13,7 +13,7 @@
     "name": "Tune-Up",
     "context": "Personal",
     "tech": ["React Native", "Expo", "TypeScript"],
-    "description": "Mobile App to understand training metrics easy",
+    "description": "Personal React Native app that turns workout tracking into actionable weekly summaries: users see progress across sessions without manually comparing spreadsheets.",
     "status": "in-progress",
     "featured": true
   },

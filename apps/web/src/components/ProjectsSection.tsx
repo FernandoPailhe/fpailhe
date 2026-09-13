@@ -1,8 +1,29 @@
-import type { Project } from "@ferpa/data-model";
+import type { Project, ProjectLink } from "@ferpa/data-model";
 import { ProjectCard } from "@ferpa/ui";
+import type { ProjectCardLink } from "@ferpa/ui";
 
 export interface ProjectsSectionProps {
   projects: Project[];
+}
+
+const LINK_LABELS: Record<ProjectLink["type"], string> = {
+  appStore: "App Store",
+  playStore: "Play Store",
+  github: "GitHub",
+  website: "Website",
+};
+
+function defaultLabel(type: ProjectLink["type"]): string {
+  return LINK_LABELS[type];
+}
+
+function toCardLink(link: ProjectLink): ProjectCardLink {
+  return { label: link.label ?? defaultLabel(link.type), href: link.url, external: true };
+}
+
+function toImageUrl(screenshot: string | undefined): string | undefined {
+  if (!screenshot) return undefined;
+  return screenshot.startsWith("/") ? screenshot : `/${screenshot}`;
 }
 
 /** Grilla de proyectos con hairlines: fondo `line` + `gap-px`. */
@@ -22,6 +43,8 @@ export function ProjectsSection({ projects }: ProjectsSectionProps) {
             description={project.description}
             status={project.status}
             link={project.link}
+            links={project.links?.map(toCardLink)}
+            imageUrl={toImageUrl(project.screenshot)}
           />
         ))}
       </div>

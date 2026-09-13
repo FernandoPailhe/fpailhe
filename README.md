@@ -1,89 +1,91 @@
-# Ferpa — Monorepo Template
+# Fernando Pailhe — Personal Site
 
-Monorepo template con **pnpm workspaces** + Vite + React 18 + TypeScript
-estricto + TanStack Query + Zustand + TailwindCSS.
+Personal site and CV of Fernando Pailhe, Mobile Engineer — React Native
+and Kotlin, from first commits to rescued codebases. Live at
+[fpailhe.com](https://fpailhe.com).
+
+## Stack
+
+pnpm monorepo + Vite + React 18 + TypeScript (strict) + TanStack Query +
+Zustand + TailwindCSS. Static content lives in JSON files; a post-build
+script prerenders `/` and `/cv` to real HTML so the site reads fine
+without JavaScript.
 
 ```
-ferpa/
+fpailhe/
 ├── apps/
-│   └── web/              # App web (Vite + React)
+│   └── web/                # Web app (Vite + React)
+│       ├── public/data/    # Content JSON (profile, experience, projects…)
+│       ├── scripts/        # prerender.mjs (static HTML for / and /cv)
+│       └── src/
+│           ├── components/ # Page-level organisms
+│           ├── queries/    # TanStack Query hooks
+│           ├── domain/     # Derived-state hooks (useMemo over pure fns)
+│           ├── services/   # dataService + httpClient (fetchers)
+│           └── routes/     # / , /cv, 404
 ├── packages/
-│   ├── data-model/       # Tipos, lógica de dominio y formateo (sin React)
-│   └── ui/               # Design system: theme + átomos + moléculas
-├── package.json          # Scripts raíz (dev, build, typecheck)
-├── pnpm-workspace.yaml
-└── tsconfig.base.json
+│   ├── data-model/         # @ferpa/data-model — types + pure domain logic
+│   └── ui/                 # @ferpa/ui — theme tokens, atoms, molecules
+├── wrangler.toml           # Cloudflare Workers static assets deploy
+└── vitest.config.ts        # Vitest projects (data-model + web)
 ```
 
-## Paquetes
-
-| Paquete | Scope | Rol |
-|---|---|---|
-| `apps/web` | `@ferpa/web` | Composición: rutas, servicios, queries, componentes de página |
-| `packages/ui` | `@ferpa/ui` | Presentación pura: `ThemeProvider`, atoms, molecules |
-| `packages/data-model` | `@ferpa/data-model` | Dominio puro: tipos TS, funciones de cálculo, formatters |
-
-## Cómo levantar
+## Getting started
 
 ```bash
 pnpm install
-pnpm dev     # build de packages + Vite en http://localhost:5173
+pnpm dev       # builds packages, then Vite on http://localhost:5173
+pnpm build     # typecheck + vite build + prerender → apps/web/dist
+pnpm preview   # serves apps/web/dist
 ```
 
-Producción:
+## Quality gates
 
 ```bash
-pnpm build
-pnpm preview
+pnpm typecheck     # builds packages, then tsc --noEmit on all projects
+pnpm lint          # ESLint flat config (typescript-eslint + react-hooks)
+pnpm format        # Prettier write
+pnpm format:check  # Prettier check (CI)
+pnpm test          # Vitest: domain unit tests + component tests
 ```
 
-## Datos
+All gates run in CI (`.github/workflows/ci.yml`) on pushes and PRs to
+`main` / `v0.2.0`.
 
-Los datos de ejemplo viven en `apps/web/public/data/`:
+## Content & data flow
 
-- `items.json` → entidades de ejemplo
-- `meta.json` → metadata de la app
+Content lives in `apps/web/public/data/*.json` and is typed by
+`@ferpa/data-model` (`Job`, `Project`, `Profile`, `Hero`, …). The app
+fetches it through `services/dataService.ts` (axios, base URL
+`VITE_API_BASE_URL`, default `/data`). To point at a real backend later,
+change that env var — nothing else in the app depends on it.
 
-La app los lee vía `services/dataService.ts` usando Axios. Para conectar un
-backend real, cambiar `VITE_API_BASE_URL` en `.env`.
+## Theming & dark mode
 
-## Theming
-
-Un solo archivo gobierna el look:
-**`packages/ui/src/theme/tokens.ts`** (colores, tipografías, radios).
-
-- `ThemeProvider` vuelca los tokens como variables CSS en `:root`.
-- `tailwind.config.ts` genera las clases de utilidad a partir del mismo
-  objeto, vía `@ferpa/ui/theme-tokens`.
-
-Para cambiar colores, tipografías o radios: editar `tokens.ts` y nada más.
-
-## Estado
-
-| Tipo | Dónde vive |
-|---|---|
-| Servidor (datos remotos) | TanStack Query (`queries/`) |
-| Derivado (cálculos) | `useMemo` en hooks de `domain/` |
-| Navegación | URL (React Router) |
-| UI efímero | Zustand (`store/`) |
-
-## Componentes atómicos
-
-- **Atoms** (`packages/ui/src/atoms/`): Badge, Button, CheckerRule, DnfTag,
-  PositionChip, PtsValue, SealMark, StatPill
-- **Molecules** (`packages/ui/src/molecules/`): ComunicadoBox, Dialog,
-  TeamIdentity
-
-`Dialog` está escrito a mano (sin Radix/shadcn) con foco atrapado, cierre
-con Escape/clic afuera y devolución de foco.
-
-## Estilos
-
-- TailwindCSS con theme extendido desde tokens
-- Breakpoint custom: `mobile` (max-width: 680px)
-- Sin CSS Modules — solo Tailwind utilities
+Single source of truth: `packages/ui/src/theme/tokens.ts` (colors, fonts,
+radii) + `darkTokens.ts` for the dark theme. `ThemeProvider` writes the
+tokens as CSS variables on `:root` and persists the choice in
+`localStorage` (`light` / `dark` / `system`, following
+`prefers-color-scheme`). Tailwind classes map to the same variables via
+`@ferpa/ui/theme-tokens`, so no hex value is hardcoded outside tokens.
 
 ## Deploy
 
-Configurado para Cloudflare Workers (ver `wrangler.toml`). Editar las
-rutas/dominio antes de deployar.
+Configured for Cloudflare Workers static assets (`wrangler.toml`,
+`name = "ferpa"`):
+
+- `not_found_handling = "404-page"` — missing assets return a real 404
+  (`public/404.html`); `/` and `/cv` are real files thanks to prerender.
+- `public/_headers` — HSTS, X-Content-Type-Options, Referrer-Policy,
+  Permissions-Policy, immutable cache for hashed `/assets/*`.
+- `public/robots.txt` + `public/sitemap.xml` point to `fpailhe.com`.
+- The `www.fpailhe.com` → `fpailhe.com` redirect is configured in
+  Cloudflare (Redirect Rules), not in code.
+
+Expected image assets live in `apps/web/public/` — see
+`apps/web/public/assets/README.md` for the checklist. Missing project
+links are tracked in `doc/project-links.md`.
+
+---
+
+© Fernando Pailhe. All rights reserved.

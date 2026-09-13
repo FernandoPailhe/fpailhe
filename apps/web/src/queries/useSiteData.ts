@@ -44,7 +44,11 @@ export function useHowIWorkQuery() {
 }
 
 export function useAboutAsideQuery() {
-  return useQuery<AboutAside>({ queryKey: queryKeys.aboutAside, queryFn: fetchAboutAside, staleTime });
+  return useQuery<AboutAside>({
+    queryKey: queryKeys.aboutAside,
+    queryFn: fetchAboutAside,
+    staleTime,
+  });
 }
 
 export function useProjectsQuery() {
@@ -56,7 +60,11 @@ export function useExperienceQuery() {
 }
 
 export function useEducationQuery() {
-  return useQuery<EducationEntry[]>({ queryKey: queryKeys.education, queryFn: fetchEducation, staleTime });
+  return useQuery<EducationEntry[]>({
+    queryKey: queryKeys.education,
+    queryFn: fetchEducation,
+    staleTime,
+  });
 }
 
 export function useCoursesQuery() {
@@ -64,5 +72,9 @@ export function useCoursesQuery() {
 }
 
 export function useContactQuery() {
-  return useQuery<ContactSection>({ queryKey: queryKeys.contact, queryFn: fetchContact, staleTime });
+  return useQuery<ContactSection>({
+    queryKey: queryKeys.contact,
+    queryFn: fetchContact,
+    staleTime,
+  });
 }

@@ -7,9 +7,9 @@
  * genera las clases de utilidad (`bg-canvas`, `text-gold`, `font-display`,
  * `rounded-lg`, ...) a partir del mismo objeto — ver `theme/cssVariables.ts`.
  *
- * TEMPLATE: Editá los valores de abajo para adaptar la estética a tu
- * proyecto. Los colores por-entidad de dominio NO van acá: son datos,
- * no parte del theme (ver @ferpa/data-model).
+ * Los colores por-entidad de dominio NO van acá: son datos, no parte
+ * del theme (ver @ferpa/data-model). El tema oscuro vive en
+ * `darkTokens.ts` con las mismas claves.
  */
 
 export const themeTokens = {
@@ -35,7 +35,7 @@ export const themeTokens = {
     crimson: "#b3271f",
     crimsonBright: "#d84a3d",
 
-    // Acentos secundarios
+    // Acentos secundarios (en uso por PositionChip: podios 2° y 3°)
     silver: "oklch(45% 0.010 75)",
     silverSoft: "rgba(69, 69, 69, 0.08)",
     bronze: "oklch(45% 0.010 75)",
@@ -65,7 +65,17 @@ export const themeTokens = {
   },
 } as const;
 
-export type ThemeTokens = typeof themeTokens;
+/**
+ * `themeTokens` está `as const`, así que `typeof` produce tipos literales.
+ * `ThemeTokens` los amplía a `string` en las hojas para que un tema
+ * alternativo (ej. `darkTokens`) pueda declararse con otros valores
+ * manteniendo exactamente las mismas claves.
+ */
+type StringLeaves<T> = {
+  [K in keyof T]: T[K] extends string ? string : StringLeaves<T[K]>;
+};
+
+export type ThemeTokens = StringLeaves<typeof themeTokens>;
 export type ThemeColorToken = keyof ThemeTokens["color"];
 export type ThemeFontToken = keyof ThemeTokens["font"];
 export type ThemeRadiusToken = keyof ThemeTokens["radius"];

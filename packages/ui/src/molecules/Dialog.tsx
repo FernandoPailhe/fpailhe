@@ -63,6 +63,7 @@ export function Dialog({ open, onClose, labelledBy, children, panelClassName = "
 
   return createPortal(
     <div
+      role="presentation"
       className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto px-5 py-[5vh]"
       style={{ backgroundColor: "rgba(6,7,9,.72)", backdropFilter: "blur(2px)" }}
       onMouseDown={(event) => {
