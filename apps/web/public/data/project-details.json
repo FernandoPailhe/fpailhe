@@ -1,0 +1,35 @@
+[
+  {
+    "projectId": "tune-up",
+    "product": {
+      "heading": "The product",
+      "paragraphs": [
+        "Tune-Up is a personal training log that turns raw workout entries into actionable weekly summaries. Instead of manually comparing spreadsheets, users open the app and see how this week compares to the last — volume, consistency, and progress across sessions."
+      ],
+      "bullets": [
+        "Workout logging with per-session detail",
+        "Automatic weekly summaries and progress view",
+        "Mobile-first experience built for quick entry between sets"
+      ]
+    },
+    "technical": {
+      "heading": "The tech",
+      "paragraphs": ["Built with React Native and Expo in strict TypeScript."],
+      "stack": ["React Native", "Expo", "TypeScript"]
+    },
+    "role": {
+      "heading": "My role",
+      "title": "Solo mobile engineer",
+      "paragraphs": [
+        "I own the project end to end: product definition, data model, UI, and release tooling."
+      ],
+      "bullets": [
+        "Product and UX decisions",
+        "React Native / Expo implementation",
+        "Data model and weekly-summary logic"
+      ]
+    },
+    "links": [],
+    "media": []
+  }
+]

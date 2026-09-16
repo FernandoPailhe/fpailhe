@@ -8,6 +8,7 @@ import type {
   Job,
   Profile,
   Project,
+  ProjectDetail,
   Stat,
 } from "@ferpa/data-model";
 import { http } from "./httpClient";
@@ -46,6 +47,11 @@ export async function fetchAboutAside(): Promise<AboutAside> {
 
 export async function fetchProjects(): Promise<Project[]> {
   const { data } = await http.get<Project[]>("/projects.json");
+  return data;
+}
+
+export async function fetchProjectDetails(): Promise<ProjectDetail[]> {
+  const { data } = await http.get<ProjectDetail[]>("/project-details.json");
   return data;
 }
 

@@ -9,6 +9,7 @@ export const queryKeys = {
   howIWork: ["howIWork"] as const,
   aboutAside: ["aboutAside"] as const,
   projects: ["projects"] as const,
+  projectDetails: ["projectDetails"] as const,
   experience: ["experience"] as const,
   education: ["education"] as const,
   courses: ["courses"] as const,

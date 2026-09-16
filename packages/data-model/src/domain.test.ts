@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { getFeaturedProjects, getJobProjects, sortJobsByDateDesc } from "./domain";
-import type { Job, Project } from "./types";
+import {
+  getFeaturedProjects,
+  getJobProjects,
+  getProjectById,
+  getProjectDetail,
+  getProjectDetailIds,
+  sortJobsByDateDesc,
+} from "./domain";
+import type { Job, Project, ProjectDetail } from "./types";
 
 const baseProject: Project = {
   id: "a",
@@ -39,6 +46,40 @@ describe("getJobProjects", () => {
     const resolved = getJobProjects(job, projects);
     expect(resolved).toHaveLength(1);
     expect(resolved[0]?.id).toBe("b");
+  });
+});
+
+const baseDetail: ProjectDetail = {
+  projectId: "a",
+  product: { heading: "The product", paragraphs: [] },
+  technical: { heading: "The tech", paragraphs: [], stack: [] },
+  role: { heading: "My role", title: "Dev", paragraphs: [] },
+};
+
+describe("getProjectById", () => {
+  it("finds a project by id and returns undefined for a missing id", () => {
+    const projects: Project[] = [baseProject, { ...baseProject, id: "b", name: "B" }];
+    expect(getProjectById(projects, "b")?.name).toBe("B");
+    expect(getProjectById(projects, "missing")).toBeUndefined();
+  });
+});
+
+describe("getProjectDetail", () => {
+  it("finds a detail by projectId and returns undefined if absent", () => {
+    const details: ProjectDetail[] = [baseDetail, { ...baseDetail, projectId: "b" }];
+    expect(getProjectDetail(details, "b")?.projectId).toBe("b");
+    expect(getProjectDetail(details, "missing")).toBeUndefined();
+  });
+});
+
+describe("getProjectDetailIds", () => {
+  it("returns a Set with the projectIds", () => {
+    const details: ProjectDetail[] = [baseDetail, { ...baseDetail, projectId: "b" }];
+    const ids = getProjectDetailIds(details);
+    expect(ids).toBeInstanceOf(Set);
+    expect(ids.has("a")).toBe(true);
+    expect(ids.has("b")).toBe(true);
+    expect(ids.has("c")).toBe(false);
   });
 });
 

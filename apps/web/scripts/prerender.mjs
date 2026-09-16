@@ -114,14 +114,16 @@ function navHtml(links) {
   return `<nav aria-label="Main navigation" class="no-print border-b border-line"><div class="mx-auto flex max-w-[880px] justify-end px-[clamp(20px,5vw,32px)] py-4"><ul class="flex items-center gap-6">${items}</ul></div></nav>`;
 }
 
-function projectCardHtml(project) {
+function projectCardHtml(project, detailHref) {
   const links = projectLinks(project);
   const shot = screenshotUrl(project);
   const title = escapeHtml(project.name);
-  const header =
-    links.length > 0
-      ? `<h3 class="font-display text-lg font-medium text-ink">${textLink(links[0].url, project.name)}</h3>`
-      : `<h3 class="font-display text-lg font-medium text-ink">${title}</h3>`;
+  const nameHtml = detailHref
+    ? textLink(detailHref, project.name, false)
+    : links.length > 0
+      ? textLink(links[0].url, project.name)
+      : title;
+  const header = `<h3 class="font-display text-lg font-medium text-ink">${nameHtml}</h3>`;
   const img = shot
     ? `<img src="${escapeHtml(shot)}" alt="${escapeHtml(project.name)} screenshot" class="mb-4 border border-line" />`
     : "";
@@ -140,11 +142,14 @@ function projectCardHtml(project) {
         `<span class="border border-line px-1.5 py-0.5 font-mono text-[11px] text-ink-dim">${escapeHtml(t)}</span>`,
     )
     .join(" ");
-  return `<article class="flex h-full flex-col bg-surface-raised p-5">${img}<header>${header}${context}</header><p class="mt-3 flex-1 font-ui text-sm leading-relaxed text-ink-dim">${escapeHtml(project.description)}</p>${linkList}<footer class="mt-4 flex flex-wrap items-center gap-2"><span class="font-mono text-[11px] uppercase tracking-[0.1em] text-gold">${escapeHtml(project.status)}</span>${tech}</footer></article>`;
+  const detailLink = detailHref
+    ? `<p class="mt-3">${textLink(detailHref, "Details →", false)}</p>`
+    : "";
+  return `<article class="flex h-full flex-col bg-surface-raised p-5">${img}<header>${header}${context}</header><p class="mt-3 flex-1 font-ui text-sm leading-relaxed text-ink-dim">${escapeHtml(project.description)}</p>${linkList}${detailLink}<footer class="mt-4 flex flex-wrap items-center gap-2"><span class="font-mono text-[11px] uppercase tracking-[0.1em] text-gold">${escapeHtml(project.status)}</span>${tech}</footer></article>`;
 }
 
 function renderHome(data) {
-  const { profile, hero, stats, howIWork, aboutAside, projects, contact } = data;
+  const { profile, hero, stats, howIWork, aboutAside, projects, projectDetails, contact } = data;
   const photoRel = aboutAside.photo ?? "";
   const photoPath = path.join(distDir, photoRel.replace(/^\//, ""));
   const photoHtml = fs.existsSync(photoPath)
@@ -167,7 +172,10 @@ function renderHome(data) {
     )
     .join("");
   const featured = getFeaturedProjects(projects ?? []);
-  const cards = featured.map(projectCardHtml).join("");
+  const detailIds = new Set((projectDetails ?? []).map((d) => d.projectId));
+  const cards = featured
+    .map((p) => projectCardHtml(p, detailIds.has(p.id) ? `/projects/${p.id}` : null))
+    .join("");
 
   const nav = navHtml([
     { label: "Home", href: "/" },
@@ -228,6 +236,70 @@ function renderCV(data) {
   return `${nav}<main id="main-content" tabindex="-1" class="mx-auto max-w-[760px] px-[clamp(20px,5vw,32px)] pb-16"><header class="border-b border-line py-12"><h1 class="font-display text-3xl font-medium text-ink">${escapeHtml(profile.name)}</h1><p class="mt-2 font-ui text-base text-ink-dim">${escapeHtml(profile.role)} — ${escapeHtml(profile.location)} · ${escapeHtml(profile.remoteNote)}</p><div class="mt-4 flex flex-wrap gap-x-5 gap-y-1 font-mono text-xs text-ink-faint"><a href="mailto:${escapeHtml(profile.email)}" class="hover:text-ink">${escapeHtml(profile.email)}</a><a href="${escapeHtml(profile.linkedin)}" target="_blank" rel="noreferrer" class="hover:text-ink">LinkedIn</a><a href="${escapeHtml(profile.github)}" target="_blank" rel="noreferrer" class="hover:text-ink">GitHub</a><span>${escapeHtml(profile.domain)}</span></div></header><section class="py-16"><h2 class="font-display text-[clamp(1.6rem,3vw,2.1rem)] font-medium text-ink">Experience</h2><div class="mt-6">${jobs}</div></section><section class="py-16"><h2 class="font-display text-[clamp(1.6rem,3vw,2.1rem)] font-medium text-ink">Education</h2><div class="mt-6">${edu}</div></section><section class="py-16"><h2 class="font-display text-[clamp(1.6rem,3vw,2.1rem)] font-medium text-ink">Courses</h2><ul class="mt-6">${courseItems}</ul></section></main>`;
 }
 
+function localAssetOk(src) {
+  if (!src || !src.startsWith("/")) return true;
+  return fs.existsSync(path.join(distDir, src.replace(/^\//, "")));
+}
+
+function mediaFigureHtml(m) {
+  if ((m.type === "image" || m.type === "video") && !localAssetOk(m.src)) {
+    console.warn(`prerender: media file missing for "${m.src}", skipping`);
+    return "";
+  }
+  const caption = m.caption
+    ? `<figcaption class="mt-2 font-mono text-xs text-ink-faint">${escapeHtml(m.caption)}</figcaption>`
+    : "";
+  let inner = "";
+  if (m.type === "image") {
+    inner = `<img src="${escapeHtml(m.src)}" alt="${escapeHtml(m.alt ?? "")}" loading="lazy" class="w-full border border-line" />`;
+  } else if (m.type === "video") {
+    const poster = m.poster ? ` poster="${escapeHtml(m.poster)}"` : "";
+    inner = `<video src="${escapeHtml(m.src)}" controls preload="metadata"${poster} class="w-full border border-line"></video>`;
+  } else {
+    inner = `<iframe src="${escapeHtml(m.src)}" title="${escapeHtml(m.title ?? "Embedded media")}" loading="lazy" allowfullscreen class="aspect-video w-full border border-line"></iframe>`;
+  }
+  return `<figure>${inner}${caption}</figure>`;
+}
+
+function detailSectionHtml(section, extraHtml = "") {
+  const paragraphs = (section.paragraphs ?? [])
+    .map(
+      (p) =>
+        `<p class="mt-4 max-w-[62ch] font-ui text-base leading-relaxed text-ink-dim">${escapeHtml(p)}</p>`,
+    )
+    .join("");
+  const bullets = (section.bullets ?? [])
+    .map((b) => `<li class="font-ui text-sm leading-relaxed text-ink-dim">${escapeHtml(b)}</li>`)
+    .join("");
+  const bulletList = bullets ? `<ul class="mt-4 list-disc space-y-1.5 pl-5">${bullets}</ul>` : "";
+  return `<section class="mt-12"><h2 class="font-display text-[clamp(1.4rem,2.5vw,1.8rem)] font-medium text-ink">${escapeHtml(section.heading)}</h2>${extraHtml}${paragraphs}${bulletList}</section>`;
+}
+
+function renderProjectDetail(project, detail) {
+  const stack = (detail.technical.stack ?? [])
+    .map(
+      (t) =>
+        `<span class="border border-line px-1.5 py-0.5 font-mono text-[11px] text-ink-dim">${escapeHtml(t)}</span>`,
+    )
+    .join(" ");
+  const links = (detail.links ?? [])
+    .map((l) => `<li>${textLink(l.url, l.label ?? LINK_LABELS[l.type] ?? "Link")}</li>`)
+    .join("");
+  const media = (detail.media ?? []).map(mediaFigureHtml).filter(Boolean).join("");
+  const context = project.context
+    ? `<p class="font-mono text-xs uppercase tracking-[0.12em] text-ink-faint">${escapeHtml(project.context)}</p>`
+    : "";
+
+  const nav = navHtml([
+    { label: "Home", href: "/" },
+    { label: "CV", href: "/cv" },
+  ]);
+
+  const roleExtra = `<p class="mt-4 font-mono text-sm text-ink-faint">${escapeHtml(detail.role.title)}</p>`;
+
+  return `${nav}<main id="main-content" tabindex="-1" class="mx-auto max-w-[880px] px-[clamp(20px,5vw,32px)]"><article class="py-16">${textLink("/#projects", "← Back to projects", false)}<header class="mt-8">${context}<h1 class="mt-2 font-display text-[clamp(2rem,5vw,3rem)] font-medium text-ink">${escapeHtml(project.name)}</h1><div class="mt-4 flex flex-wrap items-center gap-2"><span class="font-mono text-[11px] uppercase tracking-[0.1em] text-gold">${escapeHtml(project.status)}</span>${stack}</div></header>${detailSectionHtml(detail.product)}${detailSectionHtml(detail.technical)}${detailSectionHtml(detail.role, roleExtra)}${links ? `<section class="mt-12"><h2 class="font-display text-lg font-medium text-ink">Links</h2><ul class="mt-3 flex flex-wrap gap-x-5 gap-y-2">${links}</ul></section>` : ""}${media ? `<section class="mt-12"><h2 class="font-display text-lg font-medium text-ink">Media</h2><div class="mt-4 grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-4">${media}</div></section>` : ""}</article></main>`;
+}
+
 function main() {
   const templatePath = path.join(distDir, "index.html");
   const template = fs.readFileSync(templatePath, "utf8");
@@ -242,6 +314,7 @@ function main() {
     howIWork: readJson("how-i-work"),
     aboutAside: readJson("about-aside"),
     projects: readJson("projects"),
+    projectDetails: readJson("project-details"),
     experience: readJson("experience"),
     education: readJson("education"),
     courses: readJson("courses"),
@@ -260,7 +333,29 @@ function main() {
     fs.writeFileSync(path.join(outDir, "index.html"), output, "utf8");
   }
 
-  console.log("Prerendered / and /cv");
+  let rendered = 0;
+  for (const detail of data.projectDetails ?? []) {
+    const project = (data.projects ?? []).find((p) => p.id === detail.projectId);
+    if (!project) {
+      console.warn(`prerender: no project for detail "${detail.projectId}", skipping`);
+      continue;
+    }
+    const outDir = path.join(distDir, "projects", detail.projectId);
+    fs.mkdirSync(outDir, { recursive: true });
+    const output = template
+      .replace(
+        "<title>Fernando Pailhe — Mobile Engineer</title>",
+        `<title>${escapeHtml(project.name)} — Fernando Pailhe</title>`,
+      )
+      .replace(
+        '<div id="root"></div>',
+        `<div id="root">${renderProjectDetail(project, detail)}</div>`,
+      );
+    fs.writeFileSync(path.join(outDir, "index.html"), output, "utf8");
+    rendered += 1;
+  }
+
+  console.log(`Prerendered /, /cv and ${rendered} project page(s)`);
 }
 
 main();

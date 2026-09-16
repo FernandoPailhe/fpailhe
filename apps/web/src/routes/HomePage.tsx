@@ -4,10 +4,11 @@ import {
   useHeroQuery,
   useHowIWorkQuery,
   useProfileQuery,
+  useProjectDetailsQuery,
   useProjectsQuery,
   useStatsQuery,
 } from "../queries/useSiteData";
-import { useFeaturedProjects } from "../domain/useSiteDomain";
+import { useFeaturedProjects, useProjectDetailIds } from "../domain/useSiteDomain";
 import {
   AboutSection,
   ContactSection,
@@ -35,11 +36,13 @@ export function HomePage() {
   const howIWork = useHowIWorkQuery();
   const aboutAside = useAboutAsideQuery();
   const projects = useProjectsQuery();
+  const projectDetails = useProjectDetailsQuery();
   const contact = useContactQuery();
 
   const featuredProjects = useFeaturedProjects(projects.data);
+  const detailIds = useProjectDetailIds(projectDetails.data);
 
-  const queries = [profile, hero, stats, howIWork, aboutAside, projects, contact];
+  const queries = [profile, hero, stats, howIWork, aboutAside, projects, projectDetails, contact];
   if (queries.some((q) => q.isLoading)) return <LoadingState />;
   if (
     queries.some((q) => q.isError) ||
@@ -49,6 +52,7 @@ export function HomePage() {
     !howIWork.data ||
     !aboutAside.data ||
     !projects.data ||
+    !projectDetails.data ||
     !contact.data
   ) {
     return <ErrorState label="Could not load site data." />;
@@ -74,7 +78,7 @@ export function HomePage() {
       <main className="mx-auto max-w-[880px] px-[clamp(20px,5vw,32px)]">
         <HowIWorkSection panels={howIWork.data.panels} closingNote={howIWork.data.closingNote} />
         <AboutSection text={aboutAside.data.text} photo={aboutAside.data.photo} />
-        <ProjectsSection projects={featuredProjects} />
+        <ProjectsSection projects={featuredProjects} detailIds={detailIds} />
       </main>
       <ContactSection
         heading={contact.data.heading}

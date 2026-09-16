@@ -7,6 +7,7 @@ export * from "./StatsSection";
 export * from "./HowIWorkSection";
 export * from "./AboutSection";
 export * from "./ProjectsSection";
+export * from "./ProjectArticle";
 export * from "./ExperienceItem";
 export * from "./ExperienceSection";
 export * from "./EducationItem";

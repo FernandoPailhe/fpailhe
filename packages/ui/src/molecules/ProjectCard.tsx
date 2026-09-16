@@ -16,6 +16,8 @@ export interface ProjectCardProps {
   link?: string;
   links?: ProjectCardLink[];
   imageUrl?: string;
+  /** Ruta interna a la página de detalle (ej. `/projects/tune-up`). Si existe, el nombre linkea ahí. */
+  detailHref?: string;
 }
 
 /**
@@ -33,6 +35,7 @@ export function ProjectCard({
   link,
   links,
   imageUrl,
+  detailHref,
 }: ProjectCardProps) {
   const effectiveLinks: ProjectCardLink[] =
     links ?? (link ? [{ label: "Website", href: link, external: true }] : []);
@@ -45,7 +48,9 @@ export function ProjectCard({
       ) : null}
       <header>
         <h3 className="font-display text-lg font-medium text-ink">
-          {primaryHref ? (
+          {detailHref ? (
+            <TextLink href={detailHref}>{name}</TextLink>
+          ) : primaryHref ? (
             <TextLink href={primaryHref} external>
               {name}
             </TextLink>
@@ -66,6 +71,11 @@ export function ProjectCard({
             </li>
           ))}
         </ul>
+      ) : null}
+      {detailHref ? (
+        <p className="mt-3">
+          <TextLink href={detailHref}>Details →</TextLink>
+        </p>
       ) : null}
       <footer className="mt-4 flex flex-wrap items-center gap-2">
         <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-gold">{status}</span>

@@ -77,6 +77,43 @@ export interface Project {
   featured: boolean;
 }
 
+export interface ProjectDetailSection {
+  heading: string;
+  paragraphs: string[];
+  bullets?: string[];
+}
+
+export interface ProjectMediaItem {
+  type: "image" | "video" | "embed";
+  /** Path bajo `/public` (ej. `/project-media/tune-up/demo.mp4`) o URL externa para `embed`. */
+  src: string;
+  /** Texto alternativo; obligatorio en la práctica para `image`. */
+  alt?: string;
+  /** Título accesible del `<iframe>` para `embed`. */
+  title?: string;
+  caption?: string;
+  /** Poster del `<video>` (path bajo `/public`). */
+  poster?: string;
+}
+
+/**
+ * Contenido de la página de detalle de un proyecto (`/projects/<id>`).
+ * Vive en `project-details.json`, separado de `projects.json`: solo los
+ * proyectos con entrada acá tienen página de detalle y su card navega.
+ */
+export interface ProjectDetail {
+  /** FK a `Project.id`. */
+  projectId: string;
+  /** Info del producto: qué es, qué resuelve, features. */
+  product: ProjectDetailSection;
+  /** Info técnica del proyecto: arquitectura, decisiones, stack. */
+  technical: ProjectDetailSection & { stack: string[] };
+  /** Info técnica del rol; `title` = nombre del rol (ej. "Solo mobile engineer"). */
+  role: ProjectDetailSection & { title: string };
+  links?: ProjectLink[];
+  media?: ProjectMediaItem[];
+}
+
 export interface Job {
   id: string;
   title: string;

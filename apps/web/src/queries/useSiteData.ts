@@ -9,6 +9,7 @@ import type {
   Job,
   Profile,
   Project,
+  ProjectDetail,
   Stat,
 } from "@ferpa/data-model";
 import {
@@ -20,6 +21,7 @@ import {
   fetchHero,
   fetchHowIWork,
   fetchProfile,
+  fetchProjectDetails,
   fetchProjects,
   fetchStats,
 } from "../services/dataService";
@@ -53,6 +55,14 @@ export function useAboutAsideQuery() {
 
 export function useProjectsQuery() {
   return useQuery<Project[]>({ queryKey: queryKeys.projects, queryFn: fetchProjects, staleTime });
+}
+
+export function useProjectDetailsQuery() {
+  return useQuery<ProjectDetail[]>({
+    queryKey: queryKeys.projectDetails,
+    queryFn: fetchProjectDetails,
+    staleTime,
+  });
 }
 
 export function useExperienceQuery() {

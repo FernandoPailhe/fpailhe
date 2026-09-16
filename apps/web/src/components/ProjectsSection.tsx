@@ -1,24 +1,19 @@
 import type { Project, ProjectLink } from "@ferpa/data-model";
+import { formatProjectLinkLabel } from "@ferpa/data-model";
 import { ProjectCard } from "@ferpa/ui";
 import type { ProjectCardLink } from "@ferpa/ui";
 
 export interface ProjectsSectionProps {
   projects: Project[];
-}
-
-const LINK_LABELS: Record<ProjectLink["type"], string> = {
-  appStore: "App Store",
-  playStore: "Play Store",
-  github: "GitHub",
-  website: "Website",
-};
-
-function defaultLabel(type: ProjectLink["type"]): string {
-  return LINK_LABELS[type];
+  detailIds?: ReadonlySet<string>;
 }
 
 function toCardLink(link: ProjectLink): ProjectCardLink {
-  return { label: link.label ?? defaultLabel(link.type), href: link.url, external: true };
+  return {
+    label: link.label ?? formatProjectLinkLabel(link.type),
+    href: link.url,
+    external: true,
+  };
 }
 
 function toImageUrl(screenshot: string | undefined): string | undefined {
@@ -27,7 +22,7 @@ function toImageUrl(screenshot: string | undefined): string | undefined {
 }
 
 /** Grilla de proyectos con hairlines: fondo `line` + `gap-px`. */
-export function ProjectsSection({ projects }: ProjectsSectionProps) {
+export function ProjectsSection({ projects, detailIds }: ProjectsSectionProps) {
   return (
     <section id="projects" className="py-16">
       <h2 className="font-display text-[clamp(1.6rem,3vw,2.1rem)] font-medium text-ink">
@@ -45,6 +40,7 @@ export function ProjectsSection({ projects }: ProjectsSectionProps) {
             link={project.link}
             links={project.links?.map(toCardLink)}
             imageUrl={toImageUrl(project.screenshot)}
+            detailHref={detailIds?.has(project.id) ? `/projects/${project.id}` : undefined}
           />
         ))}
       </div>
