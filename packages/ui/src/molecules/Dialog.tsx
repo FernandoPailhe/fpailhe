@@ -9,6 +9,12 @@ export interface DialogProps {
   labelledBy: string;
   children: ReactNode;
   panelClassName?: string;
+  /**
+   * Cuando es true, Escape y el click en el overlay NO cierran el diálogo
+   * (modal bloqueante — excepción deliberada a la convención de cierre).
+   * El focus trap se mantiene: el usuario solo puede interactuar dentro.
+   */
+  blocking?: boolean;
 }
 
 const FOCUSABLE_SELECTOR =
@@ -20,7 +26,14 @@ const FOCUSABLE_SELECTOR =
  * lo abrió. Es puramente de comportamiento — el contenido visual lo define
  * quien lo usa.
  */
-export function Dialog({ open, onClose, labelledBy, children, panelClassName = "" }: DialogProps) {
+export function Dialog({
+  open,
+  onClose,
+  labelledBy,
+  children,
+  panelClassName = "",
+  blocking = false,
+}: DialogProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
 
@@ -34,6 +47,7 @@ export function Dialog({ open, onClose, labelledBy, children, panelClassName = "
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
+        if (blocking) return;
         event.preventDefault();
         onClose();
         return;
@@ -57,7 +71,7 @@ export function Dialog({ open, onClose, labelledBy, children, panelClassName = "
       document.removeEventListener("keydown", handleKeyDown);
       previouslyFocused.current?.focus();
     };
-  }, [open, onClose]);
+  }, [open, onClose, blocking]);
 
   if (!open) return null;
 
@@ -67,7 +81,7 @@ export function Dialog({ open, onClose, labelledBy, children, panelClassName = "
       className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto px-5 py-[5vh]"
       style={{ backgroundColor: "rgba(6,7,9,.72)", backdropFilter: "blur(2px)" }}
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
+        if (!blocking && event.target === event.currentTarget) onClose();
       }}
     >
       <div

@@ -51,7 +51,7 @@ export function BoardTile({
     <div
       role="gridcell"
       aria-colindex={position.x + 1}
-      className={`aspect-square border border-line ${parity ? "bg-canvas" : "bg-surface"} ${stateClass}`}
+      className={`aspect-square border border-line ${parity ? "bg-pitch" : "bg-pitch-alt"} ${stateClass}`}
     >
       <button
         type="button"

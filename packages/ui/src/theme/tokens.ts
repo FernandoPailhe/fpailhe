@@ -42,6 +42,11 @@ export const themeTokens = {
     bronzeSoft: "rgba(69, 69, 69, 0.08)",
     bronzeBright: "oklch(17% 0.010 75)",
 
+    // Tablero de rugby-chess — verdes de cancha (luminosidad media:
+    // deben convivir pieza negra e invertida sobre ambos tonos)
+    pitch: "oklch(55% 0.13 150)",
+    pitchAlt: "oklch(47% 0.12 150)",
+
     // Superficie invertida (footer/contacto)
     parchment: "oklch(17% 0.010 75)",
     parchmentRaised: "oklch(20% 0.010 75)",

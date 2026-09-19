@@ -7,12 +7,13 @@ export interface PieceTokenProps {
 }
 
 /**
- * Pieza del juego. Los 3 SVG son oscuros: las BLANCAS se invierten con
- * `filter: invert(1)` para distinguir el bando (decisión del plan).
+ * Pieza del juego, sin chip ni borde: solo el SVG a tamaño completo.
+ * Los 3 SVG son oscuros: las BLANCAS se invierten con `filter: invert(1)`
+ * para distinguir el bando (decisión del plan).
  */
 export function PieceToken({ type, owner }: PieceTokenProps) {
   return (
-    <span className="flex h-full w-full items-center justify-center rounded-full border border-line bg-surface-raised p-[8%]">
+    <span className="flex h-full w-full items-center justify-center">
       <img
         src={PIECE_ASSET[type]}
         alt={`${PLAYER_LABEL[owner]} ${PIECE_LABEL[type]}`}

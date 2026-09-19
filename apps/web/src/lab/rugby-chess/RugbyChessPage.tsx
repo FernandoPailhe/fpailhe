@@ -1,6 +1,6 @@
 import { Nav } from "../../components";
 import { RugbyChessBoard } from "./components/RugbyChessBoard";
-import { PieceTypePicker } from "./components/PieceTypePicker";
+import { PiecePickerDialog } from "./components/PiecePickerDialog";
 import { BenchPanel } from "./components/BenchPanel";
 import { GameStatusBar } from "./components/GameStatusBar";
 import { GameOverPanel } from "./components/GameOverPanel";
@@ -36,9 +36,6 @@ export function RugbyChessPage() {
           </p>
         </header>
         <GameStatusBar />
-        {(gamePhase === GamePhase.SETUP || gamePhase === GamePhase.BENCH_SELECTION) && (
-          <PieceTypePicker />
-        )}
         {gamePhase === GamePhase.PLAYING && <BenchPanel />}
         <RugbyChessBoard />
         {(gamePhase === GamePhase.PLAYING || gamePhase === GamePhase.GAME_OVER) && (
@@ -46,6 +43,7 @@ export function RugbyChessPage() {
         )}
         {gamePhase === GamePhase.GAME_OVER && <GameOverPanel />}
       </main>
+      <PiecePickerDialog />
     </>
   );
 }
