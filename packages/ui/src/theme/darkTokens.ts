@@ -35,10 +35,10 @@ export const darkTokens: ThemeTokens = {
     bronzeSoft: "rgba(200, 200, 200, 0.10)",
     bronzeBright: "oklch(94% 0.010 75)",
 
-    // Tablero de rugby-chess — mismos verdes de cancha, un punto más
-    // bajos para no competir con la página oscura
-    pitch: "oklch(52% 0.11 150)",
-    pitchAlt: "oklch(45% 0.10 150)",
+    // Tablero de rugby-chess — la misma madera, un punto más apagada
+    // para no competir con la página oscura
+    pitch: "oklch(86% 0.040 80.8)",
+    pitchAlt: "oklch(62% 0.055 64.7)",
 
     // Superficie invertida (footer/contacto): en dark se vuelve clara
     parchment: "oklch(94% 0.010 75)",
