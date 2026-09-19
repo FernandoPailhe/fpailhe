@@ -59,6 +59,16 @@ const appDir = path.resolve(__dirname, "..");
 const distDir = path.join(appDir, "dist");
 const dataDir = path.join(appDir, "public", "data");
 
+// Rutas que resuelve React Router en cliente: el build emite un
+// index.html shell por cada una para que el hosting las sirva.
+const SHELL_ROUTES = [
+  {
+    route: "/lab/rugby-chess",
+    title: "Rugby Chess — Fernando Pailhe",
+    html: `<main id="main-content" tabindex="-1" class="mx-auto max-w-[880px] px-[clamp(20px,5vw,32px)] py-20"><p class="font-ui text-xs uppercase tracking-widest text-gold-bright">Lab</p><h1 class="mt-2 font-display text-3xl font-bold text-ink">Rugby Chess</h1><p class="mt-2 font-ui text-base leading-relaxed text-ink-dim">Experimental module: chess-like tactics on a 5×11 rugby field. This interactive module requires JavaScript.</p><p class="mt-6"><a href="/" class="border-b border-ink font-ui text-ink transition-colors hover:border-gold hover:text-gold">← Back to home</a></p></main>`,
+  },
+];
+
 function readJson(name) {
   return JSON.parse(fs.readFileSync(path.join(dataDir, `${name}.json`), "utf8"));
 }
@@ -355,7 +365,21 @@ function main() {
     rendered += 1;
   }
 
-  console.log(`Prerendered /, /cv and ${rendered} project page(s)`);
+  for (const shell of SHELL_ROUTES) {
+    const outDir = path.join(distDir, shell.route.replace(/^\//, ""));
+    fs.mkdirSync(outDir, { recursive: true });
+    const output = template
+      .replace(
+        "<title>Fernando Pailhe — Mobile Engineer</title>",
+        `<title>${escapeHtml(shell.title)}</title>`,
+      )
+      .replace('<div id="root"></div>', `<div id="root">${shell.html}</div>`);
+    fs.writeFileSync(path.join(outDir, "index.html"), output, "utf8");
+  }
+
+  console.log(
+    `Prerendered /, /cv and ${rendered} project page(s); emitted ${SHELL_ROUTES.length} app shell(s)`,
+  );
 }
 
 main();
