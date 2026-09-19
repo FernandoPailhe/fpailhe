@@ -4,6 +4,7 @@ import { PieceTypePicker } from "./components/PieceTypePicker";
 import { BenchPanel } from "./components/BenchPanel";
 import { GameStatusBar } from "./components/GameStatusBar";
 import { GameOverPanel } from "./components/GameOverPanel";
+import { MoveHistoryPanel } from "./components/MoveHistoryPanel";
 import { useGameStore } from "./application/GameState";
 import { GamePhase } from "./domain/constants/GameRules";
 
@@ -40,6 +41,9 @@ export function RugbyChessPage() {
         )}
         {gamePhase === GamePhase.PLAYING && <BenchPanel />}
         <RugbyChessBoard />
+        {(gamePhase === GamePhase.PLAYING || gamePhase === GamePhase.GAME_OVER) && (
+          <MoveHistoryPanel />
+        )}
         {gamePhase === GamePhase.GAME_OVER && <GameOverPanel />}
       </main>
     </>
