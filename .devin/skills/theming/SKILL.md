@@ -1,5 +1,10 @@
 ---
-skill: theming
+name: theming
+description: >
+  Guía para modificar/extender el theme (tokens.ts como fuente única, Tailwind
+  y CSS vars automáticos). Usar para colores, fuentes o radios nuevos.
+triggers:
+  - user
 ---
 
 # Modificar o extender el theme

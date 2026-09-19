@@ -1,5 +1,10 @@
 ---
-skill: add-ui-component
+name: add-ui-component
+description: >
+  Guía para crear componentes UI (atom en packages/ui, molecule, organismo en
+  apps/web). Usar al crear componentes nuevos.
+triggers:
+  - user
 ---
 
 # Agregar un componente de UI
