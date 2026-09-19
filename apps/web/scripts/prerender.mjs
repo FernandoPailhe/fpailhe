@@ -121,7 +121,7 @@ function navHtml(links) {
         `<li><a href="${escapeHtml(l.href)}" class="font-ui text-sm text-ink-dim transition-colors hover:text-ink">${escapeHtml(l.label)}</a></li>`,
     )
     .join("");
-  return `<nav aria-label="Main navigation" class="no-print border-b border-line"><div class="mx-auto flex max-w-[880px] justify-end px-[clamp(20px,5vw,32px)] py-4"><ul class="flex items-center gap-6">${items}</ul></div></nav>`;
+  return `<nav aria-label="Main navigation" class="no-print border-b border-line"><div class="mx-auto flex max-w-[880px] justify-end px-[clamp(20px,5vw,32px)] py-4"><ul class="flex flex-wrap items-center justify-end gap-x-6 gap-y-2">${items}</ul></div></nav>`;
 }
 
 function projectCardHtml(project, detailHref) {
@@ -192,6 +192,7 @@ function renderHome(data) {
     { label: "Work", href: "#work" },
     { label: "Projects", href: "#projects" },
     { label: "CV", href: "/cv" },
+    { label: "Lab", href: "/lab/rugby-chess" },
     { label: "Contact", href: "#contact" },
   ]);
 
@@ -241,6 +242,7 @@ function renderCV(data) {
   const nav = navHtml([
     { label: "Home", href: "/" },
     { label: "CV", href: "/cv" },
+    { label: "Lab", href: "/lab/rugby-chess" },
   ]);
 
   return `${nav}<main id="main-content" tabindex="-1" class="mx-auto max-w-[760px] px-[clamp(20px,5vw,32px)] pb-16"><header class="border-b border-line py-12"><h1 class="font-display text-3xl font-medium text-ink">${escapeHtml(profile.name)}</h1><p class="mt-2 font-ui text-base text-ink-dim">${escapeHtml(profile.role)} — ${escapeHtml(profile.location)} · ${escapeHtml(profile.remoteNote)}</p><div class="mt-4 flex flex-wrap gap-x-5 gap-y-1 font-mono text-xs text-ink-faint"><a href="mailto:${escapeHtml(profile.email)}" class="hover:text-ink">${escapeHtml(profile.email)}</a><a href="${escapeHtml(profile.linkedin)}" target="_blank" rel="noreferrer" class="hover:text-ink">LinkedIn</a><a href="${escapeHtml(profile.github)}" target="_blank" rel="noreferrer" class="hover:text-ink">GitHub</a><span>${escapeHtml(profile.domain)}</span></div></header><section class="py-16"><h2 class="font-display text-[clamp(1.6rem,3vw,2.1rem)] font-medium text-ink">Experience</h2><div class="mt-6">${jobs}</div></section><section class="py-16"><h2 class="font-display text-[clamp(1.6rem,3vw,2.1rem)] font-medium text-ink">Education</h2><div class="mt-6">${edu}</div></section><section class="py-16"><h2 class="font-display text-[clamp(1.6rem,3vw,2.1rem)] font-medium text-ink">Courses</h2><ul class="mt-6">${courseItems}</ul></section></main>`;
@@ -303,6 +305,7 @@ function renderProjectDetail(project, detail) {
   const nav = navHtml([
     { label: "Home", href: "/" },
     { label: "CV", href: "/cv" },
+    { label: "Lab", href: "/lab/rugby-chess" },
   ]);
 
   const roleExtra = `<p class="mt-4 font-mono text-sm text-ink-faint">${escapeHtml(detail.role.title)}</p>`;

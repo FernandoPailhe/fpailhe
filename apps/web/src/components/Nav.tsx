@@ -17,7 +17,7 @@ export function Nav({ links }: NavProps) {
     <nav aria-label="Main navigation" className="no-print border-b border-line">
       <div className="mx-auto flex max-w-[880px] justify-end px-[clamp(20px,5vw,32px)] py-4">
         <div className="flex items-center gap-6">
-          <ul className="flex items-center gap-6">
+          <ul className="flex flex-wrap items-center justify-end gap-x-6 gap-y-2">
             {links.map((link) => (
               <li key={link.label}>
                 {link.href.startsWith("/") ? (
