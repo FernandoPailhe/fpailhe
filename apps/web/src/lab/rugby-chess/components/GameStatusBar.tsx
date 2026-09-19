@@ -30,7 +30,7 @@ export function GameStatusBar() {
 
   return (
     <div className="mx-auto flex w-full max-w-[420px] flex-wrap items-center justify-between gap-2 font-ui text-sm">
-      <div className="flex flex-wrap items-center gap-3">
+      <div aria-live="polite" className="flex flex-wrap items-center gap-3">
         <span className="font-semibold text-ink">{PHASE_LABEL[gamePhase]}</span>
         <span className="text-ink-dim">{PLAYER_LABEL[currentPlayer]} to move</span>
         <span className="text-ink">

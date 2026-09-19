@@ -13,6 +13,7 @@ export function GameOverPanel() {
 
   return (
     <section
+      role="status"
       aria-label="Game result"
       className="mx-auto w-full max-w-[420px] border border-line bg-surface px-6 py-5 text-center"
     >

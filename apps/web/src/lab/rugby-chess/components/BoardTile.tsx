@@ -10,15 +10,26 @@ export interface BoardTileProps {
   piece: GamePiece | undefined;
   state: BoardTileState;
   disabled: boolean;
+  tabIndex: number;
   onSelect: () => void;
+  onFocus: () => void;
 }
 
 /**
  * Casilla del tablero: `gridcell` ARIA con un `<button>` que ocupa todo.
  * El highlighting deriva del store (`selectedPiece`/`validMoves`/`blockedMoves`),
- * no de `TileState` (decisión 1 del plan).
+ * no de `TileState` (decisión 1 del plan). El `tabIndex` lo maneja el grid
+ * (roving tabindex, patrón ARIA grid).
  */
-export function BoardTile({ position, piece, state, disabled, onSelect }: BoardTileProps) {
+export function BoardTile({
+  position,
+  piece,
+  state,
+  disabled,
+  tabIndex,
+  onSelect,
+  onFocus,
+}: BoardTileProps) {
   const name = squareName(position);
   const label = piece
     ? `${name} — ${PLAYER_LABEL[piece.owner]} ${PIECE_LABEL[piece.type]}`
@@ -46,7 +57,10 @@ export function BoardTile({ position, piece, state, disabled, onSelect }: BoardT
         type="button"
         aria-label={label}
         disabled={disabled}
+        tabIndex={tabIndex}
+        data-square={`${position.x},${position.y}`}
         onClick={onSelect}
+        onFocus={onFocus}
         className="flex h-full w-full items-center justify-center p-[6%] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
       >
         {piece ? (

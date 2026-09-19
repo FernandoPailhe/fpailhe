@@ -1,3 +1,4 @@
+import { useRef, useState, type KeyboardEvent } from "react";
 import { useGameStore } from "../application/GameState";
 import { GAME_CONFIG } from "../domain/constants/GameConstants";
 import { GamePhase } from "../domain/constants/GameRules";
@@ -8,6 +9,8 @@ import { BoardTile, type BoardTileState } from "./BoardTile";
  * Tablero 5×11 conectado al store. Suscripción completa (decisión 2 del
  * plan: `board` muta in-place, hace falta re-render en cada `set()`).
  * Toda interacción de casillas entra por `handleTileClick`.
+ * Teclado: patrón ARIA grid — un solo tab stop (roving tabindex) y
+ * flechas/Home/End para mover el foco; Enter/Space activa la casilla.
  */
 export function RugbyChessBoard() {
   const {
@@ -20,10 +23,49 @@ export function RugbyChessBoard() {
     handleTileClick,
   } = useGameStore();
 
+  const [focusedPos, setFocusedPos] = useState(() => new Position(0, 0));
+  const gridRef = useRef<HTMLDivElement>(null);
+
   const inert =
     isViewingHistory ||
     gamePhase === GamePhase.BENCH_SELECTION ||
     gamePhase === GamePhase.GAME_OVER;
+
+  const moveFocus = (next: Position) => {
+    setFocusedPos(next);
+    gridRef.current
+      ?.querySelector<HTMLButtonElement>(`[data-square="${next.x},${next.y}"]`)
+      ?.focus();
+  };
+
+  const onGridKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const { x, y } = focusedPos;
+    let next: Position;
+    switch (event.key) {
+      case "ArrowUp":
+        next = new Position(x, Math.min(y + 1, GAME_CONFIG.BOARD_HEIGHT - 1));
+        break;
+      case "ArrowDown":
+        next = new Position(x, Math.max(y - 1, 0));
+        break;
+      case "ArrowLeft":
+        next = new Position(Math.max(x - 1, 0), y);
+        break;
+      case "ArrowRight":
+        next = new Position(Math.min(x + 1, GAME_CONFIG.BOARD_WIDTH - 1), y);
+        break;
+      case "Home":
+        next = new Position(0, y);
+        break;
+      case "End":
+        next = new Position(GAME_CONFIG.BOARD_WIDTH - 1, y);
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+    moveFocus(next);
+  };
 
   const rows = [];
   for (let y = GAME_CONFIG.BOARD_HEIGHT - 1; y >= 0; y--) {
@@ -45,7 +87,9 @@ export function RugbyChessBoard() {
           piece={piece}
           state={tileState}
           disabled={inert}
+          tabIndex={focusedPos.equals(position) ? 0 : -1}
           onSelect={() => handleTileClick(position)}
+          onFocus={() => setFocusedPos(position)}
         />,
       );
     }
@@ -63,11 +107,13 @@ export function RugbyChessBoard() {
 
   return (
     <div
+      ref={gridRef}
       role="grid"
       aria-label="Rugby chess board"
       aria-rowcount={GAME_CONFIG.BOARD_HEIGHT}
       aria-colcount={GAME_CONFIG.BOARD_WIDTH}
       aria-disabled={inert}
+      onKeyDown={onGridKeyDown}
       className={`mx-auto w-full max-w-[420px] ${isViewingHistory ? "opacity-60" : ""}`}
     >
       {rows}

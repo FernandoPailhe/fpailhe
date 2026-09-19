@@ -16,7 +16,10 @@ export function MoveHistoryPanel() {
   return (
     <section aria-label="Move history" className="mx-auto w-full max-w-[420px]">
       {isViewingHistory && (
-        <p className="mb-2 bg-gold-soft px-2 py-1 font-ui text-xs font-semibold text-gold-bright">
+        <p
+          role="status"
+          className="mb-2 bg-gold-soft px-2 py-1 font-ui text-xs font-semibold text-gold-bright"
+        >
           Viewing history — game controls are locked
         </p>
       )}
