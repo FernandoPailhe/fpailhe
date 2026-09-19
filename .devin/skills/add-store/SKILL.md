@@ -1,5 +1,10 @@
 ---
-skill: add-store
+name: add-store
+description: >
+  Receta para agregar un Zustand store de estado UI efímero en
+  apps/web/src/store/. Usar solo cuando el estado no es query, derivado ni URL.
+triggers:
+  - user
 ---
 
 # Agregar un Zustand store (estado UI efímero)

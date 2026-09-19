@@ -1,5 +1,11 @@
 ---
-skill: responsive-layout
+name: responsive-layout
+description: >
+  Guía de layout responsive del repo (breakpoint único mobile ≤680px, gap sobre
+  margins, tabla→tarjeta con grid explícito). Usar al construir o revisar
+  layouts.
+triggers:
+  - user
 ---
 
 # Responsive layout

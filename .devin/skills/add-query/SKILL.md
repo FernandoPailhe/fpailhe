@@ -1,5 +1,11 @@
 ---
-skill: add-query
+name: add-query
+description: >
+  Receta para agregar un hook de TanStack Query (fetcher en services, key
+  centralizada, hook useXxxQuery). Usar para nuevas fuentes de datos o
+  endpoints.
+triggers:
+  - user
 ---
 
 # Agregar un hook de TanStack Query

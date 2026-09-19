@@ -1,5 +1,10 @@
 ---
-skill: add-route
+name: add-route
+description: >
+  Receta para agregar una ruta/página deep-linkable en apps/web. Usar para
+  nuevas pantallas o URLs.
+triggers:
+  - user
 ---
 
 # Agregar una nueva ruta / página

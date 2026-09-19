@@ -1,5 +1,11 @@
 ---
-skill: add-feature
+name: add-feature
+description: >
+  Receta para agregar una entidad/feature de punta a punta en el monorepo Ferpa
+  (data-model → services → queries → domain → components → routes). Usar cuando
+  se pida agregar una entidad nueva end-to-end.
+triggers:
+  - user
 ---
 
 # Agregar una entidad/feature de punta a punta
