@@ -1,0 +1,64 @@
+import type { GamePiece } from "../domain/entities/GamePiece";
+import type { Position } from "../domain/entities/Position";
+import { PIECE_LABEL, PLAYER_LABEL, squareName } from "../lib/gameDisplay";
+import { PieceToken } from "./PieceToken";
+
+export type BoardTileState = "idle" | "selected" | "valid" | "blocked";
+
+export interface BoardTileProps {
+  position: Position;
+  piece: GamePiece | undefined;
+  state: BoardTileState;
+  disabled: boolean;
+  onSelect: () => void;
+}
+
+/**
+ * Casilla del tablero: `gridcell` ARIA con un `<button>` que ocupa todo.
+ * El highlighting deriva del store (`selectedPiece`/`validMoves`/`blockedMoves`),
+ * no de `TileState` (decisión 1 del plan).
+ */
+export function BoardTile({ position, piece, state, disabled, onSelect }: BoardTileProps) {
+  const name = squareName(position);
+  const label = piece
+    ? `${name} — ${PLAYER_LABEL[piece.owner]} ${PIECE_LABEL[piece.type]}`
+    : state === "valid"
+      ? `${name} — empty, legal move`
+      : state === "blocked"
+        ? `${name} — blocked`
+        : `${name} — empty`;
+
+  const parity = (position.x + position.y) % 2 === 1;
+  const stateClass =
+    state === "selected"
+      ? "ring-2 ring-inset ring-gold-bright"
+      : state === "valid" && piece
+        ? "ring-2 ring-inset ring-gold"
+        : "";
+
+  return (
+    <div
+      role="gridcell"
+      aria-colindex={position.x + 1}
+      className={`aspect-square border border-line ${parity ? "bg-canvas" : "bg-surface"} ${stateClass}`}
+    >
+      <button
+        type="button"
+        aria-label={label}
+        disabled={disabled}
+        onClick={onSelect}
+        className="flex h-full w-full items-center justify-center p-[6%] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+      >
+        {piece ? (
+          <PieceToken type={piece.type} owner={piece.owner} />
+        ) : state === "valid" ? (
+          <span aria-hidden="true" className="h-2/5 w-2/5 rounded-full bg-gold-soft" />
+        ) : state === "blocked" ? (
+          <span aria-hidden="true" className="font-ui text-ink-dim">
+            ×
+          </span>
+        ) : null}
+      </button>
+    </div>
+  );
+}

@@ -1,41 +1,76 @@
-import type { BoardState } from "../domain/types";
-import { getPieceAt } from "../domain/engine";
-
-export interface RugbyChessBoardProps {
-  board: BoardState;
-}
+import { useGameStore } from "../application/GameState";
+import { GAME_CONFIG } from "../domain/constants/GameConstants";
+import { GamePhase } from "../domain/constants/GameRules";
+import { Position } from "../domain/entities/Position";
+import { BoardTile, type BoardTileState } from "./BoardTile";
 
 /**
- * Render del tablero. Componente específico del módulo:
- * si surge un "Board"/"Grid" genérico reutilizable, va en `packages/ui`.
+ * Tablero 5×11 conectado al store. Suscripción completa (decisión 2 del
+ * plan: `board` muta in-place, hace falta re-render en cada `set()`).
+ * Toda interacción de casillas entra por `handleTileClick`.
  */
-export function RugbyChessBoard({ board }: RugbyChessBoardProps) {
-  const squares = [];
-  for (let row = 0; row < board.rows; row += 1) {
-    for (let col = 0; col < board.cols; col += 1) {
-      const piece = getPieceAt(board, { row, col });
-      const isDark = (row + col) % 2 === 1;
-      squares.push(
-        <div
-          key={`${row}-${col}`}
-          className={`flex aspect-square items-center justify-center border border-line font-ui text-xs ${
-            isDark ? "bg-surface-alt" : "bg-surface"
-          }`}
-        >
-          {piece ? piece.side === "home" ? "H" : "A" : null}
-        </div>,
+export function RugbyChessBoard() {
+  const {
+    board,
+    selectedPiece,
+    validMoves,
+    blockedMoves,
+    isViewingHistory,
+    gamePhase,
+    handleTileClick,
+  } = useGameStore();
+
+  const inert =
+    isViewingHistory ||
+    gamePhase === GamePhase.BENCH_SELECTION ||
+    gamePhase === GamePhase.GAME_OVER;
+
+  const rows = [];
+  for (let y = GAME_CONFIG.BOARD_HEIGHT - 1; y >= 0; y--) {
+    const cells = [];
+    for (let x = 0; x < GAME_CONFIG.BOARD_WIDTH; x++) {
+      const position = new Position(x, y);
+      const piece = board.getPieceAt(position);
+      const tileState: BoardTileState = selectedPiece?.position?.equals(position)
+        ? "selected"
+        : validMoves.some((p) => p.equals(position))
+          ? "valid"
+          : blockedMoves.some((p) => p.equals(position))
+            ? "blocked"
+            : "idle";
+      cells.push(
+        <BoardTile
+          key={`${x}-${y}`}
+          position={position}
+          piece={piece}
+          state={tileState}
+          disabled={inert}
+          onSelect={() => handleTileClick(position)}
+        />,
       );
     }
+    rows.push(
+      <div
+        key={y}
+        role="row"
+        aria-rowindex={GAME_CONFIG.BOARD_HEIGHT - y}
+        className="grid grid-cols-5"
+      >
+        {cells}
+      </div>,
+    );
   }
 
   return (
     <div
       role="grid"
       aria-label="Rugby chess board"
-      className="grid w-full max-w-[480px] gap-0"
-      style={{ gridTemplateColumns: `repeat(${board.cols}, minmax(0, 1fr))` }}
+      aria-rowcount={GAME_CONFIG.BOARD_HEIGHT}
+      aria-colcount={GAME_CONFIG.BOARD_WIDTH}
+      aria-disabled={inert}
+      className={`mx-auto w-full max-w-[420px] ${isViewingHistory ? "opacity-60" : ""}`}
     >
-      {squares}
+      {rows}
     </div>
   );
 }
