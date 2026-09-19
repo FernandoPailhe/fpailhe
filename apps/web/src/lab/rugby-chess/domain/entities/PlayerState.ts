@@ -1,5 +1,7 @@
 import { GamePiece } from "./GamePiece";
+import { Position } from "./Position";
 import { PieceType } from "../constants/PieceConstants";
+import type { PieceSnapshot, PlayerSnapshot } from "./GameSnapshot";
 
 export class PlayerState {
   private selectedPieces: PieceType[] = [];
@@ -66,5 +68,36 @@ export class PlayerState {
     this.placedPieces = [];
     this.benchPieces = [];
     this.score = 0;
+  }
+
+  toSnapshot(): PlayerSnapshot {
+    const toPieceSnapshot = (piece: GamePiece): PieceSnapshot => ({
+      id: piece.id,
+      type: piece.type,
+      owner: piece.owner,
+      position: piece.position ? { x: piece.position.x, y: piece.position.y } : null,
+    });
+    return {
+      selectedPieces: [...this.selectedPieces],
+      placedPieces: this.placedPieces.map(toPieceSnapshot),
+      benchPieces: this.benchPieces.map(toPieceSnapshot),
+      score: this.score,
+    };
+  }
+
+  static fromSnapshot(playerId: string, data: PlayerSnapshot): PlayerState {
+    const state = new PlayerState(playerId);
+    const toPiece = (p: PieceSnapshot): GamePiece =>
+      new GamePiece(
+        p.id,
+        p.type,
+        p.position ? new Position(p.position.x, p.position.y) : null,
+        p.owner,
+      );
+    state.selectedPieces = [...data.selectedPieces];
+    state.placedPieces = data.placedPieces.map(toPiece);
+    state.benchPieces = data.benchPieces.map(toPiece);
+    state.score = data.score;
+    return state;
   }
 }

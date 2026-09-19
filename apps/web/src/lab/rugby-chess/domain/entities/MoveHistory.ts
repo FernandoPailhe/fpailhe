@@ -66,6 +66,11 @@ export class MoveHistory {
     return this.moves.length;
   }
 
+  restore(records: MoveRecord[]): void {
+    this.moves = [...records];
+    this.currentIndex = this.moves.length - 1;
+  }
+
   clear(): void {
     this.moves = [];
     this.currentIndex = -1;

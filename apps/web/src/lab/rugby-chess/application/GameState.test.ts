@@ -5,7 +5,7 @@ import { Board } from "../domain/entities/Board";
 import { GamePiece } from "../domain/entities/GamePiece";
 import { PlayerState } from "../domain/entities/PlayerState";
 import { PieceType, Player } from "../domain/constants/PieceConstants";
-import { GamePhase, GAME_RULES } from "../domain/constants/GameRules";
+import { GamePhase, GAME_RULES, GameMode } from "../domain/constants/GameRules";
 import { GAME_CONFIG } from "../domain/constants/GameConstants";
 
 const S = () => useGameStore.getState();
@@ -266,6 +266,96 @@ describe("move history", () => {
     expect(S().isViewingHistory).toBe(false);
     expect(S().board.getPieceAt(pos(2, 6))?.type).toBe(PieceType.APEX);
     expect(S().board.getPieceAt(pos(2, 8))).toBeUndefined();
+  });
+});
+
+describe("online mode", () => {
+  it("setOnlineContext sets ONLINE mode and localPlayer", () => {
+    S().setOnlineContext("room-1", Player.BLANCAS);
+    expect(S().gameMode).toBe(GameMode.ONLINE);
+    expect(S().roomId).toBe("room-1");
+    expect(S().localPlayer).toBe(Player.BLANCAS);
+    expect(S().isLocalPlayerTurn()).toBe(true); // BLANCAS starts
+  });
+
+  it("blocks every interaction path for the inactive player", () => {
+    S().setOnlineContext("room-1", Player.NEGRAS); // guest; BLANCAS has the turn
+    expect(S().isLocalPlayerTurn()).toBe(false);
+
+    // Board path
+    S().handleTileClick(pos(0, 7));
+    expect(S().board.getPieceAt(pos(0, 7))).toBeUndefined();
+    expect(S().selectedPieceTypeForPlacement).toBeNull();
+
+    // Picker paths
+    expect(S().canSelectPieceType(PieceType.BULWARK)).toBe(false);
+    S().selectPieceTypeForSetup(PieceType.BULWARK);
+    expect(S().selectedPieceTypeForPlacement).toBeNull();
+    expect(S().canSelectBenchPieceType(PieceType.BULWARK)).toBe(false);
+    S().selectPieceTypeForBench(PieceType.BULWARK);
+    expect(S().player2State.getBenchPieces()).toHaveLength(0);
+    expect(S().currentPlayer).toBe(Player.BLANCAS);
+  });
+
+  it("blocks the board in PLAYING when it is not the local turn", () => {
+    S().quickStart();
+    S().setOnlineContext("room-1", Player.NEGRAS); // BLANCAS to move
+    expect(S().isLocalPlayerTurn()).toBe(false);
+    expect(S().canPlaceBenchPiece()).toBe(false);
+
+    S().handleTileClick(pos(2, 2)); // white apex
+    expect(S().selectedPiece).toBeNull();
+    S().handleTileClick(pos(2, 4));
+    expect(S().board.getPieceAt(pos(2, 4))).toBeUndefined();
+    expect(S().currentPlayer).toBe(Player.BLANCAS);
+  });
+
+  it("applyRemoteSnapshot restores state and re-enables the turn", () => {
+    S().quickStart();
+    S().handleTileClick(pos(2, 2));
+    S().handleTileClick(pos(2, 4)); // BLANCAS moves → NEGRAS to move
+    const snap = S().toSnapshot();
+
+    S().reset();
+    S().setOnlineContext("room-1", Player.NEGRAS);
+    expect(S().isLocalPlayerTurn()).toBe(false); // fresh SETUP: BLANCAS to move
+    S().applyRemoteSnapshot(snap); // remote state is authoritative: NEGRAS to move
+
+    expect(S().board.getPieceAt(pos(2, 4))?.type).toBe(PieceType.APEX);
+    expect(S().currentPlayer).toBe(Player.NEGRAS);
+    expect(S().gamePhase).toBe(GamePhase.PLAYING);
+    expect(S().moveHistory.getTotalMoves()).toBe(1);
+
+    // NEGRAS can act on the applied state
+    S().handleTileClick(pos(2, 8));
+    expect(S().selectedPiece?.type).toBe(PieceType.APEX);
+    S().handleTileClick(pos(2, 6));
+    expect(S().currentPlayer).toBe(Player.BLANCAS);
+    expect(S().isLocalPlayerTurn()).toBe(false);
+  });
+
+  it("toSnapshot + applyRemoteSnapshot is a store-level round trip", () => {
+    S().quickStart();
+    S().handleTileClick(pos(2, 2));
+    S().handleTileClick(pos(2, 4));
+    const snap = S().toSnapshot();
+
+    S().reset();
+    S().applyRemoteSnapshot(snap);
+    expect(S().board.getAllPieces()).toHaveLength(10);
+    expect(S().player1State.getBenchPieces()).toHaveLength(3);
+    expect(S().player2State.getBenchPieces()).toHaveLength(3);
+    expect(S().pieceIdCounter).toBe(snap.pieceIdCounter);
+    expect(S().moveHistory.getTotalMoves()).toBe(1);
+  });
+
+  it("reset() clears the online context and returns to PVP", () => {
+    S().setOnlineContext("room-1", Player.NEGRAS);
+    S().reset();
+    expect(S().gameMode).toBe(GameMode.PVP);
+    expect(S().roomId).toBeNull();
+    expect(S().localPlayer).toBeNull();
+    expect(S().isLocalPlayerTurn()).toBe(true);
   });
 });
 

@@ -29,6 +29,7 @@ export enum GamePhase {
 
 export enum GameMode {
   PVP = "PVP",
+  ONLINE = "ONLINE",
 }
 
 export interface PieceCount {

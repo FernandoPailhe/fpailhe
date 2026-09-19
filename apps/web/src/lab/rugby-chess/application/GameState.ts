@@ -9,6 +9,13 @@ import { Player, PieceType } from "../domain/constants/PieceConstants";
 import { GamePhase, GAME_RULES, GameMode } from "../domain/constants/GameRules";
 import { MovementRuleEngine } from "./rules/MovementRuleEngine";
 import { MoveHistory, MoveRecord } from "../domain/entities/MoveHistory";
+import {
+  boardFromPieceSnapshots,
+  deserializeGameSnapshot,
+  serializeGameSnapshot,
+  type GameSnapshot,
+  type PieceSnapshot,
+} from "../domain/entities/GameSnapshot";
 
 interface GameStateStore {
   board: Board;
@@ -26,6 +33,9 @@ interface GameStateStore {
   pieceIdCounter: number;
   moveHistory: MoveHistory;
   isViewingHistory: boolean;
+  /** Bando que controla este cliente en ONLINE; null = modo local. */
+  localPlayer: Player | null;
+  roomId: string | null;
 
   selectPieceTypeForSetup: (type: PieceType) => void;
   selectPieceTypeForBench: (type: PieceType) => void;
@@ -53,13 +63,10 @@ interface GameStateStore {
   getMoveHistory: () => MoveRecord[];
   canGoBack: () => boolean;
   canGoForward: () => boolean;
-}
-
-interface BoardSnapshotPiece {
-  id: string;
-  type: PieceType;
-  owner: Player;
-  position: { x: number; y: number } | null;
+  isLocalPlayerTurn: () => boolean;
+  setOnlineContext: (roomId: string | null, localPlayer: Player | null) => void;
+  applyRemoteSnapshot: (snapshot: GameSnapshot) => void;
+  toSnapshot: () => GameSnapshot;
 }
 
 const createInitialBoard = (): Board => {
@@ -67,21 +74,7 @@ const createInitialBoard = (): Board => {
 };
 
 function restoreBoardFromSnapshot(json: string): Board {
-  const snapshot = JSON.parse(json) as BoardSnapshotPiece[];
-  const board = new Board(GAME_CONFIG.BOARD_WIDTH, GAME_CONFIG.BOARD_HEIGHT);
-  snapshot.forEach((pieceData) => {
-    if (pieceData.position) {
-      board.addPiece(
-        new GamePiece(
-          pieceData.id,
-          pieceData.type,
-          new Position(pieceData.position.x, pieceData.position.y),
-          pieceData.owner,
-        ),
-      );
-    }
-  });
-  return board;
+  return boardFromPieceSnapshots(JSON.parse(json) as PieceSnapshot[]);
 }
 
 export const useGameStore = create<GameStateStore>((set, get) => ({
@@ -100,6 +93,57 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
   pieceIdCounter: 0,
   moveHistory: new MoveHistory(),
   isViewingHistory: false,
+  localPlayer: null,
+  roomId: null,
+
+  isLocalPlayerTurn: () => {
+    const state = get();
+    return (
+      state.gameMode !== GameMode.ONLINE ||
+      state.localPlayer === null ||
+      state.localPlayer === state.currentPlayer
+    );
+  },
+
+  setOnlineContext: (roomId: string | null, localPlayer: Player | null) => {
+    set({
+      roomId,
+      localPlayer,
+      gameMode: roomId ? GameMode.ONLINE : GameMode.PVP,
+    });
+  },
+
+  applyRemoteSnapshot: (snapshot: GameSnapshot) => {
+    const restored = deserializeGameSnapshot(snapshot);
+    set({
+      board: restored.board,
+      player1State: restored.player1State,
+      player2State: restored.player2State,
+      currentPlayer: restored.currentPlayer,
+      gamePhase: restored.gamePhase,
+      pieceIdCounter: restored.pieceIdCounter,
+      moveHistory: restored.moveHistory,
+      selectedPiece: null,
+      selectedPieceTypeForPlacement: null,
+      selectedBenchPiece: null,
+      validMoves: [],
+      blockedMoves: [],
+      isViewingHistory: false,
+    });
+  },
+
+  toSnapshot: () => {
+    const state = get();
+    return serializeGameSnapshot({
+      board: state.board,
+      player1State: state.player1State,
+      player2State: state.player2State,
+      currentPlayer: state.currentPlayer,
+      gamePhase: state.gamePhase,
+      pieceIdCounter: state.pieceIdCounter,
+      moveHistory: state.moveHistory,
+    });
+  },
 
   getCurrentPlayerState: () => {
     const state = get();
@@ -113,6 +157,7 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
 
   canSelectPieceType: (type: PieceType) => {
     const state = get();
+    if (!state.isLocalPlayerTurn()) return false;
     if (state.gamePhase !== GamePhase.SETUP) return false;
     if (state.selectedPieceTypeForPlacement !== null) return false;
 
@@ -127,6 +172,7 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
 
   canSelectBenchPieceType: (type: PieceType) => {
     const state = get();
+    if (!state.isLocalPlayerTurn()) return false;
     if (state.gamePhase !== GamePhase.BENCH_SELECTION) {
       return false;
     }
@@ -174,6 +220,7 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
 
   canPlaceBenchPiece: () => {
     const state = get();
+    if (!state.isLocalPlayerTurn()) return false;
     if (state.gamePhase !== GamePhase.PLAYING) return false;
 
     const playerState = state.getCurrentPlayerState();
@@ -263,6 +310,7 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
 
   placePieceInSetup: (position: Position) => {
     set((state) => {
+      if (!state.isLocalPlayerTurn()) return state;
       if (state.gamePhase !== GamePhase.SETUP) return state;
       if (!state.selectedPieceTypeForPlacement) return state;
 
@@ -332,6 +380,7 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
 
   placeBenchPiece: (position: Position) => {
     set((state) => {
+      if (!state.isLocalPlayerTurn()) return state;
       if (state.gamePhase !== GamePhase.PLAYING) return state;
 
       const playerState = state.getCurrentPlayerState();
@@ -383,6 +432,7 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
 
   selectBenchPiece: (benchPiece: GamePiece) => {
     set((state) => {
+      if (!state.isLocalPlayerTurn()) return state;
       if (state.gamePhase !== GamePhase.PLAYING) return state;
 
       const playerState = state.getCurrentPlayerState();
@@ -433,6 +483,7 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
 
   selectTile: (position: Position) => {
     set((state) => {
+      if (!state.isLocalPlayerTurn()) return state;
       if (state.gamePhase === GamePhase.SETUP) {
         state.placePieceInSetup(position);
         return {};
@@ -499,6 +550,7 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
   handleTileClick: (position: Position) => {
     const state = get();
     if (state.isViewingHistory) return;
+    if (!state.isLocalPlayerTurn()) return;
     if (state.gamePhase !== GamePhase.SETUP && state.gamePhase !== GamePhase.PLAYING) {
       return;
     }
@@ -565,6 +617,7 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
 
   movePiece: (to: Position) => {
     set((state) => {
+      if (!state.isLocalPlayerTurn()) return state;
       if (state.gamePhase !== GamePhase.PLAYING) return state;
       if (!state.selectedPiece) return state;
 
@@ -656,10 +709,13 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
       pieceIdCounter: 0,
       moveHistory: new MoveHistory(),
       isViewingHistory: false,
+      localPlayer: null,
+      roomId: null,
     });
   },
 
   quickStart: () => {
+    if (get().gameMode === GameMode.ONLINE) return;
     const board = createInitialBoard();
     const player1State = new PlayerState("player1");
     const player2State = new PlayerState("player2");

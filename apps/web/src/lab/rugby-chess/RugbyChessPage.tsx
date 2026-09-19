@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Nav } from "../../components";
 import { RugbyChessBoard } from "./components/RugbyChessBoard";
 import { PiecePickerDialog } from "./components/PiecePickerDialog";
@@ -5,7 +6,10 @@ import { BenchPanel } from "./components/BenchPanel";
 import { GameStatusBar } from "./components/GameStatusBar";
 import { GameOverPanel } from "./components/GameOverPanel";
 import { MoveHistoryPanel } from "./components/MoveHistoryPanel";
+import { RoomLobby } from "./components/RoomLobby";
 import { useGameStore } from "./application/GameState";
+import { useRoomStore } from "./application/RoomState";
+import { createFirebaseRoomsGateway } from "./infrastructure/firebase/FirebaseRoomsGateway";
 import { GamePhase } from "./domain/constants/GameRules";
 
 const NAV_LINKS = [
@@ -19,6 +23,12 @@ const NAV_LINKS = [
  */
 export function RugbyChessPage() {
   const gamePhase = useGameStore((s) => s.gamePhase);
+
+  // Composition root: inyecta el adaptador concreto del puerto RoomsGateway.
+  // Sin credenciales devuelve null → el lobby avisa y el modo local sigue.
+  useEffect(() => {
+    useRoomStore.getState().setGateway(createFirebaseRoomsGateway());
+  }, []);
 
   return (
     <>
@@ -36,6 +46,7 @@ export function RugbyChessPage() {
           </p>
         </header>
         <GameStatusBar />
+        <RoomLobby />
         {gamePhase === GamePhase.PLAYING && <BenchPanel />}
         <RugbyChessBoard />
         {(gamePhase === GamePhase.PLAYING || gamePhase === GamePhase.GAME_OVER) && (

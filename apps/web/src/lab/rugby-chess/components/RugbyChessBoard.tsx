@@ -1,7 +1,7 @@
 import { useRef, useState, type KeyboardEvent } from "react";
 import { useGameStore } from "../application/GameState";
 import { GAME_CONFIG } from "../domain/constants/GameConstants";
-import { GamePhase } from "../domain/constants/GameRules";
+import { GameMode, GamePhase } from "../domain/constants/GameRules";
 import { Position } from "../domain/entities/Position";
 import { BoardTile, type BoardTileState } from "./BoardTile";
 
@@ -20,14 +20,18 @@ export function RugbyChessBoard() {
     blockedMoves,
     isViewingHistory,
     gamePhase,
+    gameMode,
+    isLocalPlayerTurn,
     handleTileClick,
   } = useGameStore();
 
   const [focusedPos, setFocusedPos] = useState(() => new Position(0, 0));
   const gridRef = useRef<HTMLDivElement>(null);
 
+  const notMyTurn = gameMode === GameMode.ONLINE && !isLocalPlayerTurn();
   const inert =
     isViewingHistory ||
+    notMyTurn ||
     gamePhase === GamePhase.BENCH_SELECTION ||
     gamePhase === GamePhase.GAME_OVER;
 
@@ -114,7 +118,7 @@ export function RugbyChessBoard() {
       aria-colcount={GAME_CONFIG.BOARD_WIDTH}
       aria-disabled={inert}
       onKeyDown={onGridKeyDown}
-      className={`mx-auto w-full max-w-[420px] ${isViewingHistory ? "opacity-60" : ""}`}
+      className={`mx-auto w-full max-w-[420px] ${isViewingHistory || notMyTurn ? "opacity-60" : ""}`}
     >
       {rows}
     </div>
