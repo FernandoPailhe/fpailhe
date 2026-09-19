@@ -10,7 +10,7 @@ variables configuradas, la app no se rompe: el módulo avisa
 Todas se obtienen en **Firebase Console → Project settings → Your apps →
 Web app → SDK setup and configuration** (objeto `firebaseConfig`).
 
-| Variable | Qué es | De dónde sale |
+|  Variable | Qué es | De dónde sale |
 |---|---|---|
 | `VITE_FIREBASE_API_KEY` | `apiKey` | Web app config |
 | `VITE_FIREBASE_AUTH_DOMAIN` | `authDomain` (suele ser `<projectId>.firebaseapp.com`) | Web app config |
