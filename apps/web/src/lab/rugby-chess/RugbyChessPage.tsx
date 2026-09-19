@@ -1,7 +1,11 @@
 import { Nav } from "../../components";
 import { RugbyChessBoard } from "./components/RugbyChessBoard";
+import { PieceTypePicker } from "./components/PieceTypePicker";
+import { BenchPanel } from "./components/BenchPanel";
+import { GameStatusBar } from "./components/GameStatusBar";
+import { GameOverPanel } from "./components/GameOverPanel";
 import { useGameStore } from "./application/GameState";
-import { PHASE_LABEL, PLAYER_LABEL } from "./lib/gameDisplay";
+import { GamePhase } from "./domain/constants/GameRules";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
@@ -13,7 +17,7 @@ const NAV_LINKS = [
  * Módulo independiente: su dominio y componentes viven en esta carpeta.
  */
 export function RugbyChessPage() {
-  const { gamePhase, currentPlayer, player1State, player2State } = useGameStore();
+  const gamePhase = useGameStore((s) => s.gamePhase);
 
   return (
     <>
@@ -21,17 +25,22 @@ export function RugbyChessPage() {
       <main
         id="main-content"
         tabIndex={-1}
-        className="mx-auto max-w-[880px] px-[clamp(20px,5vw,32px)] py-10"
+        className="mx-auto flex max-w-[880px] flex-col gap-6 px-[clamp(20px,5vw,32px)] py-10"
       >
-        <header className="mb-8">
+        <header>
           <p className="font-ui text-xs uppercase tracking-widest text-gold-bright">Lab</p>
           <h1 className="font-display text-3xl font-bold text-ink">Rugby Chess</h1>
           <p className="mt-2 text-ink-dim">
-            {PHASE_LABEL[gamePhase]} — {PLAYER_LABEL[currentPlayer]} to move · White{" "}
-            {player1State.getScore()} — {player2State.getScore()} Black
+            Experimental module: chess-like tactics on a 5×11 rugby field.
           </p>
         </header>
+        <GameStatusBar />
+        {(gamePhase === GamePhase.SETUP || gamePhase === GamePhase.BENCH_SELECTION) && (
+          <PieceTypePicker />
+        )}
+        {gamePhase === GamePhase.PLAYING && <BenchPanel />}
         <RugbyChessBoard />
+        {gamePhase === GamePhase.GAME_OVER && <GameOverPanel />}
       </main>
     </>
   );
