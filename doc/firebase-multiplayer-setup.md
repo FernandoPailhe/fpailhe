@@ -1,6 +1,6 @@
-# Rugby Chess — Setup de Multiplayer (Firebase Realtime Database)
+# TryMate — Setup de Multiplayer (Firebase Realtime Database)
 
-El multiplayer de `/lab/rugby-chess` usa Firebase Realtime Database desde el
+El multiplayer de `/lab/trymate` usa Firebase Realtime Database desde el
 cliente (el sitio es estático en Cloudflare, sin backend propio). Sin las
 variables configuradas, la app no se rompe: el módulo avisa
 "Online multiplayer is not configured" y sigue funcionando en modo local.
@@ -22,7 +22,7 @@ Web app → SDK setup and configuration** (objeto `firebaseConfig`).
 
 Las cinco primeras son requeridas: si falta **cualquiera**, el módulo se
 comporta como "no configurado" (modo local). Las referencias están en
-`apps/web/src/lab/rugby-chess/infrastructure/firebase/firebaseClient.ts` y
+`apps/web/src/lab/trymate/infrastructure/firebase/firebaseClient.ts` y
 listadas con valores vacíos en `apps/web/.env.example`.
 
 ## Pasos en Firebase Console
@@ -69,6 +69,6 @@ el aviso y el modo local (hot-seat PVP) funciona igual que siempre.
 
 ## Compartir sala
 
-El link es `/lab/rugby-chess?room=<roomId>` — query param, no path, porque el
+El link es `/lab/trymate?room=<roomId>` — query param, no path, porque el
 hosting es estático con 404 real para rutas desconocidas. Quien abre el link
 entra directo a la sala como Black (el host siempre es White).

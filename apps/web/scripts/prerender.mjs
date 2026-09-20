@@ -63,9 +63,9 @@ const dataDir = path.join(appDir, "public", "data");
 // index.html shell por cada una para que el hosting las sirva.
 const SHELL_ROUTES = [
   {
-    route: "/lab/rugby-chess",
-    title: "Rugby Chess — Fernando Pailhe",
-    html: `<main id="main-content" tabindex="-1" class="mx-auto max-w-[880px] px-[clamp(20px,5vw,32px)] py-20"><p class="font-ui text-xs uppercase tracking-widest text-gold-bright">Lab</p><h1 class="mt-2 font-display text-3xl font-bold text-ink">Rugby Chess</h1><p class="mt-2 font-ui text-base leading-relaxed text-ink-dim">Experimental module: chess-like tactics on a 5×11 rugby field. This interactive module requires JavaScript.</p><p class="mt-6"><a href="/" class="border-b border-ink font-ui text-ink transition-colors hover:border-gold hover:text-gold">← Back to home</a></p></main>`,
+    route: "/lab/trymate",
+    title: "TryMate — Fernando Pailhe",
+    html: `<main id="main-content" tabindex="-1" class="mx-auto max-w-[880px] px-[clamp(20px,5vw,32px)] py-20"><p class="font-ui text-xs uppercase tracking-widest text-gold-bright">Lab</p><h1 class="mt-2 font-display text-3xl font-bold text-ink">TryMate</h1><p class="mt-2 font-ui text-base leading-relaxed text-ink-dim">Experimental module: chess-like tactics on a 5×11 rugby field. This interactive module requires JavaScript.</p><p class="mt-6"><a href="/" class="border-b border-ink font-ui text-ink transition-colors hover:border-gold hover:text-gold">← Back to home</a></p></main>`,
   },
 ];
 
