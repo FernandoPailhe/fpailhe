@@ -28,6 +28,7 @@ export function RoomLobby() {
   const localPlayer = useGameStore((s) => s.localPlayer);
   const gameMode = useGameStore((s) => s.gameMode);
   const [copied, setCopied] = useState(false);
+  const [quickStart, setQuickStart] = useState(false);
   const [params] = useSearchParams();
 
   // Auto-join por link compartido: /lab/trymate?room=<id>
@@ -76,10 +77,27 @@ export function RoomLobby() {
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between gap-3">
             <h2 className="font-ui text-sm font-semibold text-ink">Play online</h2>
-            <Button type="button" onClick={() => void createRoom()}>
+            <Button
+              type="button"
+              onClick={() => {
+                // quickStart antes de createRoom: el snapshot inicial de la
+                // sala ya nace en PLAYING con los ejércitos colocados.
+                if (quickStart) useGameStore.getState().quickStart();
+                void createRoom();
+              }}
+            >
               Create a room
             </Button>
           </div>
+          <label className="flex items-center gap-2 font-ui text-xs text-ink-dim">
+            <input
+              type="checkbox"
+              checked={quickStart}
+              onChange={(e) => setQuickStart(e.target.checked)}
+              className={`h-4 w-4 accent-gold ${FOCUS}`}
+            />
+            Quick start — skip setup, armies placed and ready to play
+          </label>
           {error && (
             <div className="flex items-center justify-between gap-3" role="alert">
               <p className="font-ui text-xs text-gold-bright">{error}</p>
