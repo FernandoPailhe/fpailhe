@@ -1,4 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { Button } from "@ferpa/ui";
 import { Nav } from "../../components";
 import { TryMateBoard } from "./components/TryMateBoard";
 import { PiecePickerDialog } from "./components/PiecePickerDialog";
@@ -17,18 +19,44 @@ const NAV_LINKS = [
   { label: "CV", href: "/cv" },
 ];
 
+type Screen = "menu" | "online" | "local";
+
+const FOCUS =
+  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold";
+
 /**
  * Página del módulo trymate (ruta `/lab/trymate`).
  * Módulo independiente: su dominio y componentes viven en esta carpeta.
+ * Arranca en una pantalla de inicio: "Play online" abre el lobby de salas,
+ * "Play local 1v1" va directo al comienzo del partido. Un `?room=<id>` en la
+ * URL entra directo al lobby para conservar el auto-join por link.
  */
 export function TryMatePage() {
   const gamePhase = useGameStore((s) => s.gamePhase);
+  const roomStatus = useRoomStore((s) => s.status);
+  const [params] = useSearchParams();
+  const [screen, setScreen] = useState<Screen>(() =>
+    params.get("room") ? "online" : "menu",
+  );
 
   // Composition root: inyecta el adaptador concreto del puerto RoomsGateway.
   // Sin credenciales devuelve null → el lobby avisa y el modo local sigue.
   useEffect(() => {
     useRoomStore.getState().setGateway(createFirebaseRoomsGateway());
   }, []);
+
+  const goLocal = () => {
+    useGameStore.getState().reset();
+    setScreen("local");
+  };
+
+  const backToMenu = () => {
+    void useRoomStore.getState().leaveRoom();
+    useGameStore.getState().reset();
+    setScreen("menu");
+  };
+
+  const showGame = screen === "local" || (screen === "online" && roomStatus === "connected");
 
   return (
     <>
@@ -45,16 +73,48 @@ export function TryMatePage() {
             Experimental module: chess-like tactics on a 5×11 rugby field.
           </p>
         </header>
-        <GameStatusBar />
-        <RoomLobby />
-        {gamePhase === GamePhase.PLAYING && <BenchPanel />}
-        <TryMateBoard />
-        {(gamePhase === GamePhase.PLAYING || gamePhase === GamePhase.GAME_OVER) && (
-          <MoveHistoryPanel />
+
+        {screen === "menu" && (
+          <section
+            aria-label="Choose game mode"
+            className="mx-auto flex w-full max-w-[420px] flex-col gap-3 border border-line bg-surface px-6 py-5"
+          >
+            <Button type="button" onClick={() => setScreen("online")}>
+              Play online
+            </Button>
+            <Button type="button" onClick={goLocal}>
+              Play local 1v1
+            </Button>
+          </section>
         )}
-        {gamePhase === GamePhase.GAME_OVER && <GameOverPanel />}
+
+        {screen === "online" && <RoomLobby />}
+
+        {screen !== "menu" && (
+          <div className="mx-auto w-full max-w-[420px]">
+            <button
+              type="button"
+              onClick={backToMenu}
+              className={`font-ui text-xs text-ink-dim underline underline-offset-2 hover:text-ink ${FOCUS}`}
+            >
+              Back to menu
+            </button>
+          </div>
+        )}
+
+        {showGame && (
+          <>
+            <GameStatusBar />
+            {gamePhase === GamePhase.PLAYING && <BenchPanel />}
+            <TryMateBoard />
+            {(gamePhase === GamePhase.PLAYING || gamePhase === GamePhase.GAME_OVER) && (
+              <MoveHistoryPanel />
+            )}
+            {gamePhase === GamePhase.GAME_OVER && <GameOverPanel />}
+          </>
+        )}
       </main>
-      <PiecePickerDialog />
+      {screen !== "menu" && <PiecePickerDialog />}
     </>
   );
 }
