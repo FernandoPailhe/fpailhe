@@ -1,7 +1,7 @@
 export enum PieceType {
-  BULWARK = "BULWARK",
-  VANGUARD = "VANGUARD",
-  APEX = "APEX",
+  FORT = "FORT",
+  STRIKER = "STRIKER",
+  PIONEER = "PIONEER",
 }
 
 export enum Player {
@@ -28,7 +28,7 @@ export interface CapturePattern {
 }
 
 export const PIECE_MOVEMENT_CONFIG = {
-  [PieceType.BULWARK]: {
+  [PieceType.FORT]: {
     movement: {
       directions: [{ dx: 0, dy: 1 }],
       minDistance: 1,
@@ -49,7 +49,7 @@ export const PIECE_MOVEMENT_CONFIG = {
       { dx: 1, dy: 0 },
     ] as DirectionVector[],
   },
-  [PieceType.VANGUARD]: {
+  [PieceType.STRIKER]: {
     movement: {
       directions: [
         { dx: 0, dy: 1 },
@@ -73,7 +73,7 @@ export const PIECE_MOVEMENT_CONFIG = {
     } as CapturePattern,
     blocksSides: false,
   },
-  [PieceType.APEX]: {
+  [PieceType.PIONEER]: {
     movement: {
       directions: [
         // Only forward movement defined here - L-shape moves are calculated separately

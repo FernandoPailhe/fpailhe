@@ -30,33 +30,33 @@ function emptySource(): GameSnapshotSource {
 function midGameSource(): GameSnapshotSource {
   const source = emptySource();
 
-  const w1 = new GamePiece("w-0", PieceType.BULWARK, pos(0, 1), Player.BLANCAS);
-  const w2 = new GamePiece("w-1", PieceType.APEX, pos(2, 4), Player.BLANCAS);
-  const b1 = new GamePiece("b-0", PieceType.VANGUARD, pos(3, 9), Player.NEGRAS);
+  const w1 = new GamePiece("w-0", PieceType.FORT, pos(0, 1), Player.BLANCAS);
+  const w2 = new GamePiece("w-1", PieceType.PIONEER, pos(2, 4), Player.BLANCAS);
+  const b1 = new GamePiece("b-0", PieceType.STRIKER, pos(3, 9), Player.NEGRAS);
   [w1, w2, b1].forEach((p) => source.board.addPiece(p));
 
   [w1, w2].forEach((p) => source.player1State.addPlacedPiece(p));
-  source.player1State.addSelectedPiece(PieceType.BULWARK);
-  source.player1State.addSelectedPiece(PieceType.APEX);
+  source.player1State.addSelectedPiece(PieceType.FORT);
+  source.player1State.addSelectedPiece(PieceType.PIONEER);
   source.player1State.addBenchPiece(
-    new GamePiece("w-bench-0", PieceType.VANGUARD, null, Player.BLANCAS),
+    new GamePiece("w-bench-0", PieceType.STRIKER, null, Player.BLANCAS),
   );
   source.player1State.incrementScore();
 
   source.player2State.addPlacedPiece(b1);
-  source.player2State.addSelectedPiece(PieceType.VANGUARD);
+  source.player2State.addSelectedPiece(PieceType.STRIKER);
 
   const record: MoveRecord = {
     moveNumber: 1,
     player: Player.BLANCAS,
     pieceId: "w-1",
-    pieceType: PieceType.APEX,
+    pieceType: PieceType.PIONEER,
     from: pos(2, 2),
     to: pos(2, 4),
     boardSnapshot: JSON.stringify([
-      { id: "w-0", type: PieceType.BULWARK, owner: Player.BLANCAS, position: { x: 0, y: 1 } },
-      { id: "w-1", type: PieceType.APEX, owner: Player.BLANCAS, position: { x: 2, y: 4 } },
-      { id: "b-0", type: PieceType.VANGUARD, owner: Player.NEGRAS, position: { x: 3, y: 9 } },
+      { id: "w-0", type: PieceType.FORT, owner: Player.BLANCAS, position: { x: 0, y: 1 } },
+      { id: "w-1", type: PieceType.PIONEER, owner: Player.BLANCAS, position: { x: 2, y: 4 } },
+      { id: "b-0", type: PieceType.STRIKER, owner: Player.NEGRAS, position: { x: 3, y: 9 } },
     ]),
     timestamp: new Date("2026-09-19T12:00:00.000Z"),
   };
@@ -96,14 +96,14 @@ describe("GameSnapshot", () => {
 
     const pieces = restored.board.getAllPieces();
     expect(pieces).toHaveLength(3);
-    const apex = restored.board.getPieceById("w-1");
-    expect(apex?.type).toBe(PieceType.APEX);
-    expect(apex?.position?.equals(pos(2, 4))).toBe(true);
+    const pioneer = restored.board.getPieceById("w-1");
+    expect(pioneer?.type).toBe(PieceType.PIONEER);
+    expect(pioneer?.position?.equals(pos(2, 4))).toBe(true);
 
     expect(restored.player1State.getScore()).toBe(1);
     expect(restored.player1State.getSelectedPieces()).toEqual([
-      PieceType.BULWARK,
-      PieceType.APEX,
+      PieceType.FORT,
+      PieceType.PIONEER,
     ]);
     expect(restored.player1State.getPlacedPieces()).toHaveLength(2);
     expect(restored.player1State.getBenchPieces()).toHaveLength(1);
@@ -126,10 +126,10 @@ describe("GameSnapshot", () => {
       moveNumber: 2,
       player: Player.NEGRAS,
       pieceId: "b-0",
-      pieceType: PieceType.VANGUARD,
+      pieceType: PieceType.STRIKER,
       from: pos(3, 9),
       to: pos(2, 4),
-      captured: { pieceId: "w-1", pieceType: PieceType.APEX, position: pos(2, 4) },
+      captured: { pieceId: "w-1", pieceType: PieceType.PIONEER, position: pos(2, 4) },
       boardSnapshot: "[]",
       timestamp: new Date("2026-09-19T12:05:00.000Z"),
     });

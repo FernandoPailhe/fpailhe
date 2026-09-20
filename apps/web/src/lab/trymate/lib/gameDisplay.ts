@@ -3,15 +3,15 @@ import { GamePhase } from "../domain/constants/GameRules";
 import type { Position } from "../domain/entities/Position";
 
 export const PIECE_ASSET: Record<PieceType, string> = {
-  [PieceType.BULWARK]: "/lab/trymate/pieces/muralla.svg",
-  [PieceType.VANGUARD]: "/lab/trymate/pieces/ariete.svg",
-  [PieceType.APEX]: "/lab/trymate/pieces/explorador.svg",
+  [PieceType.FORT]: "/lab/trymate/pieces/fort.svg",
+  [PieceType.STRIKER]: "/lab/trymate/pieces/striker.svg",
+  [PieceType.PIONEER]: "/lab/trymate/pieces/pioneer.svg",
 };
 
 export const PIECE_LABEL: Record<PieceType, string> = {
-  [PieceType.BULWARK]: "Bulwark",
-  [PieceType.VANGUARD]: "Vanguard",
-  [PieceType.APEX]: "Apex",
+  [PieceType.FORT]: "Fort",
+  [PieceType.STRIKER]: "Striker",
+  [PieceType.PIONEER]: "Pioneer",
 };
 
 export const PLAYER_LABEL: Record<Player, string> = {

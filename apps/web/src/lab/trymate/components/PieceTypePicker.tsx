@@ -4,7 +4,7 @@ import { GamePhase, GAME_RULES } from "../domain/constants/GameRules";
 import { PIECE_LABEL, PLAYER_LABEL } from "../lib/gameDisplay";
 import { PieceToken } from "./PieceToken";
 
-const PIECE_TYPES = [PieceType.BULWARK, PieceType.VANGUARD, PieceType.APEX];
+const PIECE_TYPES = [PieceType.FORT, PieceType.STRIKER, PieceType.PIONEER];
 
 /**
  * Selector de tipo de pieza para SETUP y BENCH_SELECTION.
