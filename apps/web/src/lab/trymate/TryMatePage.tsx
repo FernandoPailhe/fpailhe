@@ -9,6 +9,7 @@ import { GameStatusBar } from "./components/GameStatusBar";
 import { GameOverPanel } from "./components/GameOverPanel";
 import { MoveHistoryPanel } from "./components/MoveHistoryPanel";
 import { RoomLobby } from "./components/RoomLobby";
+import { RulesPanel } from "./components/RulesPanel";
 import { useGameStore } from "./application/GameState";
 import { useRoomStore } from "./application/RoomState";
 import { createFirebaseRoomsGateway } from "./infrastructure/firebase/FirebaseRoomsGateway";
@@ -38,6 +39,7 @@ export function TryMatePage() {
   const [screen, setScreen] = useState<Screen>(() =>
     params.get("room") ? "online" : "menu",
   );
+  const [showRules, setShowRules] = useState(false);
 
   // Composition root: inyecta el adaptador concreto del puerto RoomsGateway.
   // Sin credenciales devuelve null → el lobby avisa y el modo local sigue.
@@ -72,7 +74,17 @@ export function TryMatePage() {
           <p className="mt-2 text-ink-dim">
             Experimental module: chess-like tactics on a 5×11 rugby field.
           </p>
+          <button
+            type="button"
+            aria-expanded={showRules}
+            onClick={() => setShowRules((v) => !v)}
+            className={`mt-3 font-ui text-xs text-gold-bright underline underline-offset-2 hover:text-gold ${FOCUS}`}
+          >
+            {showRules ? "Hide rules" : "How to play / Reglas"}
+          </button>
         </header>
+
+        {showRules && <RulesPanel />}
 
         {screen === "menu" && (
           <section

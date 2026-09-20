@@ -1,7 +1,9 @@
 import { useGameStore } from "../application/GameState";
+import { useUiPrefsStore } from "../application/uiPrefs";
 import { PieceType } from "../domain/constants/PieceConstants";
 import { GamePhase, GAME_RULES } from "../domain/constants/GameRules";
 import { PIECE_LABEL, PLAYER_LABEL } from "../lib/gameDisplay";
+import { RULES_CONTENT } from "../lib/rulesContent";
 import { PieceToken } from "./PieceToken";
 
 const PIECE_TYPES = [PieceType.FORT, PieceType.STRIKER, PieceType.PIONEER];
@@ -21,6 +23,9 @@ export function PieceTypePicker() {
     selectPieceTypeForBench,
     getCurrentPlayerState,
   } = useGameStore();
+
+  const rulesLang = useUiPrefsStore((s) => s.rulesLang);
+  const pieceRules = RULES_CONTENT[rulesLang].pieces;
 
   const isSetup = gamePhase === GamePhase.SETUP;
   const playerState = getCurrentPlayerState();
@@ -60,6 +65,9 @@ export function PieceTypePicker() {
                 <PieceToken type={type} owner={currentPlayer} />
               </span>
               <span>{PIECE_LABEL[type]}</span>
+              <span className="text-[10px] leading-tight text-ink-dim">
+                {pieceRules.find((r) => r.type === type)?.short}
+              </span>
               <span className="text-xs text-ink-dim">
                 {totalOfType}/{GAME_RULES.MAX_PIECES_PER_TYPE}
               </span>
