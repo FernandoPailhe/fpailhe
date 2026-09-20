@@ -94,10 +94,10 @@ export class PlayerState {
         p.position ? new Position(p.position.x, p.position.y) : null,
         p.owner,
       );
-    state.selectedPieces = [...data.selectedPieces];
-    state.placedPieces = data.placedPieces.map(toPiece);
-    state.benchPieces = data.benchPieces.map(toPiece);
-    state.score = data.score;
+    state.selectedPieces = [...(data.selectedPieces ?? [])];
+    state.placedPieces = (data.placedPieces ?? []).map(toPiece);
+    state.benchPieces = (data.benchPieces ?? []).map(toPiece);
+    state.score = data.score ?? 0;
     return state;
   }
 }

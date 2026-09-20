@@ -136,9 +136,9 @@ describe("roomSync", () => {
     G().handleTileClick(new Position(0, 1));
 
     const remote = gateway.getRoom(roomId);
-    expect(remote?.state?.board.some((p) => p.position?.x === 0 && p.position?.y === 1)).toBe(
-      true,
-    );
+    expect(
+      (remote?.state?.board ?? []).some((p) => p.position?.x === 0 && p.position?.y === 1),
+    ).toBe(true);
     expect(remote?.state?.currentPlayer).toBe(Player.NEGRAS);
   });
 
@@ -149,12 +149,15 @@ describe("roomSync", () => {
 
     // Snapshot "remoto": el rival colocó una pieza y pasó el turno.
     const remote = G().toSnapshot();
-    remote.board.push({
-      id: "remote-1",
-      type: PieceType.STRIKER,
-      owner: Player.NEGRAS,
-      position: { x: 4, y: 9 },
-    });
+    remote.board = [
+      ...(remote.board ?? []),
+      {
+        id: "remote-1",
+        type: PieceType.STRIKER,
+        owner: Player.NEGRAS,
+        position: { x: 4, y: 9 },
+      },
+    ];
     remote.currentPlayer = Player.BLANCAS;
     remote.pieceIdCounter += 1;
 

@@ -15,10 +15,11 @@ export interface PieceSnapshot {
 }
 
 export interface PlayerSnapshot {
-  selectedPieces: PieceType[];
-  placedPieces: PieceSnapshot[];
-  benchPieces: PieceSnapshot[];
-  score: number;
+  // Todos opcionales: RTDB no persiste arrays vacíos ni claves con valor null.
+  selectedPieces?: PieceType[];
+  placedPieces?: PieceSnapshot[];
+  benchPieces?: PieceSnapshot[];
+  score?: number;
 }
 
 export interface MoveRecordSnapshot {
@@ -34,13 +35,14 @@ export interface MoveRecordSnapshot {
 }
 
 export interface GameSnapshot {
-  board: PieceSnapshot[];
+  // board/moveHistory opcionales: RTDB elimina los arrays vacíos al escribir.
+  board?: PieceSnapshot[];
   player1: PlayerSnapshot;
   player2: PlayerSnapshot;
   currentPlayer: Player;
   gamePhase: GamePhase;
   pieceIdCounter: number;
-  moveHistory: MoveRecordSnapshot[];
+  moveHistory?: MoveRecordSnapshot[];
 }
 
 function pieceToSnapshot(piece: GamePiece): PieceSnapshot {
@@ -69,13 +71,16 @@ function moveRecordToSnapshot(record: MoveRecord): MoveRecordSnapshot {
     pieceType: record.pieceType,
     from: { x: record.from.x, y: record.from.y },
     to: { x: record.to.x, y: record.to.y },
-    captured: record.captured
+    // Sin captured → la clave no se emite: RTDB rechaza valores undefined.
+    ...(record.captured
       ? {
-          pieceId: record.captured.pieceId,
-          pieceType: record.captured.pieceType,
-          position: { x: record.captured.position.x, y: record.captured.position.y },
+          captured: {
+            pieceId: record.captured.pieceId,
+            pieceType: record.captured.pieceType,
+            position: { x: record.captured.position.x, y: record.captured.position.y },
+          },
         }
-      : undefined,
+      : {}),
     boardSnapshot: record.boardSnapshot,
     timestamp: record.timestamp.toISOString(),
   };
@@ -145,21 +150,17 @@ export interface DeserializedGameState {
 }
 
 export function deserializeGameSnapshot(snap: GameSnapshot): DeserializedGameState {
-  if (
-    !snap ||
-    !Array.isArray(snap.board) ||
-    !snap.player1 ||
-    !snap.player2 ||
-    !Array.isArray(snap.moveHistory)
-  ) {
+  // Solo se exige la forma mínima: RTDB omite arrays/objetos vacíos, así que
+  // `board`, `moveHistory` y los campos de cada player pueden venir ausentes.
+  if (!snap || !snap.player1 || !snap.player2) {
     throw new Error("Malformed game snapshot");
   }
 
   const moveHistory = new MoveHistory();
-  moveHistory.restore(snap.moveHistory.map(moveRecordFromSnapshot));
+  moveHistory.restore((snap.moveHistory ?? []).map(moveRecordFromSnapshot));
 
   return {
-    board: boardFromPieceSnapshots(snap.board),
+    board: boardFromPieceSnapshots(snap.board ?? []),
     player1State: PlayerState.fromSnapshot("player1", snap.player1),
     player2State: PlayerState.fromSnapshot("player2", snap.player2),
     currentPlayer: snap.currentPlayer,

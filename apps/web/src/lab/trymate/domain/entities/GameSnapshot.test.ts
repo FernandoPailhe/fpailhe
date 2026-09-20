@@ -10,6 +10,7 @@ import { GAME_CONFIG } from "../constants/GameConstants";
 import {
   deserializeGameSnapshot,
   serializeGameSnapshot,
+  type GameSnapshot,
   type GameSnapshotSource,
 } from "./GameSnapshot";
 
@@ -145,7 +146,34 @@ describe("GameSnapshot", () => {
     expect(() => deserializeGameSnapshot(null as never)).toThrow("Malformed game snapshot");
     expect(() => deserializeGameSnapshot({} as never)).toThrow("Malformed game snapshot");
     expect(() =>
-      deserializeGameSnapshot({ board: [], player1: {}, player2: {} } as never),
+      deserializeGameSnapshot({ board: [], player1: null, player2: {} } as never),
     ).toThrow("Malformed game snapshot");
+  });
+
+  it("deserializes snapshots whose empty arrays were dropped by RTDB", () => {
+    // RTDB no persiste arrays vacíos: board/moveHistory y los campos de cada
+    // player pueden llegar ausentes. Antes esto lanzaba "Malformed game
+    // snapshot" y el sync online quedaba trabado (issue #4).
+    const snap = serializeGameSnapshot(emptySource());
+    const wire = JSON.parse(JSON.stringify(snap)) as GameSnapshot;
+    delete wire.board;
+    delete wire.moveHistory;
+    delete wire.player1.selectedPieces;
+    delete wire.player1.placedPieces;
+    delete wire.player1.benchPieces;
+    delete wire.player2.selectedPieces;
+
+    const restored = deserializeGameSnapshot(wire);
+    expect(restored.board.getAllPieces()).toHaveLength(0);
+    expect(restored.moveHistory.getTotalMoves()).toBe(0);
+    expect(restored.player1State.getTotalSelectedCount()).toBe(0);
+    expect(restored.player1State.getScore()).toBe(0);
+  });
+
+  it("omits the captured key on moves without a capture (RTDB rejects undefined)", () => {
+    const source = midGameSource();
+    const snap = serializeGameSnapshot(source);
+    // El move de midGameSource no tiene captura.
+    expect("captured" in snap.moveHistory![0]!).toBe(false);
   });
 });

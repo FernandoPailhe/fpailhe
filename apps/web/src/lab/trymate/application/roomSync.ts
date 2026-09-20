@@ -25,6 +25,9 @@ export function startRoomSync(gateway: RoomsGateway, roomId: string): void {
     applyingRemote = true;
     try {
       useGameStore.getState().applyRemoteSnapshot(remote);
+    } catch (error) {
+      // Un snapshot malformado no debe tumbar la suscripción de Firebase.
+      console.error("Failed to apply remote snapshot", error);
     } finally {
       applyingRemote = false;
     }
