@@ -13,7 +13,7 @@ Pipeline iterativo sobre los issues abiertos de GitHub: cualquier issue sin la e
 1. Determina el repositorio objetivo:
    - Si el usuario pasó `owner/repo` como argumento, úsalo.
    - Si no, resuélvelo desde el remote de git del proyecto actual (`git remote get-url origin` o `gh repo view --json nameWithOwner`).
-2. Descubre las herramientas disponibles del servidor MCP `github` con `mcp_list_tools` antes de llamarlas — no asumas nombres de herramientas.
+2. La comunicación con GitHub se hace **por defecto vía la API** usando `gh` (`gh issue list`, `gh api repos/{owner}/{repo}/issues/...` para leer issues y gestionar etiquetas). Solo si `gh` no está instalado o autenticado (`gh auth status`), recurre al servidor MCP `github` — descubre sus herramientas con `mcp_list_tools` antes de llamarlas, no asumas nombres.
 3. Verifica que hay un remote configurado y credenciales de git funcionando (un `git fetch` inicial sirve de chequeo).
 4. Asegura que `.devin/agent-work/` está en `.git/info/exclude` — los archivos de trabajo de este proceso (prioridades, planes) **nunca** quedan trackeados ni se commitean. No modifiques el `.gitignore` trackeado.
 
@@ -23,7 +23,7 @@ Cada iteración procesa **un solo lote**. Tras un lote publicado, vuelve al paso
 
 ### 1. Obtener el lote
 
-1. Lista los issues **abiertos** del repositorio usando el MCP de GitHub.
+1. Lista los issues **abiertos** del repositorio vía la API de GitHub (ej: `gh issue list --state open --json number,title,labels`).
 2. Excluye:
    - Los que tengan la etiqueta `human` (son para trabajo humano — anótalos como omitidos en el reporte).
    - Los que tengan la etiqueta `status:blocked` (requieren intervención humana — anótalos en el reporte).
@@ -52,7 +52,7 @@ Cada iteración procesa **un solo lote**. Tras un lote publicado, vuelve al paso
 
 Para cada issue del lote:
 
-1. Al empezar a trabajar el issue, agrégale la etiqueta `status:in-progress` vía MCP de GitHub — bloquea el issue para que nadie más lo tome.
+1. Al empezar a trabajar el issue, agrégale la etiqueta `status:in-progress` vía la API de GitHub — bloquea el issue para que nadie más lo tome.
 2. Si el proyecto tiene la skill `make-detailed-plan` disponible (verifícalo con la herramienta `skill` en modo list/search sobre el path del proyecto), invócala para generar el plan de implementación del issue.
    - Los archivos del plan deben quedar dentro de `.devin/agent-work/` o rutas agregadas a `.git/info/exclude` — nunca trackeados.
    - Si la skill no existe, planifica directamente a partir del contenido del issue.
@@ -62,11 +62,11 @@ Para cada issue del lote:
    - Si el commit o el push fallan (hooks, non-fast-forward, lint-staged, etc.), diagnostica la causa y corrígela. Si el push es rechazado, haz `git pull --rebase` sobre la base y reintenta; si necesitas forzar tras un rebase, usa `--force-with-lease`.
    - Reintenta hasta que el push tenga éxito. No pases al siguiente issue sin haber pusheado.
 6. Si en cualquier punto encuentras un **error crítico de dependencias** que no puedas resolver (dependencia faltante/incompatible, servicio caído, falta de acceso, etc.):
-   - Quita `status:in-progress` y agrega `status:blocked` al issue vía MCP.
+   - Quita `status:in-progress` y agrega `status:blocked` al issue vía la API de GitHub.
    - Detén el trabajo de ese issue y **pide ayuda humana**: explica el error, qué intentaste y qué se necesita para desbloquearlo.
    - Pregunta al usuario si debe saltar el issue y continuar con los demás, o abortar el proceso. Si salta el issue, márcalo como bloqueado en `priorities.md` y continúa con el siguiente.
 7. **Borra los archivos de plan generados** para ese issue (los creados por `make-detailed-plan` o por tu planificación). El archivo `priorities.md` se conserva — es el registro de progreso.
-8. Quita la etiqueta `status:in-progress` del issue vía MCP y actualiza su estado a completado en `priorities.md`.
+8. Quita la etiqueta `status:in-progress` del issue vía la API de GitHub y actualiza su estado a completado en `priorities.md`.
 9. Pasa al siguiente issue **siempre sobre el código acumulado** en la misma rama de trabajo — nunca vuelvas a la base, para evitar conflictos de merge.
 
 ### 5. Crear la rama de release
