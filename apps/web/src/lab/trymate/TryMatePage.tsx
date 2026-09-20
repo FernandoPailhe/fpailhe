@@ -4,6 +4,7 @@ import { Button, useThemeOverride } from "@ferpa/ui";
 import { Nav } from "../../components";
 import { TryMateBoard } from "./components/TryMateBoard";
 import { PiecePickerDialog } from "./components/PiecePickerDialog";
+import { BenchPieceDialog } from "./components/BenchPieceDialog";
 import { BenchPanel } from "./components/BenchPanel";
 import { GameStatusBar } from "./components/GameStatusBar";
 import { GameOverPanel } from "./components/GameOverPanel";
@@ -129,6 +130,7 @@ export function TryMatePage() {
         )}
       </main>
       {showGame && <PiecePickerDialog />}
+      {showGame && <BenchPieceDialog />}
     </>
   );
 }
