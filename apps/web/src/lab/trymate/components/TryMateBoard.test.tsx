@@ -24,14 +24,20 @@ describe("TryMateBoard", () => {
     expect(screen.getAllByRole("button", { name: /legal move/ }).length).toBeGreaterThan(0);
   });
 
-  it("renders legal-move dots with a high-contrast halo (visible on dark tiles)", () => {
+  it("renders legal-move dots with a halo that contrasts each tile tone (issues #15, #18)", () => {
     useGameStore.getState().quickStart();
     render(<TryMateBoard />);
     fireEvent.click(screen.getByRole("button", { name: "c3 — White Pioneer" }));
-    const moveTile = screen.getAllByRole("button", { name: /legal move/ })[0];
-    const dot = moveTile?.querySelector("span");
-    expect(dot?.className).toContain("bg-gold");
-    expect(dot?.className).toContain("ring-pitch");
+    const moveTiles = screen.getAllByRole("button", { name: /legal move/ });
+    expect(moveTiles.length).toBeGreaterThan(0);
+    for (const moveTile of moveTiles) {
+      const [x, y] = moveTile.dataset.square!.split(",").map(Number);
+      const lightTile = (x! + y!) % 2 === 1;
+      const dot = moveTile.querySelector("span");
+      expect(dot?.className).toContain("bg-gold");
+      // Halo del tono opuesto: pitch-alt sobre casilla clara, pitch sobre oscura.
+      expect(dot?.className).toContain(lightTile ? "ring-pitch-alt" : "ring-pitch");
+    }
   });
 
   it("marks the try-zone rows (1 and 11) as the arrival, not the field", () => {

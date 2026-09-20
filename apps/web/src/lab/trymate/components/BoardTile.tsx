@@ -97,7 +97,9 @@ export function BoardTile({
         ) : state === "valid" ? (
           <span
             aria-hidden="true"
-            className="h-2/5 w-2/5 rounded-full bg-gold ring-2 ring-pitch"
+            className={`h-2/5 w-2/5 rounded-full bg-gold ring-2 ${
+              parity ? "ring-pitch-alt" : "ring-pitch"
+            }`}
           />
         ) : state === "blocked" ? (
           <span aria-hidden="true" className="font-ui text-ink-dim">
