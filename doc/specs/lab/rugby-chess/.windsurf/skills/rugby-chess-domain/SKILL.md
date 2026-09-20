@@ -40,11 +40,21 @@ All piece behavior is data-driven via `PIECE_MOVEMENT_CONFIG`. Never hard-code m
 // Good: behavior expressed as config
 export const PIECE_MOVEMENT_CONFIG = {
   [PieceType.BULWARK]: {
-    movement: { directions: [{dx:0, dy:1}], minDistance:1, maxDistance:1, canCapture:false },
-    capture: { directions: [{dx:1, dy:1},{dx:-1, dy:1}], minDistance:1, maxDistance:1 },
+    movement: { directions: [{ dx: 0, dy: 1 }], minDistance: 1, maxDistance: 1, canCapture: false },
+    capture: {
+      directions: [
+        { dx: 1, dy: 1 },
+        { dx: -1, dy: 1 },
+      ],
+      minDistance: 1,
+      maxDistance: 1,
+    },
     blocksSides: true,
-    blockedSideOffsets: [{dx:-1, dy:0},{dx:1, dy:0}],
-  }
+    blockedSideOffsets: [
+      { dx: -1, dy: 0 },
+      { dx: 1, dy: 0 },
+    ],
+  },
 } as const;
 ```
 
@@ -61,11 +71,13 @@ Follow this exact sequence — all steps in `PieceConstants.ts`:
 No other file in `src/domain/` needs to change. The application layer (`MovementRuleEngine`) reads config dynamically.
 
 **Interface types available for movement config:**
+
 - `MovementPattern`: `{ directions: DirectionVector[], minDistance, maxDistance, canCapture }`
 - `CapturePattern`: `{ directions: DirectionVector[], minDistance, maxDistance }`
 - `DirectionVector`: `{ dx: number, dy: number }` — always expressed from Player.BLANCAS perspective (positive dy = forward). `getDirectionMultiplier()` handles Player.NEGRAS automatically.
 
 Special flags used in existing pieces:
+
 - `blocksSides: boolean` + `blockedSideOffsets: DirectionVector[]` — BULWARK side-blocking
 - `alternativeMovement: MovementPattern` — secondary move pattern (VANGUARD)
 - `canBypassBlocker: boolean` + `bypassMinDistance: number` — APEX bypass rule
@@ -87,12 +99,12 @@ export const GAME_RULES = {
   PLACEMENT_ROWS_PLAYER1: [1, 2, 3],
   PLACEMENT_ROWS_PLAYER2: [7, 8, 9],
   MAX_PIECES_PER_ROW: 2,
-  SCORING_ZONE_PLAYER1: 10,   // row index where Player1 scores
-  SCORING_ZONE_PLAYER2: 0,    // row index where Player2 scores
+  SCORING_ZONE_PLAYER1: 10, // row index where Player1 scores
+  SCORING_ZONE_PLAYER2: 0, // row index where Player2 scores
   POINTS_TO_WIN: 3,
   FORBIDDEN_ZONE_PLAYER1: 0,
   FORBIDDEN_ZONE_PLAYER2: 10,
-}
+};
 ```
 
 After changing `GAME_RULES`, notify the state skill — `GameState.ts` uses these values for phase transitions and validation.
@@ -102,6 +114,7 @@ After changing `GAME_RULES`, notify the state skill — `GameState.ts` uses thes
 ## Entities: Key Contracts
 
 **`GamePiece`**
+
 - `id: string` — unique identifier
 - `type: PieceType`
 - `owner: Player`
@@ -109,17 +122,20 @@ After changing `GAME_RULES`, notify the state skill — `GameState.ts` uses thes
 - `getDirectionMultiplier(): 1 | -1` — returns +1 for BLANCAS, -1 for NEGRAS
 
 **`Board`**
+
 - Uses `Map<string, Tile>` keyed by `"x,y"` and `Map<string, GamePiece>` keyed by piece id
 - `addPiece()`, `removePiece()`, `movePiece()`, `getPieceAt()`, `getAllPieces()`
 - `isValidPosition()` for bounds checking
 
 **`Position`**
+
 - Immutable value object: `{ x: number, y: number }`
 - Has `equals(other: Position): boolean`
 
 **`Tile`** — state machine with `TileState`: `EMPTY | SELECTED | HIGHLIGHTED | OCCUPIED`
 
 **`PlayerState`**
+
 - Tracks `pieceCounts: PieceCount`, `score: number`, `benchPieces: GamePiece[]`
 - Methods: `addPiece()`, `removePiece()`, `addToBench()`, `removeFromBench()`
 
@@ -138,6 +154,7 @@ Interfaces are contracts consumed by the application and presentation layers. Wh
 ## TypeScript Constraints
 
 The project uses strict TypeScript (`strict: true`, `noUnusedLocals`, `noUnusedParameters`). When writing domain code:
+
 - Always type parameters and return values explicitly.
 - Use `as const` for config objects to preserve literal types.
 - Use interface segregation — don't add unrelated methods to existing interfaces.

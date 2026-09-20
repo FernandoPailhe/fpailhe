@@ -1,6 +1,6 @@
-import { Tile, TileState } from './Tile';
-import { Position } from './Position';
-import { GamePiece } from './GamePiece';
+import { Tile, TileState } from "./Tile";
+import { Position } from "./Position";
+import { GamePiece } from "./GamePiece";
 
 export class Board {
   private tiles: Map<string, Tile>;
@@ -8,10 +8,10 @@ export class Board {
 
   constructor(
     public readonly width: number,
-    public readonly height: number
+    public readonly height: number,
   ) {
     if (width <= 0 || height <= 0) {
-      throw new Error('Board dimensions must be positive');
+      throw new Error("Board dimensions must be positive");
     }
 
     this.tiles = new Map();
@@ -43,10 +43,7 @@ export class Board {
 
   isValidPosition(position: Position): boolean {
     return (
-      position.x >= 0 &&
-      position.x < this.width &&
-      position.y >= 0 &&
-      position.y < this.height
+      position.x >= 0 && position.x < this.width && position.y >= 0 && position.y < this.height
     );
   }
 
@@ -170,7 +167,7 @@ export class Board {
 
   highlightPositions(positions: Position[]): void {
     this.clearHighlights();
-    positions.forEach(pos => {
+    positions.forEach((pos) => {
       const tile = this.getTile(pos);
       if (tile && !tile.isSelected() && !tile.isOccupied()) {
         tile.setState(TileState.HIGHLIGHTED);

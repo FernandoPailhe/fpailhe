@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { create, type StateCreator } from "zustand";
 import { Board } from "../domain/entities/Board";
 import { Position } from "../domain/entities/Position";
 import { GamePiece } from "../domain/entities/GamePiece";
@@ -6,7 +6,7 @@ import { PlayerState } from "../domain/entities/PlayerState";
 import { IGameState } from "../domain/interfaces/IGameState";
 import { GAME_CONFIG } from "../domain/constants/GameConstants";
 import { Player, PieceType } from "../domain/constants/PieceConstants";
-import { GamePhase, GAME_RULES, GameMode } from "../domain/constants/GameRules";
+import { GamePhase, GAME_RULES, GameMode, type RoomSetupMode } from "../domain/constants/GameRules";
 import { MovementRuleEngine } from "./rules/MovementRuleEngine";
 import { MoveHistory, MoveRecord } from "../domain/entities/MoveHistory";
 import {
@@ -49,6 +49,8 @@ interface GameStateStore {
   startGame: () => void;
   reset: () => void;
   quickStart: () => void;
+  /** Prepara el estado inicial de una sala online de forma determinista. */
+  prepareOnlineGame: (setupMode: RoomSetupMode) => void;
   getCurrentPlayerState: () => PlayerState;
   getOpponentPlayerState: () => PlayerState;
   checkScoring: (piece: GamePiece) => void;
@@ -77,7 +79,87 @@ function restoreBoardFromSnapshot(json: string): Board {
   return boardFromPieceSnapshots(JSON.parse(json) as PieceSnapshot[]);
 }
 
-export const useGameStore = create<GameStateStore>((set, get) => ({
+interface InitialGameState {
+  board: Board;
+  player1State: PlayerState;
+  player2State: PlayerState;
+  pieceIdCounter: number;
+}
+
+/** Estado fresco para setup manual: tablero vacío y contadores en cero. */
+function buildManualStartState(): InitialGameState {
+  return {
+    board: createInitialBoard(),
+    player1State: new PlayerState("player1"),
+    player2State: new PlayerState("player2"),
+    pieceIdCounter: 0,
+  };
+}
+
+/**
+ * Layout fijo de quick start: 5 piezas por lado en el tablero y 3 en la
+ * banca de cada jugador. Compartido entre `quickStart` (local) y
+ * `prepareOnlineGame("quick")` para que ambos modos no dupliquen la
+ * disposición ni los contadores.
+ */
+function buildQuickStartState(): InitialGameState {
+  const board = createInitialBoard();
+  const player1State = new PlayerState("player1");
+  const player2State = new PlayerState("player2");
+  let pieceCounter = 0;
+
+  // Player 1 pieces on board (rows 2-4)
+  const p1BoardPieces = [
+    { type: PieceType.FORT, pos: new Position(1, 1) },
+    { type: PieceType.STRIKER, pos: new Position(3, 1) },
+    { type: PieceType.PIONEER, pos: new Position(2, 2) },
+    { type: PieceType.FORT, pos: new Position(0, 3) },
+    { type: PieceType.STRIKER, pos: new Position(4, 3) },
+  ];
+
+  p1BoardPieces.forEach(({ type, pos }) => {
+    const piece = new GamePiece(`p1-${pieceCounter++}`, type, pos, Player.BLANCAS);
+    board.addPiece(piece);
+    player1State.addSelectedPiece(type);
+    player1State.addPlacedPiece(piece);
+  });
+
+  // Player 1 bench pieces
+  const p1BenchPieces = [PieceType.STRIKER, PieceType.PIONEER, PieceType.FORT];
+
+  p1BenchPieces.forEach((type) => {
+    const benchPiece = new GamePiece(`p1-bench-${pieceCounter++}`, type, null, Player.BLANCAS);
+    player1State.addBenchPiece(benchPiece);
+  });
+
+  // Player 2 pieces on board (rows 8-10)
+  const p2BoardPieces = [
+    { type: PieceType.FORT, pos: new Position(1, 9) },
+    { type: PieceType.STRIKER, pos: new Position(3, 9) },
+    { type: PieceType.PIONEER, pos: new Position(2, 8) },
+    { type: PieceType.FORT, pos: new Position(0, 7) },
+    { type: PieceType.STRIKER, pos: new Position(4, 7) },
+  ];
+
+  p2BoardPieces.forEach(({ type, pos }) => {
+    const piece = new GamePiece(`p2-${pieceCounter++}`, type, pos, Player.NEGRAS);
+    board.addPiece(piece);
+    player2State.addSelectedPiece(type);
+    player2State.addPlacedPiece(piece);
+  });
+
+  // Player 2 bench pieces
+  const p2BenchPieces = [PieceType.STRIKER, PieceType.PIONEER, PieceType.FORT];
+
+  p2BenchPieces.forEach((type) => {
+    const benchPiece = new GamePiece(`p2-bench-${pieceCounter++}`, type, null, Player.NEGRAS);
+    player2State.addBenchPiece(benchPiece);
+  });
+
+  return { board, player1State, player2State, pieceIdCounter: pieceCounter };
+}
+
+const gameStoreInitializer: StateCreator<GameStateStore> = (set, get) => ({
   board: createInitialBoard(),
   gamePhase: GamePhase.SETUP,
   gameMode: GameMode.PVP,
@@ -716,73 +798,45 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
 
   quickStart: () => {
     if (get().gameMode === GameMode.ONLINE) return;
-    const board = createInitialBoard();
-    const player1State = new PlayerState("player1");
-    const player2State = new PlayerState("player2");
-    let pieceCounter = 0;
-
-    // Player 1 pieces on board (rows 2-4)
-    const p1BoardPieces = [
-      { type: PieceType.FORT, pos: new Position(1, 1) },
-      { type: PieceType.STRIKER, pos: new Position(3, 1) },
-      { type: PieceType.PIONEER, pos: new Position(2, 2) },
-      { type: PieceType.FORT, pos: new Position(0, 3) },
-      { type: PieceType.STRIKER, pos: new Position(4, 3) },
-    ];
-
-    p1BoardPieces.forEach(({ type, pos }) => {
-      const piece = new GamePiece(`p1-${pieceCounter++}`, type, pos, Player.BLANCAS);
-      board.addPiece(piece);
-      player1State.addSelectedPiece(type);
-      player1State.addPlacedPiece(piece);
-    });
-
-    // Player 1 bench pieces
-    const p1BenchPieces = [PieceType.STRIKER, PieceType.PIONEER, PieceType.FORT];
-
-    p1BenchPieces.forEach((type) => {
-      const benchPiece = new GamePiece(`p1-bench-${pieceCounter++}`, type, null, Player.BLANCAS);
-      player1State.addBenchPiece(benchPiece);
-    });
-
-    // Player 2 pieces on board (rows 8-10)
-    const p2BoardPieces = [
-      { type: PieceType.FORT, pos: new Position(1, 9) },
-      { type: PieceType.STRIKER, pos: new Position(3, 9) },
-      { type: PieceType.PIONEER, pos: new Position(2, 8) },
-      { type: PieceType.FORT, pos: new Position(0, 7) },
-      { type: PieceType.STRIKER, pos: new Position(4, 7) },
-    ];
-
-    p2BoardPieces.forEach(({ type, pos }) => {
-      const piece = new GamePiece(`p2-${pieceCounter++}`, type, pos, Player.NEGRAS);
-      board.addPiece(piece);
-      player2State.addSelectedPiece(type);
-      player2State.addPlacedPiece(piece);
-    });
-
-    // Player 2 bench pieces
-    const p2BenchPieces = [PieceType.STRIKER, PieceType.PIONEER, PieceType.FORT];
-
-    p2BenchPieces.forEach((type) => {
-      const benchPiece = new GamePiece(`p2-bench-${pieceCounter++}`, type, null, Player.NEGRAS);
-      player2State.addBenchPiece(benchPiece);
-    });
+    const quick = buildQuickStartState();
 
     set({
-      board,
+      board: quick.board,
       gamePhase: GamePhase.PLAYING,
       currentPlayer: Player.BLANCAS,
-      player1State,
-      player2State,
+      player1State: quick.player1State,
+      player2State: quick.player2State,
       selectedPiece: null,
       selectedPieceTypeForPlacement: null,
       selectedBenchPiece: null,
       validMoves: [],
       blockedMoves: [],
-      pieceIdCounter: pieceCounter,
+      pieceIdCounter: quick.pieceIdCounter,
       moveHistory: new MoveHistory(),
       isViewingHistory: false,
+    });
+  },
+
+  prepareOnlineGame: (setupMode: RoomSetupMode) => {
+    const initial = setupMode === "quick" ? buildQuickStartState() : buildManualStartState();
+
+    set({
+      board: initial.board,
+      gamePhase: setupMode === "quick" ? GamePhase.PLAYING : GamePhase.SETUP,
+      gameMode: GameMode.PVP,
+      currentPlayer: Player.BLANCAS,
+      player1State: initial.player1State,
+      player2State: initial.player2State,
+      selectedPiece: null,
+      selectedPieceTypeForPlacement: null,
+      selectedBenchPiece: null,
+      validMoves: [],
+      blockedMoves: [],
+      pieceIdCounter: initial.pieceIdCounter,
+      moveHistory: new MoveHistory(),
+      isViewingHistory: false,
+      localPlayer: null,
+      roomId: null,
     });
   },
 
@@ -860,7 +914,16 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
   canGoForward: () => {
     return get().moveHistory.canGoForward();
   },
-}));
+});
+
+/**
+ * Fábrica de stores de juego independientes. `useGameStore` es el singleton
+ * de la app; los tests de flujo online crean instancias aisladas para simular
+ * dos clientes reales en el mismo proceso.
+ */
+export const createGameStore = () => create<GameStateStore>(gameStoreInitializer);
+
+export const useGameStore = createGameStore();
 
 export class GameState implements IGameState {
   getBoard(): Board {

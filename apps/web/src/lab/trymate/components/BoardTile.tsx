@@ -42,11 +42,7 @@ export function BoardTile({
   // Con el tablero rotado la fila y=10 queda abajo: la zona de try invierte
   // el borde hacia el que se apaga la casilla.
   const zoneEdge =
-    flipped && dataEdge === "top"
-      ? "bottom"
-      : flipped && dataEdge === "bottom"
-        ? "top"
-        : dataEdge;
+    flipped && dataEdge === "top" ? "bottom" : flipped && dataEdge === "bottom" ? "top" : dataEdge;
   const baseLabel = piece
     ? `${name} — ${PLAYER_LABEL[piece.owner]} ${PIECE_LABEL[piece.type]}`
     : state === "valid"
@@ -77,9 +73,7 @@ export function BoardTile({
   return (
     <div
       role="gridcell"
-      aria-colindex={
-        flipped ? GAME_CONFIG.BOARD_WIDTH - position.x : position.x + 1
-      }
+      aria-colindex={flipped ? GAME_CONFIG.BOARD_WIDTH - position.x : position.x + 1}
       className={`aspect-square border border-line ${zoneClass} ${stateClass}`}
     >
       <button

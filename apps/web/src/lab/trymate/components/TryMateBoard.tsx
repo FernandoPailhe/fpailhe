@@ -54,28 +54,16 @@ export function TryMateBoard() {
     const right = flipped ? -1 : 1;
     switch (event.key) {
       case "ArrowUp":
-        next = new Position(
-          x,
-          Math.min(Math.max(y + up, 0), GAME_CONFIG.BOARD_HEIGHT - 1),
-        );
+        next = new Position(x, Math.min(Math.max(y + up, 0), GAME_CONFIG.BOARD_HEIGHT - 1));
         break;
       case "ArrowDown":
-        next = new Position(
-          x,
-          Math.min(Math.max(y - up, 0), GAME_CONFIG.BOARD_HEIGHT - 1),
-        );
+        next = new Position(x, Math.min(Math.max(y - up, 0), GAME_CONFIG.BOARD_HEIGHT - 1));
         break;
       case "ArrowLeft":
-        next = new Position(
-          Math.min(Math.max(x - right, 0), GAME_CONFIG.BOARD_WIDTH - 1),
-          y,
-        );
+        next = new Position(Math.min(Math.max(x - right, 0), GAME_CONFIG.BOARD_WIDTH - 1), y);
         break;
       case "ArrowRight":
-        next = new Position(
-          Math.min(Math.max(x + right, 0), GAME_CONFIG.BOARD_WIDTH - 1),
-          y,
-        );
+        next = new Position(Math.min(Math.max(x + right, 0), GAME_CONFIG.BOARD_WIDTH - 1), y);
         break;
       case "Home":
         next = new Position(flipped ? GAME_CONFIG.BOARD_WIDTH - 1 : 0, y);
@@ -92,15 +80,9 @@ export function TryMateBoard() {
 
   const ys = flipped
     ? Array.from({ length: GAME_CONFIG.BOARD_HEIGHT }, (_, i) => i)
-    : Array.from(
-        { length: GAME_CONFIG.BOARD_HEIGHT },
-        (_, i) => GAME_CONFIG.BOARD_HEIGHT - 1 - i,
-      );
+    : Array.from({ length: GAME_CONFIG.BOARD_HEIGHT }, (_, i) => GAME_CONFIG.BOARD_HEIGHT - 1 - i);
   const xs = flipped
-    ? Array.from(
-        { length: GAME_CONFIG.BOARD_WIDTH },
-        (_, i) => GAME_CONFIG.BOARD_WIDTH - 1 - i,
-      )
+    ? Array.from({ length: GAME_CONFIG.BOARD_WIDTH }, (_, i) => GAME_CONFIG.BOARD_WIDTH - 1 - i)
     : Array.from({ length: GAME_CONFIG.BOARD_WIDTH }, (_, i) => i);
 
   const rows = [];

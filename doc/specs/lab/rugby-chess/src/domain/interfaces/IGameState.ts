@@ -1,5 +1,5 @@
-import { Board } from '../entities/Board';
-import { Position } from '../entities/Position';
+import { Board } from "../entities/Board";
+import { Position } from "../entities/Position";
 
 export interface IGameState {
   getBoard(): Board;

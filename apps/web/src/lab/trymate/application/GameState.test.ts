@@ -269,6 +269,54 @@ describe("move history", () => {
   });
 });
 
+describe("prepareOnlineGame", () => {
+  it("manual → SETUP con tablero vacío, Blancas al turno y contexto limpio", () => {
+    // Estado previo contaminado: selección, historial y contexto online stale.
+    S().quickStart();
+    S().handleTileClick(pos(2, 2));
+    S().handleTileClick(pos(2, 4));
+    S().setOnlineContext("room-viejo", Player.NEGRAS);
+
+    S().prepareOnlineGame("manual");
+    expect(S().gamePhase).toBe(GamePhase.SETUP);
+    expect(S().board.getAllPieces()).toHaveLength(0);
+    expect(S().currentPlayer).toBe(Player.BLANCAS);
+    expect(S().selectedPiece).toBeNull();
+    expect(S().selectedPieceTypeForPlacement).toBeNull();
+    expect(S().selectedBenchPiece).toBeNull();
+    expect(S().moveHistory.getTotalMoves()).toBe(0);
+    expect(S().pieceIdCounter).toBe(0);
+    expect(S().localPlayer).toBeNull();
+    expect(S().roomId).toBeNull();
+  });
+
+  it("quick → PLAYING con 10 piezas, 3 de bench por jugador y Blancas al turno", () => {
+    S().prepareOnlineGame("quick");
+    expect(S().gamePhase).toBe(GamePhase.PLAYING);
+    expect(S().board.getAllPieces()).toHaveLength(10);
+    expect(S().player1State.getBenchPieces()).toHaveLength(3);
+    expect(S().player2State.getBenchPieces()).toHaveLength(3);
+    expect(S().currentPlayer).toBe(Player.BLANCAS);
+    expect(S().moveHistory.getTotalMoves()).toBe(0);
+    expect(S().isViewingHistory).toBe(false);
+  });
+
+  it("quick produce el mismo snapshot que quickStart local", () => {
+    S().quickStart();
+    const local = S().toSnapshot();
+    S().prepareOnlineGame("quick");
+    expect(S().toSnapshot()).toEqual(local);
+  });
+
+  it("manual permite selectPieceTypeForSetup tras fijar el contexto online", () => {
+    S().prepareOnlineGame("manual");
+    S().setOnlineContext("room-1", Player.BLANCAS);
+    S().selectPieceTypeForSetup(PieceType.FORT);
+    expect(S().selectedPieceTypeForPlacement).toBe(PieceType.FORT);
+    expect(S().validMoves.length).toBeGreaterThan(0);
+  });
+});
+
 describe("online mode", () => {
   it("setOnlineContext sets ONLINE mode and localPlayer", () => {
     S().setOnlineContext("room-1", Player.BLANCAS);

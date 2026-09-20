@@ -102,10 +102,7 @@ describe("GameSnapshot", () => {
     expect(pioneer?.position?.equals(pos(2, 4))).toBe(true);
 
     expect(restored.player1State.getScore()).toBe(1);
-    expect(restored.player1State.getSelectedPieces()).toEqual([
-      PieceType.FORT,
-      PieceType.PIONEER,
-    ]);
+    expect(restored.player1State.getSelectedPieces()).toEqual([PieceType.FORT, PieceType.PIONEER]);
     expect(restored.player1State.getPlacedPieces()).toHaveLength(2);
     expect(restored.player1State.getBenchPieces()).toHaveLength(1);
     expect(restored.player1State.getBenchPieces()[0]?.id).toBe("w-bench-0");

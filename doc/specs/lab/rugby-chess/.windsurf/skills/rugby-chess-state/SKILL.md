@@ -77,6 +77,7 @@ myNewAction: (param: SomeType) => {
 ```
 
 Key rules:
+
 - Keep actions pure — no direct DOM manipulation, no rendering calls.
 - Use `get()` to access other state fields and call other actions (`get().checkGameOver()`).
 - If an action needs to run after a state update (async or sequenced), use `setTimeout(() => get().nextAction(), 0)` to avoid nested `set()` calls.
@@ -104,6 +105,7 @@ When adding a new phase, add it to `GamePhase` enum in `src/domain/constants/Gam
 `MovementRuleEngine` implements `IMovementRule` and is instantiated once in the store as `movementEngine`.
 
 **Public API:**
+
 ```typescript
 getValidMoves(piece: GamePiece, board: Board): Position[]
 getBlockedMoves(piece: GamePiece, board: Board): Position[]
@@ -112,11 +114,13 @@ canPassThrough(piece: GamePiece, targetPosition: Position, board: Board): boolea
 ```
 
 **When to modify `MovementRuleEngine`:**
+
 - New piece type requires special move logic (like APEX's L-shape)
 - Existing piece movement rules change in `PIECE_MOVEMENT_CONFIG`
 - New blocking mechanic is introduced
 
 **Pattern for special piece movement:**
+
 - Add a `get[PieceName]ValidMoves()` private method (see `getApexValidMoves()` as reference)
 - Add a branch in `getValidMoves()` for the new piece type
 - Blocked moves (`getBlockedMoves()`) should mirror the same special-case handling
@@ -128,6 +132,7 @@ canPassThrough(piece: GamePiece, targetPosition: Position, board: Board): boolea
 ## Key Patterns in GameState
 
 **Move execution flow:**
+
 ```typescript
 selectTile(position) → {
   if PLACEMENT phase: placePieceInSetup(position)
@@ -148,11 +153,13 @@ movePiece(to) → {
 ```
 
 **Scoring check:**
+
 - BLANCAS scores when a piece reaches `SCORING_ZONE_PLAYER1` (row 10)
 - NEGRAS scores when a piece reaches `SCORING_ZONE_PLAYER2` (row 0)
 - On score: piece is returned to original player's bench, score incremented
 
 **History navigation:**
+
 - `moveHistory: MoveHistory` stores `MoveRecord[]`
 - `isViewingHistory: boolean` — while true, moves are disabled; UI shows historical state
 - `goBackInHistory()`, `goForwardInHistory()`, `returnToPresent()` navigate without mutating canonical state
@@ -162,6 +169,7 @@ movePiece(to) → {
 ## IGameState Interface
 
 `src/domain/interfaces/IGameState.ts` defines the public contract consumed by `GameController`. When adding new public actions intended for use in the presentation layer:
+
 1. Add the method signature to `IGameState`
 2. Implement it in `useGameStore`
 3. Wire it in `GameController` via the `gameState` reference (presentation skill handles this)

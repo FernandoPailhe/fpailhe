@@ -1,23 +1,21 @@
 import { create } from "zustand";
 import { Player } from "../domain/constants/PieceConstants";
-import type {
-  RoomRecord,
-  RoomsGateway,
-  RoomSummary,
-  RoomUnsubscribe,
+import type { RoomSetupMode } from "../domain/constants/GameRules";
+import {
+  roomAdmissionDeadline,
+  type RoomRecord,
+  type RoomsGateway,
+  type RoomSummary,
+  type RoomUnsubscribe,
 } from "../domain/interfaces/RoomsGateway";
 import { useGameStore } from "./GameState";
 import { startRoomSync, stopRoomSync } from "./roomSync";
+import { clearHostCredential, loadHostCredential, saveHostCredential } from "./hostCredential";
 
 export type RoomRole = "host" | "guest";
 
 export type RoomConnectionStatus =
-  | "idle"
-  | "creating"
-  | "waiting"
-  | "joining"
-  | "connected"
-  | "error";
+  "idle" | "creating" | "waiting" | "joining" | "resuming" | "connected" | "error";
 
 interface RoomStore {
   /** Puerto inyectado por el composition root; null = multiplayer no configurado. */
@@ -29,8 +27,11 @@ interface RoomStore {
   error: string | null;
 
   setGateway: (gateway: RoomsGateway | null) => void;
-  createRoom: () => Promise<void>;
+  createRoom: (setupMode: RoomSetupMode) => Promise<void>;
   joinRoom: (roomId: string) => Promise<void>;
+  resumeRoom: (roomId: string) => Promise<boolean>;
+  /** Entry point del link compartido: resume como host si hay credencial local, si no join como guest. */
+  enterRoom: (roomId: string) => Promise<void>;
   leaveRoom: () => Promise<void>;
   subscribeLobby: () => RoomUnsubscribe;
 }
@@ -42,6 +43,23 @@ function toMessage(error: unknown): string {
 }
 
 export const useRoomStore = create<RoomStore>((set, get) => {
+  const syncError = (error: unknown): void => set({ error: toMessage(error) });
+
+  const teardown = (): void => {
+    stopRoomSync();
+    statusUnsub?.();
+    statusUnsub = null;
+  };
+
+  /** Cierre local cuando la sala quedó abandonada o venció su deadline. */
+  const closeRoomLocally = (message: string): void => {
+    const { roomId } = get();
+    if (roomId) clearHostCredential(roomId);
+    teardown();
+    useGameStore.getState().reset();
+    set({ status: "idle", roomId: null, role: null, error: message });
+  };
+
   /** Suscripción paralela que solo mira el ciclo de vida de la sala. */
   const watchRoomStatus = (gateway: RoomsGateway, roomId: string): void => {
     statusUnsub?.();
@@ -53,27 +71,38 @@ export const useRoomStore = create<RoomStore>((set, get) => {
         if (room.status === "playing" && role === "host") {
           set({ status: "connected" });
         }
+        const deadline = roomAdmissionDeadline(room);
+        const expired = deadline !== null && Date.now() > deadline;
         if (room.status === "abandoned") {
-          stopRoomSync();
-          statusUnsub?.();
-          statusUnsub = null;
-          useGameStore.getState().reset();
-          set({
-            status: "idle",
-            roomId: null,
-            role: null,
-            error: "The room was closed",
-          });
+          closeRoomLocally("The room was closed");
+        } else if (expired) {
+          closeRoomLocally("The room expired");
         }
       },
       (error) => set({ error: toMessage(error) }),
     );
   };
 
-  const teardown = (): void => {
-    stopRoomSync();
-    statusUnsub?.();
-    statusUnsub = null;
+  /** Orden común tras entrar a una sala: contexto → sync → status → watcher. */
+  const activateRoom = (
+    gateway: RoomsGateway,
+    roomId: string,
+    room: RoomRecord,
+    role: RoomRole,
+    player: Player,
+  ): void => {
+    // El snapshot remoto autoritativo se aplica ANTES de fijar el contexto
+    // online y antes de iniciar el sync: el estado local vacío nunca se
+    // publica sobre la sala durante el bootstrap.
+    if (room.state) useGameStore.getState().applyRemoteSnapshot(room.state);
+    useGameStore.getState().setOnlineContext(roomId, player);
+    startRoomSync(gateway, roomId, { onError: syncError });
+    set({
+      status: room.status === "waiting" ? "waiting" : "connected",
+      roomId,
+      role,
+    });
+    watchRoomStatus(gateway, roomId);
   };
 
   return {
@@ -86,18 +115,24 @@ export const useRoomStore = create<RoomStore>((set, get) => {
 
     setGateway: (gateway) => set({ gateway }),
 
-    createRoom: async () => {
+    createRoom: async (setupMode) => {
       const { gateway } = get();
       if (!gateway) {
         set({ status: "error", error: "Multiplayer is not configured" });
         return;
       }
+      teardown();
       set({ status: "creating", error: null });
       try {
+        // Único entry point online: prepara el juego, captura el snapshot y
+        // recién entonces crea la sala e inicia la sincronización.
+        const game = useGameStore.getState();
+        game.prepareOnlineGame(setupMode);
         const snapshot = useGameStore.getState().toSnapshot();
-        const roomId = await gateway.createRoom(snapshot);
+        const { roomId, hostToken } = await gateway.createRoom(snapshot);
+        saveHostCredential({ roomId, hostToken });
         useGameStore.getState().setOnlineContext(roomId, Player.BLANCAS);
-        startRoomSync(gateway, roomId);
+        startRoomSync(gateway, roomId, { onError: syncError });
         set({ status: "waiting", roomId, role: "host" });
         watchRoomStatus(gateway, roomId);
       } catch (error) {
@@ -105,26 +140,52 @@ export const useRoomStore = create<RoomStore>((set, get) => {
       }
     },
 
-    joinRoom: async (roomId: string) => {
+    joinRoom: async (roomId) => {
       const { gateway } = get();
       if (!gateway) {
         set({ status: "error", error: "Multiplayer is not configured" });
         return;
       }
+      teardown();
       set({ status: "joining", error: null });
       try {
-        const joined = await gateway.joinRoom(roomId);
-        if (!joined) {
+        const room = await gateway.joinRoom(roomId);
+        if (!room) {
           set({ status: "idle", error: "Room is no longer available" });
           return;
         }
-        useGameStore.getState().setOnlineContext(roomId, Player.NEGRAS);
-        startRoomSync(gateway, roomId);
-        set({ status: "connected", roomId, role: "guest" });
-        watchRoomStatus(gateway, roomId);
+        activateRoom(gateway, roomId, room, "guest", Player.NEGRAS);
       } catch (error) {
         set({ status: "error", error: toMessage(error) });
       }
+    },
+
+    resumeRoom: async (roomId) => {
+      const { gateway } = get();
+      const credential = loadHostCredential(roomId);
+      if (!gateway || !credential) return false;
+      teardown();
+      set({ status: "resuming", error: null });
+      try {
+        const room = await gateway.resumeRoom(roomId, credential.hostToken);
+        if (!room) {
+          clearHostCredential(roomId);
+          set({ status: "idle", error: "The room is no longer available" });
+          return false;
+        }
+        activateRoom(gateway, roomId, room, "host", Player.BLANCAS);
+        return true;
+      } catch (error) {
+        set({ status: "error", error: toMessage(error) });
+        return false;
+      }
+    },
+
+    enterRoom: async (roomId) => {
+      // Credencial local de host para esta sala → intento de resume; si no
+      // hay credencial o ya no es válida, se entra como guest (NEGRAS).
+      if (loadHostCredential(roomId) && (await get().resumeRoom(roomId))) return;
+      await get().joinRoom(roomId);
     },
 
     leaveRoom: async () => {
@@ -136,6 +197,7 @@ export const useRoomStore = create<RoomStore>((set, get) => {
           // best-effort: la sala igualmente queda cerrada localmente
         }
       }
+      if (roomId) clearHostCredential(roomId);
       teardown();
       useGameStore.getState().reset();
       set({ status: "idle", roomId: null, role: null, error: null });

@@ -19,14 +19,14 @@ It does not implement anything itself — it reads the request and produces a co
 
 ## Skill Map (Quick Reference)
 
-| Skill | Layer | Invoke when… |
-|-------|-------|-------------|
-| `rugby-chess-domain` | Domain | New types, enums, interfaces, constants, config |
-| `rugby-chess-state` | Application / State | Zustand store, game actions, movement engine |
-| `rugby-chess-3d-renderer` | Infrastructure | Three.js visuals, geometry, lighting, camera |
-| `rugby-chess-presentation` | Presentation | GameController, UI, event handlers, tutorial |
-| `rugby-chess-feature` | Cross-layer planning | Feature decomposition reference and templates |
-| `rugby-chess-code-review` | Quality gate | After EVERY layer is implemented, before moving on |
+| Skill                      | Layer                | Invoke when…                                       |
+| -------------------------- | -------------------- | -------------------------------------------------- |
+| `rugby-chess-domain`       | Domain               | New types, enums, interfaces, constants, config    |
+| `rugby-chess-state`        | Application / State  | Zustand store, game actions, movement engine       |
+| `rugby-chess-3d-renderer`  | Infrastructure       | Three.js visuals, geometry, lighting, camera       |
+| `rugby-chess-presentation` | Presentation         | GameController, UI, event handlers, tutorial       |
+| `rugby-chess-feature`      | Cross-layer planning | Feature decomposition reference and templates      |
+| `rugby-chess-code-review`  | Quality gate         | After EVERY layer is implemented, before moving on |
 
 ---
 
@@ -36,7 +36,7 @@ It does not implement anything itself — it reads the request and produces a co
 
 Before touching any file:
 
-1. Identify the **entry layer** — where does this change *originate*? (New domain concept? New visual? New UI button?)
+1. Identify the **entry layer** — where does this change _originate_? (New domain concept? New visual? New UI button?)
 2. List all **affected layers** — which layers need changes as a consequence?
 3. Identify **dependencies** — does Layer B require Layer A to be done first?
 4. Flag **risks** — are there interface changes that affect multiple layers? Any breaking changes?
@@ -60,6 +60,7 @@ Sequence:
 ### Phase 2 — Execute layer by layer
 
 Invoke each skill in the sequence. At each step:
+
 - State clearly which skill is active and what its specific task is.
 - Provide the skill with any relevant context from previous steps (e.g., "the domain step added `PieceType.BLOCKER` with `blocksSides: false`").
 - Do not skip to the next step until the current layer is complete and compilable.
@@ -67,15 +68,17 @@ Invoke each skill in the sequence. At each step:
 ### Phase 3 — Code review gate
 
 After each layer step, invoke `rugby-chess-code-review` with:
+
 - The layer just completed
 - The files changed
 - The specific things to verify
 
-Only proceed to the next layer after the review passes. If the review finds issues, fix them in the current layer *before* moving on — fixing architectural violations after crossing layer boundaries is much harder.
+Only proceed to the next layer after the review passes. If the review finds issues, fix them in the current layer _before_ moving on — fixing architectural violations after crossing layer boundaries is much harder.
 
 ### Phase 4 — Integration verification
 
 After all layers are done:
+
 1. Run `npx tsc --noEmit` — must compile with zero errors.
 2. Run `npm run dev` — visual smoke test.
 3. Final `rugby-chess-code-review` covering the full change set.

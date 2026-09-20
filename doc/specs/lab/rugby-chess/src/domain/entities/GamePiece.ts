@@ -1,12 +1,12 @@
-import { Position } from './Position';
-import { PieceType, Player } from '../constants/PieceConstants';
+import { Position } from "./Position";
+import { PieceType, Player } from "../constants/PieceConstants";
 
 export class GamePiece {
   constructor(
     public readonly id: string,
     public readonly type: PieceType,
     public position: Position | null,
-    public readonly owner: Player
+    public readonly owner: Player,
   ) {}
 
   moveTo(position: Position | null): void {

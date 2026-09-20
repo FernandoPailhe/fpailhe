@@ -32,6 +32,9 @@ export enum GameMode {
   ONLINE = "ONLINE",
 }
 
+/** Modo de configuración inicial de una sala online. */
+export type RoomSetupMode = "manual" | "quick";
+
 export interface PieceCount {
   FORT: number;
   STRIKER: number;

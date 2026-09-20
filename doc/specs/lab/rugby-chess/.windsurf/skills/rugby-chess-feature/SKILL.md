@@ -10,6 +10,7 @@ description: Orchestrator skill for planning and implementing complete features 
 This skill plans and sequences multi-layer feature work in Rugby Chess. It knows the **correct change order** dictated by Clean Architecture, which specialised skills to delegate to, and how to avoid cross-layer coupling violations.
 
 The four specialised skills it coordinates:
+
 - **rugby-chess-domain** → `src/domain/`
 - **rugby-chess-state** → `src/application/GameState.ts` + `rules/`
 - **rugby-chess-3d-renderer** → `src/infrastructure/rendering/`
@@ -42,18 +43,19 @@ domain         ← no dependencies (foundation)
 
 Break the request into layer-specific tasks:
 
-| Layer | What changes? |
-|-------|--------------|
-| Domain | New types, enums, constants, interface method signatures, entity behavior |
-| State | New store fields, new actions, phase transition logic |
-| Renderer | New geometry, new material, new visual state, new animation |
-| Presentation | New buttons, new UI updates, new event handlers, new tutorial steps |
+| Layer        | What changes?                                                             |
+| ------------ | ------------------------------------------------------------------------- |
+| Domain       | New types, enums, constants, interface method signatures, entity behavior |
+| State        | New store fields, new actions, phase transition logic                     |
+| Renderer     | New geometry, new material, new visual state, new animation               |
+| Presentation | New buttons, new UI updates, new event handlers, new tutorial steps       |
 
 Ask: which layers are NOT needed? Skip them. A visual-only change (new tile color) touches only Renderer.
 
 ### Step 2 — Implement domain first
 
 Use **rugby-chess-domain** skill for:
+
 - New `PieceType` enum values
 - New entries in `PIECE_MOVEMENT_CONFIG` and `PIECE_VISUAL_CONFIG`
 - New `GamePhase` or `GameMode` values
@@ -66,6 +68,7 @@ Use **rugby-chess-domain** skill for:
 ### Step 3 — Implement application layer (State)
 
 **State** (use **rugby-chess-state** skill):
+
 - New Zustand store fields referencing new domain types
 - New actions implementing game logic
 - Updates to `MovementRuleEngine` for new piece movement
@@ -74,6 +77,7 @@ Use **rugby-chess-domain** skill for:
 ### Step 4 — Implement infrastructure (can be parallel with Step 3 if domain is stable)
 
 Use **rugby-chess-3d-renderer** skill:
+
 - New piece geometry for new piece types
 - New tile visual states
 - New animations or effects
@@ -82,6 +86,7 @@ Use **rugby-chess-3d-renderer** skill:
 ### Step 5 — Implement presentation last
 
 Use **rugby-chess-presentation** skill:
+
 - Wire new state actions to buttons
 - Update `UIManager` for new display fields
 - Register event handlers
@@ -141,17 +146,17 @@ Use **rugby-chess-presentation** skill:
 
 These rules prevent coupling violations:
 
-| FROM | TO | Allowed? | How |
-|------|-----|----------|-----|
-| Presentation | Application | ✅ Yes | Call `useGameStore.getState().action()` |
-| Presentation | Domain | ✅ Yes | Import types/constants |
-| Presentation | Infrastructure | ⚠️ Via interface | Only through `IRenderer`, never `ThreeJSRenderer` directly |
-| Application | Domain | ✅ Yes | Direct import |
-| Application | Infrastructure | ❌ No | Never — state doesn't know about rendering |
-| Application | Presentation | ❌ No | Never — no DOM access in application layer |
-| Infrastructure | Domain | ✅ Yes | Direct import |
-| Infrastructure | Application | ❌ No | Never — renderer doesn't read from Zustand |
-| Domain | Any upper layer | ❌ No | Domain has zero upward imports |
+| FROM           | TO              | Allowed?         | How                                                        |
+| -------------- | --------------- | ---------------- | ---------------------------------------------------------- |
+| Presentation   | Application     | ✅ Yes           | Call `useGameStore.getState().action()`                    |
+| Presentation   | Domain          | ✅ Yes           | Import types/constants                                     |
+| Presentation   | Infrastructure  | ⚠️ Via interface | Only through `IRenderer`, never `ThreeJSRenderer` directly |
+| Application    | Domain          | ✅ Yes           | Direct import                                              |
+| Application    | Infrastructure  | ❌ No            | Never — state doesn't know about rendering                 |
+| Application    | Presentation    | ❌ No            | Never — no DOM access in application layer                 |
+| Infrastructure | Domain          | ✅ Yes           | Direct import                                              |
+| Infrastructure | Application     | ❌ No            | Never — renderer doesn't read from Zustand                 |
+| Domain         | Any upper layer | ❌ No            | Domain has zero upward imports                             |
 
 **If you find yourself violating these rules**, stop and reconsider the design. Usually the fix is to put shared logic in domain (as an entity method or constant) rather than importing across forbidden boundaries.
 

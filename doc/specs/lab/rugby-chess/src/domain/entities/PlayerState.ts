@@ -1,5 +1,5 @@
-import { GamePiece } from './GamePiece';
-import { PieceType } from '../constants/PieceConstants';
+import { GamePiece } from "./GamePiece";
+import { PieceType } from "../constants/PieceConstants";
 
 export class PlayerState {
   private selectedPieces: PieceType[] = [];
@@ -18,7 +18,7 @@ export class PlayerState {
   }
 
   getSelectedPieceCount(type: PieceType): number {
-    return this.selectedPieces.filter(p => p === type).length;
+    return this.selectedPieces.filter((p) => p === type).length;
   }
 
   getTotalSelectedCount(): number {
@@ -46,7 +46,7 @@ export class PlayerState {
   }
 
   removeBenchPiece(pieceId: string): GamePiece | undefined {
-    const index = this.benchPieces.findIndex(p => p.id === pieceId);
+    const index = this.benchPieces.findIndex((p) => p.id === pieceId);
     if (index !== -1) {
       return this.benchPieces.splice(index, 1)[0];
     }

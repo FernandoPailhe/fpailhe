@@ -12,8 +12,8 @@
 > propuesta (sección 14) haga trivial adaptar el juego a nuevas reglas, piezas,
 > modos o plataformas.
 >
-> **Convención:** todo lo normativo se expresa en términos de *datos* (parámetros
-> configurables) + *funciones puras* (reglas) + *máquina de estados* (flujo). Nada
+> **Convención:** todo lo normativo se expresa en términos de _datos_ (parámetros
+> configurables) + _funciones puras_ (reglas) + _máquina de estados_ (flujo). Nada
 > de lo normativo depende de UI, renderizado 3D, red ni persistencia.
 
 ---
@@ -64,22 +64,22 @@ de anotación en cada extremo — de ahí la analogía con el rugby.
 El dominio completo cabe en estos conceptos. Una re-implementación fiel solo
 necesita modelarlos; no necesita más estado que este.
 
-| Concepto | Definición |
-|---|---|
-| **Posición** | Par ordenado `(x, y)` de coordenadas enteras no negativas. `x` = columna, `y` = fila. |
-| **Casilla (Tile)** | Unidad del tablero identificada por su posición. A nivel de reglas solo importa su **ocupación**; los estados visuales (seleccionada, resaltada) son presentación. |
-| **Tablero (Board)** | Grilla de `ANCHO × ALTO` casillas. Contiene las piezas en juego. Responde: ¿posición válida?, ¿qué pieza hay en P?, ¿qué piezas existen? |
-| **Pieza (Piece)** | Entidad con `id` único, `tipo`, `dueño` y `posición` (o "sin posición" si está en la banca). Las piezas **no cambian de tipo ni de dueño** jamás. |
-| **Jugador (Player/Side)** | Dos lados: `BLANCAS` y `NEGRAS`. Determina el **sentido de avance** y la **fila de anotación**. |
-| **Ejército (Squad)** | Las 8 piezas de un jugador: 5 desplegables + 3 de banca. Sujeto a restricciones de composición por tipo. |
-| **Banca (Bench)** | Subconjunto del ejército sin posición en el tablero. Puede incorporarse durante la partida. |
-| **Estado de jugador (PlayerState)** | Piezas seleccionadas/colocadas, contenido de la banca y **puntaje**. |
-| **Fase (Phase)** | Etapa del ciclo de vida: `SETUP → BENCH_SELECTION → PLAYING → GAME_OVER`. |
-| **Turno** | Quién puede actuar. En `PLAYING`, un turno = **un movimiento**; ciertas acciones son **gratuitas** (no consumen turno). |
-| **Movimiento legal** | Destino alcanzable según el patrón de la pieza + ocupación + camino despejado + bloqueos dinámicos. |
-| **Captura** | Entrar a una casilla ocupada por pieza enemiga cuando el patrón lo permite. La pieza enemiga se elimina. |
-| **Bloqueo lateral** | Zona dinámica que proyecta un Bulwark sobre sus casillas vecinas laterales: el enemigo no puede entrar (con excepciones). |
-| **Registro de movimiento** | Entrada del historial: quién, qué pieza, origen, destino, captura y snapshot del tablero. |
+| Concepto                            | Definición                                                                                                                                                         |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Posición**                        | Par ordenado `(x, y)` de coordenadas enteras no negativas. `x` = columna, `y` = fila.                                                                              |
+| **Casilla (Tile)**                  | Unidad del tablero identificada por su posición. A nivel de reglas solo importa su **ocupación**; los estados visuales (seleccionada, resaltada) son presentación. |
+| **Tablero (Board)**                 | Grilla de `ANCHO × ALTO` casillas. Contiene las piezas en juego. Responde: ¿posición válida?, ¿qué pieza hay en P?, ¿qué piezas existen?                           |
+| **Pieza (Piece)**                   | Entidad con `id` único, `tipo`, `dueño` y `posición` (o "sin posición" si está en la banca). Las piezas **no cambian de tipo ni de dueño** jamás.                  |
+| **Jugador (Player/Side)**           | Dos lados: `BLANCAS` y `NEGRAS`. Determina el **sentido de avance** y la **fila de anotación**.                                                                    |
+| **Ejército (Squad)**                | Las 8 piezas de un jugador: 5 desplegables + 3 de banca. Sujeto a restricciones de composición por tipo.                                                           |
+| **Banca (Bench)**                   | Subconjunto del ejército sin posición en el tablero. Puede incorporarse durante la partida.                                                                        |
+| **Estado de jugador (PlayerState)** | Piezas seleccionadas/colocadas, contenido de la banca y **puntaje**.                                                                                               |
+| **Fase (Phase)**                    | Etapa del ciclo de vida: `SETUP → BENCH_SELECTION → PLAYING → GAME_OVER`.                                                                                          |
+| **Turno**                           | Quién puede actuar. En `PLAYING`, un turno = **un movimiento**; ciertas acciones son **gratuitas** (no consumen turno).                                            |
+| **Movimiento legal**                | Destino alcanzable según el patrón de la pieza + ocupación + camino despejado + bloqueos dinámicos.                                                                |
+| **Captura**                         | Entrar a una casilla ocupada por pieza enemiga cuando el patrón lo permite. La pieza enemiga se elimina.                                                           |
+| **Bloqueo lateral**                 | Zona dinámica que proyecta un Bulwark sobre sus casillas vecinas laterales: el enemigo no puede entrar (con excepciones).                                          |
+| **Registro de movimiento**          | Entrada del historial: quién, qué pieza, origen, destino, captura y snapshot del tablero.                                                                          |
 
 ### Convención de notación
 
@@ -93,38 +93,38 @@ necesita modelarlos; no necesita más estado que este.
 
 ## 3. Parámetros de configuración (las reglas como datos)
 
-**Principio rector del diseño:** las reglas viven en *datos*, no en código. El
+**Principio rector del diseño:** las reglas viven en _datos_, no en código. El
 motor interpreta estos parámetros; cambiar una regla = cambiar un valor.
 
 ### 3.1 Parámetros del tablero
 
-| Parámetro | Valor | Significado |
-|---|---|---|
-| `BOARD_WIDTH` | `5` | Columnas (`x ∈ [0, 4]`) |
-| `BOARD_HEIGHT` | `11` | Filas (`y ∈ [0, 10]`) |
+| Parámetro      | Valor | Significado             |
+| -------------- | ----- | ----------------------- |
+| `BOARD_WIDTH`  | `5`   | Columnas (`x ∈ [0, 4]`) |
+| `BOARD_HEIGHT` | `11`  | Filas (`y ∈ [0, 10]`)   |
 
 ### 3.2 Parámetros de reglas de partida
 
-| Parámetro | Valor | Significado |
-|---|---|---|
-| `TOTAL_PIECES_PER_PLAYER` | `8` | Tamaño del ejército por jugador |
-| `PIECES_TO_PLACE` | `5` | Piezas que cada jugador despliega en el tablero |
-| `PIECES_IN_BENCH` | `3` | Piezas que quedan en la banca |
-| `MIN_PIECES_PER_TYPE` | `2` | Mínimo de piezas de cada tipo en el ejército completo |
-| `MAX_PIECES_PER_TYPE` | `4` | Máximo de piezas de cada tipo en el ejército completo |
-| `PLACEMENT_ROWS_BLANCAS` | `[1, 2, 3]` | Filas donde BLANCAS puede colocar piezas |
-| `PLACEMENT_ROWS_NEGRAS` | `[7, 8, 9]` | Filas donde NEGRAS puede colocar piezas |
-| `MAX_PIECES_PER_ROW` | `2` | Máximo de piezas propias por fila al colocar |
-| `SCORING_ROW_BLANCAS` | `10` | Fila donde BLANCAS anota |
-| `SCORING_ROW_NEGRAS` | `0` | Fila donde NEGRAS anota |
-| `POINTS_TO_WIN` | `3` | Puntos necesarios para ganar |
-| `FORBIDDEN_ROW_BLANCAS` | `0` | Fila prohibida para BLANCAS *(definida, no forzada — ver §13)* |
-| `FORBIDDEN_ROW_NEGRAS` | `10` | Fila prohibida para NEGRAS *(definida, no forzada — ver §13)* |
+| Parámetro                 | Valor       | Significado                                                    |
+| ------------------------- | ----------- | -------------------------------------------------------------- |
+| `TOTAL_PIECES_PER_PLAYER` | `8`         | Tamaño del ejército por jugador                                |
+| `PIECES_TO_PLACE`         | `5`         | Piezas que cada jugador despliega en el tablero                |
+| `PIECES_IN_BENCH`         | `3`         | Piezas que quedan en la banca                                  |
+| `MIN_PIECES_PER_TYPE`     | `2`         | Mínimo de piezas de cada tipo en el ejército completo          |
+| `MAX_PIECES_PER_TYPE`     | `4`         | Máximo de piezas de cada tipo en el ejército completo          |
+| `PLACEMENT_ROWS_BLANCAS`  | `[1, 2, 3]` | Filas donde BLANCAS puede colocar piezas                       |
+| `PLACEMENT_ROWS_NEGRAS`   | `[7, 8, 9]` | Filas donde NEGRAS puede colocar piezas                        |
+| `MAX_PIECES_PER_ROW`      | `2`         | Máximo de piezas propias por fila al colocar                   |
+| `SCORING_ROW_BLANCAS`     | `10`        | Fila donde BLANCAS anota                                       |
+| `SCORING_ROW_NEGRAS`      | `0`         | Fila donde NEGRAS anota                                        |
+| `POINTS_TO_WIN`           | `3`         | Puntos necesarios para ganar                                   |
+| `FORBIDDEN_ROW_BLANCAS`   | `0`         | Fila prohibida para BLANCAS _(definida, no forzada — ver §13)_ |
+| `FORBIDDEN_ROW_NEGRAS`    | `10`        | Fila prohibida para NEGRAS _(definida, no forzada — ver §13)_  |
 
 ### 3.3 Enumeraciones del dominio
 
 ```
-PieceType  = { BULWARK, VANGUARD, APEX } 
+PieceType  = { BULWARK, VANGUARD, APEX }
 Player     = { BLANCAS, NEGRAS }
 GamePhase  = { SETUP, BENCH_SELECTION, PLAYING, GAME_OVER }
 GameMode   = { PVP }   // modos PVC_* reservados para Fase 2 (ver §12.2)
@@ -193,10 +193,10 @@ y=0   [   ][   ][   ][   ][   ]   ← fila de ANOTACIÓN de NEGRAS / prohibida B
 
 ### 4.2 Sentido de juego
 
-| Jugador | Multiplicador `d` | "Adelante" | Su fila de anotación | Filas de colocación |
-|---|---|---|---|---|
-| BLANCAS | `+1` | `y` creciente | `y = 10` | `1, 2, 3` |
-| NEGRAS | `−1` | `y` decreciente | `y = 0` | `7, 8, 9` |
+| Jugador | Multiplicador `d` | "Adelante"      | Su fila de anotación | Filas de colocación |
+| ------- | ----------------- | --------------- | -------------------- | ------------------- |
+| BLANCAS | `+1`              | `y` creciente   | `y = 10`             | `1, 2, 3`           |
+| NEGRAS  | `−1`              | `y` decreciente | `y = 0`              | `7, 8, 9`           |
 
 ### 4.3 Invariantes derivados de la geometría
 
@@ -227,7 +227,7 @@ candidato = posición + dirección × multiplicador × distancia
 2. **Ocupación** —
    - casilla con pieza **propia** → destino ilegal, siempre;
    - casilla con pieza **enemiga** → legal solo si el patrón permite captura
-     (o es un patrón de captura, que *exige* enemigo);
+     (o es un patrón de captura, que _exige_ enemigo);
    - casilla **vacía** → legal si el patrón lo cubre.
 3. **Camino despejado** — para patrones con `distancia > 1`, las casillas
    intermedias deben estar libres de piezas (no se puede saltar piezas).
@@ -291,17 +291,17 @@ Propiedades:
 
 **Excepciones de bypass implementadas:**
 
-| Pieza que se mueve | ¿Puede entrar a casilla bloqueada? |
-|---|---|
-| BULWARK | **Solo si captura**: si la casilla bloqueada contiene una pieza enemiga, el Bulwark puede entrar capturándola (vía su patrón de captura diagonal). Si está vacía → bloqueado. |
-| VANGUARD | **Nunca.** Ni para mover ni para capturar. Un Vanguard no puede capturar una pieza enemiga que esté junto a un Bulwark rival. |
-| APEX | **Sí, condicionalmente**: puede entrar si el Bulwark bloqueante está a **2 o más filas de distancia hacia adelante** del Apex. Si el Bulwark está a 1 fila, en la misma fila o detrás → bloqueado. (Formalmente: `(B.y − P.y) × d ≥ 2`.) |
+| Pieza que se mueve | ¿Puede entrar a casilla bloqueada?                                                                                                                                                                                                       |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| BULWARK            | **Solo si captura**: si la casilla bloqueada contiene una pieza enemiga, el Bulwark puede entrar capturándola (vía su patrón de captura diagonal). Si está vacía → bloqueado.                                                            |
+| VANGUARD           | **Nunca.** Ni para mover ni para capturar. Un Vanguard no puede capturar una pieza enemiga que esté junto a un Bulwark rival.                                                                                                            |
+| APEX               | **Sí, condicionalmente**: puede entrar si el Bulwark bloqueante está a **2 o más filas de distancia hacia adelante** del Apex. Si el Bulwark está a 1 fila, en la misma fila o detrás → bloqueado. (Formalmente: `(B.y − P.y) × d ≥ 2`.) |
 
 ### 5.4 Matiz sobre casillas intermedias
 
 - Para el **movimiento doble del Vanguard** (2 adelante): la casilla intermedia
   debe estar **libre de piezas**, pero **puede estar bloqueada** por un Bulwark —
-  el Vanguard "pasa por encima" de la zona. Lo que no puede es *aterrizar* en
+  el Vanguard "pasa por encima" de la zona. Lo que no puede es _aterrizar_ en
   casilla bloqueada.
 - Para el **Apex**: todas las casillas de la trayectoria (incluidas las
   intermedias y la lateral) se verifican contra el bloqueo, además de contra
@@ -316,11 +316,11 @@ Propiedades:
 **Identidad:** pieza de contención. Avanza lento, captura en diagonal y proyecta
 la zona de bloqueo lateral (§5.3).
 
-| Patrón | Direcciones | Distancia | Destino válido |
-|---|---|---|---|
-| `movement` | `(0, +1)` | 1 | solo casilla **vacía** |
-| `capture` | `(−1, +1)`, `(+1, +1)` | 1 | solo pieza **enemiga** |
-| `blocksSides` | offsets `(−1, 0)`, `(+1, 0)` | — | bloquea al enemigo |
+| Patrón        | Direcciones                  | Distancia | Destino válido         |
+| ------------- | ---------------------------- | --------- | ---------------------- |
+| `movement`    | `(0, +1)`                    | 1         | solo casilla **vacía** |
+| `capture`     | `(−1, +1)`, `(+1, +1)`       | 1         | solo pieza **enemiga** |
+| `blocksSides` | offsets `(−1, 0)`, `(+1, 0)` | —         | bloquea al enemigo     |
 
 ```
         col−1   col    col+1
@@ -346,11 +346,11 @@ M = movimiento (casilla vacía)      C = captura (pieza enemiga)
 **Identidad:** pieza de presión. Se despliega lateralmente sin capturar, captura
 de frente y tiene un avance doble.
 
-| Patrón | Direcciones | Distancia | Destino válido |
-|---|---|---|---|
-| `movement` | `(0, +1)`, `(−1, +1)`, `(+1, +1)` | 1 | solo casilla **vacía** |
-| `alternativeMovement` | `(0, +1)` | exactamente 2 | casilla vacía **y camino libre** |
-| `capture` | `(0, +1)` | 1 | solo pieza **enemiga** |
+| Patrón                | Direcciones                       | Distancia     | Destino válido                   |
+| --------------------- | --------------------------------- | ------------- | -------------------------------- |
+| `movement`            | `(0, +1)`, `(−1, +1)`, `(+1, +1)` | 1             | solo casilla **vacía**           |
+| `alternativeMovement` | `(0, +1)`                         | exactamente 2 | casilla vacía **y camino libre** |
+| `capture`             | `(0, +1)`                         | 1             | solo pieza **enemiga**           |
 
 ```
         col−1   col    col+1
@@ -425,15 +425,15 @@ L = L-shape: avanzar f filas + 1 lateral (f ∈ {1,2}; total ≤ 3)
 
 ### 6.4 Tabla resumen
 
-| Propiedad | BULWARK | VANGUARD | APEX |
-|---|---|---|---|
-| Avance recto | 1 | 1 o 2 | 1–3 |
-| Movimiento diagonal (a vacía) | no | 1 | solo como L (tras avanzar) |
-| Captura | diagonal 1 | frontal 1 | **ninguna** (implementado) |
-| Puede saltar piezas | no | no (el doble exige camino libre) | no |
-| Proyecta bloqueo | sí (laterales) | no | no |
-| Bypassea bloqueo | solo capturando | nunca | si el Bulwark está ≥2 filas adelante |
-| Retrocede | nunca | nunca | nunca |
+| Propiedad                     | BULWARK         | VANGUARD                         | APEX                                 |
+| ----------------------------- | --------------- | -------------------------------- | ------------------------------------ |
+| Avance recto                  | 1               | 1 o 2                            | 1–3                                  |
+| Movimiento diagonal (a vacía) | no              | 1                                | solo como L (tras avanzar)           |
+| Captura                       | diagonal 1      | frontal 1                        | **ninguna** (implementado)           |
+| Puede saltar piezas           | no              | no (el doble exige camino libre) | no                                   |
+| Proyecta bloqueo              | sí (laterales)  | no                               | no                                   |
+| Bypassea bloqueo              | solo capturando | nunca                            | si el Bulwark está ≥2 filas adelante |
+| Retrocede                     | nunca           | nunca                            | nunca                                |
 
 ---
 
@@ -545,13 +545,13 @@ Transiciones irreversibles; no se puede volver a una fase anterior (salvo
 
 ### 9.1 Acciones del jugador en PLAYING
 
-| Acción | Consume turno | Requisitos |
-|---|---|---|
-| Seleccionar pieza propia | no | que sea su turno y pieza en tablero |
-| Mover a destino legal | **sí** | destino ∈ movimientos legales de la pieza |
-| Incorporar pieza de banca | **no** | banca no vacía **y** < 5 piezas propias en tablero **y** destino de colocación válido |
-| Re-seleccionar otra pieza propia | no | — |
-| Deseleccionar | no | — |
+| Acción                           | Consume turno | Requisitos                                                                            |
+| -------------------------------- | ------------- | ------------------------------------------------------------------------------------- |
+| Seleccionar pieza propia         | no            | que sea su turno y pieza en tablero                                                   |
+| Mover a destino legal            | **sí**        | destino ∈ movimientos legales de la pieza                                             |
+| Incorporar pieza de banca        | **no**        | banca no vacía **y** < 5 piezas propias en tablero **y** destino de colocación válido |
+| Re-seleccionar otra pieza propia | no            | —                                                                                     |
+| Deseleccionar                    | no            | —                                                                                     |
 
 ### 9.2 Resolución de un movimiento (secuencia atómica)
 
@@ -657,8 +657,8 @@ comportamiento observable):
 
 ### 12.1 Modo actual
 
-| Modo | Descripción |
-|---|---|
+| Modo  | Descripción                          |
+| ----- | ------------------------------------ |
 | `PVP` | Humano vs. humano, mismo dispositivo |
 
 El juego es actualmente **PVP únicamente**. No existe jugador automático en la
@@ -669,7 +669,7 @@ versión portada — la implementación histórica fue descartada.
 Está previsto añadir un **oponente automático en una segunda etapa**. El
 diseño de capas ya anticipa ese punto de extensión: un agente no es más que
 otra implementación del puerto de decisión, usando los mismos puntos de
-entrada de reglas que un humano — la única diferencia es *quién decide*.
+entrada de reglas que un humano — la única diferencia es _quién decide_.
 
 Contrato planificado (no implementado aún):
 
@@ -706,26 +706,26 @@ decidir conscientemente cada punto.
 
 ### 13.1 Comportamiento implementado (fuente de verdad)
 
-| # | Regla implementada | Detalle |
-|---|---|---|
-| 1 | **El Apex NO captura** | No tiene patrón de captura y todos sus destinos exigen casilla vacía. El tutorial y `MOVEMENT_SYSTEM.md` afirman que "captura como el Vanguard (1 adelante)" — **no está implementado**. |
-| 2 | **Bulwark solo avanza recto** | Docs antiguos: "1 adelante o diagonal". Real: el diagonal es solo captura; a casilla vacía diagonal no entra. |
-| 3 | **SETUP alterna pieza a pieza** | No "J1 coloca 5, luego J2 coloca 5": cada colocación cambia el turno. |
-| 4 | **Colocar banca es acción gratuita** | No consume turno ni termina la jugada; repetible hasta agotar requisitos. |
-| 5 | **Capturadas se eliminan** | No vuelven a la banca ni al ejército. La banca solo decrece. |
-| 6 | **Bloqueo mutuo termina la partida** | Solo si **ambos** jugadores carecen de movimientos legales (piezas en tablero). Un jugador solo bloqueado no termina nada. |
-| 7 | **No existe acción de "pasar turno"** | Si un jugador no tiene movimientos ni banca disponible, no tiene acción que ceda el turno — situación potencialmente bloqueante si el rival tampoco puede mover (ver 6). Relevante para la Fase 2: un agente automático necesitaría ceder automáticamente. |
-| 8 | **Vanguard "salta" zonas bloqueadas** | Su avance doble ignora el bloqueo en la casilla intermedia; solo el destino se valida contra bloqueo. |
-| 9 | **Bloqueo verificado en el camino del Apex** | A diferencia del Vanguard, el Apex sí valida bloqueo en cada casilla de su trayectoria. |
-| 10 | **El bypass del Apex mide al Bulwark, no al destino** | Se compara la fila del Bulwark bloqueante con la del Apex (`≥ 2` hacia adelante), no la distancia del movimiento. Docs antiguos decían "Apex a 1 casillero moviendo 3" — la regla real es otra. |
-| 11 | **`FORBIDDEN_ROW_*` definido pero no forzado** | No hay validación; es innecesaria porque el movimiento estrictamente hacia adelante las hace inalcanzables (§4.3). |
-| 12 | **Anotar solo tras mover** | El chequeo de puntaje ocurre post-movimiento; una pieza nunca "empieza" en fila de anotación (las filas de colocación están lejos). |
-| 13 | **Piezas propias nunca bloquean ni se capturan** | Casilla con pieza propia = destino ilegal para cualquier patrón; los Bulwarks propios no proyectan bloqueo sobre uno mismo. |
-| 14 | **Banca invisible en las reglas** | Nada en las reglas impide ver la banca rival; el ocultamiento es decisión de UI. |
-| 15 | **Mínimos por tipo solo se fuerzan en la banca** | En SETUP solo se fuerza el máximo (4); la alcanzabilidad del mínimo (2) se garantiza al elegir banca. Combinación resultante: {4,2,2} o {3,3,2}. |
-| 16 | **`MIN_PIECES_PER_TYPE` en el destino de colocación** | El tope de 2 piezas por fila se cuenta solo con piezas **propias** (el rival puede tener las suyas en la misma fila — aunque por zonas disjuntas no ocurre en la práctica). |
-| 17 | **El historial guarda snapshot post-movimiento** | Retroceder reconstruye el tablero desde el snapshot, no deshaciendo efectos. |
-| 18 | **El empate es posible** | Solo vía bloqueo mutuo con puntajes iguales (0-0, 1-1, 2-2). |
+| #   | Regla implementada                                    | Detalle                                                                                                                                                                                                                                                    |
+| --- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **El Apex NO captura**                                | No tiene patrón de captura y todos sus destinos exigen casilla vacía. El tutorial y `MOVEMENT_SYSTEM.md` afirman que "captura como el Vanguard (1 adelante)" — **no está implementado**.                                                                   |
+| 2   | **Bulwark solo avanza recto**                         | Docs antiguos: "1 adelante o diagonal". Real: el diagonal es solo captura; a casilla vacía diagonal no entra.                                                                                                                                              |
+| 3   | **SETUP alterna pieza a pieza**                       | No "J1 coloca 5, luego J2 coloca 5": cada colocación cambia el turno.                                                                                                                                                                                      |
+| 4   | **Colocar banca es acción gratuita**                  | No consume turno ni termina la jugada; repetible hasta agotar requisitos.                                                                                                                                                                                  |
+| 5   | **Capturadas se eliminan**                            | No vuelven a la banca ni al ejército. La banca solo decrece.                                                                                                                                                                                               |
+| 6   | **Bloqueo mutuo termina la partida**                  | Solo si **ambos** jugadores carecen de movimientos legales (piezas en tablero). Un jugador solo bloqueado no termina nada.                                                                                                                                 |
+| 7   | **No existe acción de "pasar turno"**                 | Si un jugador no tiene movimientos ni banca disponible, no tiene acción que ceda el turno — situación potencialmente bloqueante si el rival tampoco puede mover (ver 6). Relevante para la Fase 2: un agente automático necesitaría ceder automáticamente. |
+| 8   | **Vanguard "salta" zonas bloqueadas**                 | Su avance doble ignora el bloqueo en la casilla intermedia; solo el destino se valida contra bloqueo.                                                                                                                                                      |
+| 9   | **Bloqueo verificado en el camino del Apex**          | A diferencia del Vanguard, el Apex sí valida bloqueo en cada casilla de su trayectoria.                                                                                                                                                                    |
+| 10  | **El bypass del Apex mide al Bulwark, no al destino** | Se compara la fila del Bulwark bloqueante con la del Apex (`≥ 2` hacia adelante), no la distancia del movimiento. Docs antiguos decían "Apex a 1 casillero moviendo 3" — la regla real es otra.                                                            |
+| 11  | **`FORBIDDEN_ROW_*` definido pero no forzado**        | No hay validación; es innecesaria porque el movimiento estrictamente hacia adelante las hace inalcanzables (§4.3).                                                                                                                                         |
+| 12  | **Anotar solo tras mover**                            | El chequeo de puntaje ocurre post-movimiento; una pieza nunca "empieza" en fila de anotación (las filas de colocación están lejos).                                                                                                                        |
+| 13  | **Piezas propias nunca bloquean ni se capturan**      | Casilla con pieza propia = destino ilegal para cualquier patrón; los Bulwarks propios no proyectan bloqueo sobre uno mismo.                                                                                                                                |
+| 14  | **Banca invisible en las reglas**                     | Nada en las reglas impide ver la banca rival; el ocultamiento es decisión de UI.                                                                                                                                                                           |
+| 15  | **Mínimos por tipo solo se fuerzan en la banca**      | En SETUP solo se fuerza el máximo (4); la alcanzabilidad del mínimo (2) se garantiza al elegir banca. Combinación resultante: {4,2,2} o {3,3,2}.                                                                                                           |
+| 16  | **`MIN_PIECES_PER_TYPE` en el destino de colocación** | El tope de 2 piezas por fila se cuenta solo con piezas **propias** (el rival puede tener las suyas en la misma fila — aunque por zonas disjuntas no ocurre en la práctica).                                                                                |
+| 17  | **El historial guarda snapshot post-movimiento**      | Retroceder reconstruye el tablero desde el snapshot, no deshaciendo efectos.                                                                                                                                                                               |
+| 18  | **El empate es posible**                              | Solo vía bloqueo mutuo con puntajes iguales (0-0, 1-1, 2-2).                                                                                                                                                                                               |
 
 ### 13.2 Decisiones pendientes que una re-implementación debe tomar
 
@@ -822,19 +822,19 @@ IRenderer.updateBoard(board); onTileClick(cb); onTileHover(cb)
 
 ### 14.4 Guía de extensión (cookbook)
 
-| Quiero… | Tocar… | Esfuerzo |
-|---|---|---|
-| Cambiar tamaño del tablero | `GameParameters` | datos |
-| Cambiar filas de colocación/anotación, puntos para ganar | `GameParameters` | datos |
-| Cambiar movimiento de una pieza | su entrada en `PieceCatalog` | datos |
-| Agregar una dirección a una pieza | `directions` de su patrón | datos |
-| Permitir captura al Apex | agregar `capture` + permitir destino enemigo en su algoritmo | datos + 1 rama en engine |
-| **Nueva pieza** | enum `PieceType` + entrada en `PieceCatalog` + visual en adapter | datos + adapter |
-| **Nueva habilidad** (p.ej. "salta piezas") | flag en `PieceConfig` + hook en `MoveGenerator` | engine acotado |
-| Nueva condición de victoria | nuevo detector en `EndConditionRule` | engine acotado |
-| Nueva fase (p.ej. draft) | enum `Phase` + rama en `GameSession` | orchestration acotado |
-| Cambiar 3D → 2D → terminal | solo el adapter `IRenderer` | aislado |
-| Multi-jugador en red | adapter de transporte que alimente `GameSession` | aislado (las reglas ya son deterministas) |
+| Quiero…                                                  | Tocar…                                                           | Esfuerzo                                  |
+| -------------------------------------------------------- | ---------------------------------------------------------------- | ----------------------------------------- |
+| Cambiar tamaño del tablero                               | `GameParameters`                                                 | datos                                     |
+| Cambiar filas de colocación/anotación, puntos para ganar | `GameParameters`                                                 | datos                                     |
+| Cambiar movimiento de una pieza                          | su entrada en `PieceCatalog`                                     | datos                                     |
+| Agregar una dirección a una pieza                        | `directions` de su patrón                                        | datos                                     |
+| Permitir captura al Apex                                 | agregar `capture` + permitir destino enemigo en su algoritmo     | datos + 1 rama en engine                  |
+| **Nueva pieza**                                          | enum `PieceType` + entrada en `PieceCatalog` + visual en adapter | datos + adapter                           |
+| **Nueva habilidad** (p.ej. "salta piezas")               | flag en `PieceConfig` + hook en `MoveGenerator`                  | engine acotado                            |
+| Nueva condición de victoria                              | nuevo detector en `EndConditionRule`                             | engine acotado                            |
+| Nueva fase (p.ej. draft)                                 | enum `Phase` + rama en `GameSession`                             | orchestration acotado                     |
+| Cambiar 3D → 2D → terminal                               | solo el adapter `IRenderer`                                      | aislado                                   |
+| Multi-jugador en red                                     | adapter de transporte que alimente `GameSession`                 | aislado (las reglas ya son deterministas) |
 
 ### 14.5 Checklist de conformidad para la re-implementación
 
@@ -945,22 +945,22 @@ loop:
 
 ### Apéndice C — Referencia rápida de todos los números
 
-| Regla | Valor |
-|---|---|
-| Tablero | 5 × 11 |
-| Ejército | 8 = 5 tablero + 3 banca |
-| Por tipo | 2–4 |
-| Colocación | filas 1-3 / 7-9, máx. 2 propias por fila |
-| Bulwark | mueve (0,+1)·1; captura (±1,+1)·1; bloquea (±1,0) |
-| Vanguard | mueve (0,+1),(±1,+1)·1; doble (0,+1)·2; captura (0,+1)·1 |
-| Apex | avanza 1-3 + lateral ≤1, total ≤3; sin captura; bypass si Bulwark ≥2 filas |
-| Anotación | fila opuesta: 10 / 0 |
-| Victoria | 3 puntos, o más puntos ante bloqueo mutuo |
-| Turno inicial | BLANCAS en todas las fases |
+| Regla         | Valor                                                                      |
+| ------------- | -------------------------------------------------------------------------- |
+| Tablero       | 5 × 11                                                                     |
+| Ejército      | 8 = 5 tablero + 3 banca                                                    |
+| Por tipo      | 2–4                                                                        |
+| Colocación    | filas 1-3 / 7-9, máx. 2 propias por fila                                   |
+| Bulwark       | mueve (0,+1)·1; captura (±1,+1)·1; bloquea (±1,0)                          |
+| Vanguard      | mueve (0,+1),(±1,+1)·1; doble (0,+1)·2; captura (0,+1)·1                   |
+| Apex          | avanza 1-3 + lateral ≤1, total ≤3; sin captura; bypass si Bulwark ≥2 filas |
+| Anotación     | fila opuesta: 10 / 0                                                       |
+| Victoria      | 3 puntos, o más puntos ante bloqueo mutuo                                  |
+| Turno inicial | BLANCAS en todas las fases                                                 |
 
 ---
 
-*Documento derivado del código fuente real del proyecto (`src/domain/`,
+_Documento derivado del código fuente real del proyecto (`src/domain/`,
 `src/application/rules/MovementRuleEngine.ts`, `src/application/GameState.ts`).
 Ante cualquier duda entre este documento y el código, **el código manda** — y
-este documento debería actualizarse.*
+este documento debería actualizarse._

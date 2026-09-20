@@ -1,14 +1,14 @@
-import { create } from 'zustand';
-import { Board } from '../domain/entities/Board';
-import { Position } from '../domain/entities/Position';
-import { GamePiece } from '../domain/entities/GamePiece';
-import { PlayerState } from '../domain/entities/PlayerState';
-import { IGameState } from '../domain/interfaces/IGameState';
-import { GAME_CONFIG } from '../domain/constants/GameConstants';
-import { Player, PieceType } from '../domain/constants/PieceConstants';
-import { GamePhase, GAME_RULES, GameMode } from '../domain/constants/GameRules';
-import { MovementRuleEngine } from './rules/MovementRuleEngine';
-import { MoveHistory, MoveRecord } from '../domain/entities/MoveHistory';
+import { create } from "zustand";
+import { Board } from "../domain/entities/Board";
+import { Position } from "../domain/entities/Position";
+import { GamePiece } from "../domain/entities/GamePiece";
+import { PlayerState } from "../domain/entities/PlayerState";
+import { IGameState } from "../domain/interfaces/IGameState";
+import { GAME_CONFIG } from "../domain/constants/GameConstants";
+import { Player, PieceType } from "../domain/constants/PieceConstants";
+import { GamePhase, GAME_RULES, GameMode } from "../domain/constants/GameRules";
+import { MovementRuleEngine } from "./rules/MovementRuleEngine";
+import { MoveHistory, MoveRecord } from "../domain/entities/MoveHistory";
 
 interface GameStateStore {
   board: Board;
@@ -26,7 +26,7 @@ interface GameStateStore {
   pieceIdCounter: number;
   moveHistory: MoveHistory;
   isViewingHistory: boolean;
-  
+
   selectPieceTypeForSetup: (type: PieceType) => void;
   selectPieceTypeForBench: (type: PieceType) => void;
   placePieceInSetup: (position: Position) => void;
@@ -63,8 +63,8 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
   gamePhase: GamePhase.SETUP,
   gameMode: GameMode.PVP,
   currentPlayer: Player.BLANCAS,
-  player1State: new PlayerState('player1'),
-  player2State: new PlayerState('player2'),
+  player1State: new PlayerState("player1"),
+  player2State: new PlayerState("player2"),
   selectedPiece: null,
   selectedPieceTypeForPlacement: null,
   selectedBenchPiece: null,
@@ -89,13 +89,13 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
     const state = get();
     if (state.gamePhase !== GamePhase.SETUP) return false;
     if (state.selectedPieceTypeForPlacement !== null) return false;
-    
+
     const playerState = state.getCurrentPlayerState();
     const currentCount = playerState.getSelectedPieceCount(type);
-    
+
     if (currentCount >= GAME_RULES.MAX_PIECES_PER_TYPE) return false;
     if (playerState.getTotalSelectedCount() >= GAME_RULES.TOTAL_PIECES_PER_PLAYER) return false;
-    
+
     return true;
   },
 
@@ -104,90 +104,99 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
     if (state.gamePhase !== GamePhase.BENCH_SELECTION) {
       return false;
     }
-    
+
     const playerState = state.getCurrentPlayerState();
     const benchCount = playerState.getBenchPieces().length;
-    const currentBenchTypeCount = playerState.getBenchPieces().filter(p => p.type === type).length;
-    
+    const currentBenchTypeCount = playerState
+      .getBenchPieces()
+      .filter((p) => p.type === type).length;
+
     if (benchCount >= GAME_RULES.PIECES_IN_BENCH) {
       return false;
     }
-    
+
     const totalOfType = playerState.getSelectedPieceCount(type) + currentBenchTypeCount;
     if (totalOfType >= GAME_RULES.MAX_PIECES_PER_TYPE) {
       return false;
     }
-    
+
     // Check if selecting this piece would prevent meeting MIN_PIECES_PER_TYPE for other types
     const remainingBenchSlots = GAME_RULES.PIECES_IN_BENCH - benchCount;
-    
+
     // For each piece type, check if we can still meet the minimum requirement
     const allPieceTypes = Object.values(PieceType);
     for (const otherType of allPieceTypes) {
       if (otherType === type) continue;
-      
-      const otherTypeTotal = playerState.getSelectedPieceCount(otherType) + 
-                            playerState.getBenchPieces().filter(p => p.type === otherType).length;
-      
+
+      const otherTypeTotal =
+        playerState.getSelectedPieceCount(otherType) +
+        playerState.getBenchPieces().filter((p) => p.type === otherType).length;
+
       // If this other type is below minimum and we don't have enough slots to reach it
       if (otherTypeTotal < GAME_RULES.MIN_PIECES_PER_TYPE) {
         const neededToReachMin = GAME_RULES.MIN_PIECES_PER_TYPE - otherTypeTotal;
         const slotsAvailableForOthers = remainingBenchSlots - 1; // -1 for current selection
-        
+
         if (slotsAvailableForOthers < neededToReachMin) {
           return false;
         }
       }
     }
-    
+
     return true;
   },
 
   canPlaceBenchPiece: () => {
     const state = get();
     if (state.gamePhase !== GamePhase.PLAYING) return false;
-    
+
     const playerState = state.getCurrentPlayerState();
-    const piecesOnBoard = state.board.getAllPieces().filter(p => p.owner === state.currentPlayer).length;
+    const piecesOnBoard = state.board
+      .getAllPieces()
+      .filter((p) => p.owner === state.currentPlayer).length;
     const hasBenchPieces = playerState.getBenchPieces().length > 0;
-    
+
     return piecesOnBoard < GAME_RULES.PIECES_TO_PLACE && hasBenchPieces;
   },
 
   selectPieceTypeForSetup: (type: PieceType) => {
     set((state) => {
       if (!state.canSelectPieceType(type)) return state;
-      
+
       // Calculate valid placement positions for setup phase
-      const validRows = (state.currentPlayer === Player.BLANCAS 
-        ? GAME_RULES.PLACEMENT_ROWS_PLAYER1 
-        : GAME_RULES.PLACEMENT_ROWS_PLAYER2) as readonly number[];
-      
+      const validRows = (
+        state.currentPlayer === Player.BLANCAS
+          ? GAME_RULES.PLACEMENT_ROWS_PLAYER1
+          : GAME_RULES.PLACEMENT_ROWS_PLAYER2
+      ) as readonly number[];
+
       const validPositions: Position[] = [];
-      
+
       for (const row of validRows) {
         for (let col = 0; col < GAME_CONFIG.BOARD_WIDTH; col++) {
           const pos = new Position(col, row);
           const existingPiece = state.board.getPieceAt(pos);
-          
+
           if (!existingPiece) {
-            const piecesInRow = state.board.getAllPieces().filter(
-              p => p.position && p.position.y === row && p.owner === state.currentPlayer
-            ).length;
-            
+            const piecesInRow = state.board
+              .getAllPieces()
+              .filter(
+                (p) => p.position && p.position.y === row && p.owner === state.currentPlayer,
+              ).length;
+
             if (piecesInRow < GAME_RULES.MAX_PIECES_PER_ROW) {
               validPositions.push(pos);
             }
           }
         }
       }
-      
+
       // Clear previous highlights and show new valid positions
       state.board.clearSelection();
       state.board.clearHighlights();
       state.board.highlightPositions(validPositions);
-      
-      return { 
+
+      return {
         selectedPieceTypeForPlacement: type,
         validMoves: validPositions,
         blockedMoves: [],
@@ -196,47 +205,42 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
   },
 
   selectPieceTypeForBench: (type: PieceType) => {
-    console.log('selectPieceTypeForBench called with type:', type);
+    console.log("selectPieceTypeForBench called with type:", type);
     const state = get();
-    console.log('Current phase:', state.gamePhase);
-    console.log('Can select bench piece?', state.canSelectBenchPieceType(type));
-    
+    console.log("Current phase:", state.gamePhase);
+    console.log("Can select bench piece?", state.canSelectBenchPieceType(type));
+
     set((state) => {
       if (!state.canSelectBenchPieceType(type)) {
-        console.log('Cannot select bench piece type, returning');
+        console.log("Cannot select bench piece type, returning");
         return state;
       }
-      
+
       const playerState = state.getCurrentPlayerState();
       const pieceId = `bench-${state.currentPlayer}-${state.pieceIdCounter}`;
-      const benchPiece = new GamePiece(
-        pieceId,
-        type,
-        null,
-        state.currentPlayer
-      );
-      
-      console.log('Adding bench piece:', pieceId, type);
+      const benchPiece = new GamePiece(pieceId, type, null, state.currentPlayer);
+
+      console.log("Adding bench piece:", pieceId, type);
       playerState.addBenchPiece(benchPiece);
-      
+
       const benchCount = playerState.getBenchPieces().length;
-      console.log('Bench count after adding:', benchCount);
-      
+      console.log("Bench count after adding:", benchCount);
+
       let newState: Partial<GameStateStore> = {
         pieceIdCounter: state.pieceIdCounter + 1,
       };
-      
+
       if (benchCount >= GAME_RULES.PIECES_IN_BENCH) {
         if (state.currentPlayer === Player.BLANCAS) {
           newState.currentPlayer = Player.NEGRAS;
-          console.log('Switching to Player 2');
+          console.log("Switching to Player 2");
         } else {
           newState.gamePhase = GamePhase.PLAYING;
           newState.currentPlayer = Player.BLANCAS;
-          console.log('Starting game phase');
+          console.log("Starting game phase");
         }
       }
-      
+
       return newState;
     });
   },
@@ -245,49 +249,53 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
     set((state) => {
       if (state.gamePhase !== GamePhase.SETUP) return state;
       if (!state.selectedPieceTypeForPlacement) return state;
-      
+
       const playerState = state.getCurrentPlayerState();
       const placedCount = playerState.getPlacedPiecesCount();
-      
+
       if (placedCount >= GAME_RULES.PIECES_TO_PLACE) return state;
-      
-      const validRows = (state.currentPlayer === Player.BLANCAS 
-        ? GAME_RULES.PLACEMENT_ROWS_PLAYER1 
-        : GAME_RULES.PLACEMENT_ROWS_PLAYER2) as readonly number[];
-      
+
+      const validRows = (
+        state.currentPlayer === Player.BLANCAS
+          ? GAME_RULES.PLACEMENT_ROWS_PLAYER1
+          : GAME_RULES.PLACEMENT_ROWS_PLAYER2
+      ) as readonly number[];
+
       if (!validRows.includes(position.y)) return state;
-      
+
       if (state.board.getPieceAt(position)) return state;
-      
-      const piecesInRow = state.board.getAllPieces().filter(
-        p => p.position && p.position.y === position.y && p.owner === state.currentPlayer
-      ).length;
-      
+
+      const piecesInRow = state.board
+        .getAllPieces()
+        .filter(
+          (p) => p.position && p.position.y === position.y && p.owner === state.currentPlayer,
+        ).length;
+
       if (piecesInRow >= GAME_RULES.MAX_PIECES_PER_ROW) return state;
-      
+
       const pieceType = state.selectedPieceTypeForPlacement;
       const pieceId = `piece-${state.pieceIdCounter}`;
       const piece = new GamePiece(pieceId, pieceType, position, state.currentPlayer);
-      
+
       state.board.addPiece(piece);
       playerState.addSelectedPiece(pieceType);
       playerState.addPlacedPiece(piece);
-      
+
       // Clear highlights after placing piece
       state.board.clearSelection();
       state.board.clearHighlights();
-      
+
       const p1Placed = state.player1State.getPlacedPiecesCount();
       const p2Placed = state.player2State.getPlacedPiecesCount();
       const totalPlaced = p1Placed + p2Placed;
-      
+
       let newState: Partial<GameStateStore> = {
         pieceIdCounter: state.pieceIdCounter + 1,
         selectedPieceTypeForPlacement: null,
         validMoves: [],
         blockedMoves: [],
       };
-      
+
       if (totalPlaced >= GAME_RULES.PIECES_TO_PLACE * 2) {
         newState.gamePhase = GamePhase.BENCH_SELECTION;
         newState.currentPlayer = Player.BLANCAS;
@@ -295,12 +303,13 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
         state.board.clearSelection();
         state.board.clearHighlights();
       } else {
-        newState.currentPlayer = state.currentPlayer === Player.BLANCAS ? Player.NEGRAS : Player.BLANCAS;
+        newState.currentPlayer =
+          state.currentPlayer === Player.BLANCAS ? Player.NEGRAS : Player.BLANCAS;
         // Clear highlights when switching turns
         state.board.clearSelection();
         state.board.clearHighlights();
       }
-      
+
       return newState;
     });
   },
@@ -308,39 +317,45 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
   placeBenchPiece: (position: Position) => {
     set((state) => {
       if (state.gamePhase !== GamePhase.PLAYING) return state;
-      
+
       const playerState = state.getCurrentPlayerState();
       const benchPieces = playerState.getBenchPieces();
-      
+
       if (benchPieces.length === 0) return state;
-      
-      const piecesOnBoard = state.board.getAllPieces().filter(p => p.owner === state.currentPlayer).length;
+
+      const piecesOnBoard = state.board
+        .getAllPieces()
+        .filter((p) => p.owner === state.currentPlayer).length;
       if (piecesOnBoard >= GAME_RULES.PIECES_TO_PLACE) return state;
-      
-      const validRows = (state.currentPlayer === Player.BLANCAS 
-        ? GAME_RULES.PLACEMENT_ROWS_PLAYER1 
-        : GAME_RULES.PLACEMENT_ROWS_PLAYER2) as readonly number[];
-      
+
+      const validRows = (
+        state.currentPlayer === Player.BLANCAS
+          ? GAME_RULES.PLACEMENT_ROWS_PLAYER1
+          : GAME_RULES.PLACEMENT_ROWS_PLAYER2
+      ) as readonly number[];
+
       if (!validRows.includes(position.y)) return state;
-      
+
       if (state.board.getPieceAt(position)) return state;
-      
-      const piecesInRow = state.board.getAllPieces().filter(
-        p => p.position && p.position.y === position.y && p.owner === state.currentPlayer
-      ).length;
-      
+
+      const piecesInRow = state.board
+        .getAllPieces()
+        .filter(
+          (p) => p.position && p.position.y === position.y && p.owner === state.currentPlayer,
+        ).length;
+
       if (piecesInRow >= GAME_RULES.MAX_PIECES_PER_ROW) return state;
-      
+
       const benchPiece = state.selectedBenchPiece || benchPieces[0];
       benchPiece.moveTo(position);
-      
+
       state.board.addPiece(benchPiece);
       playerState.removeBenchPiece(benchPiece.id);
-      
+
       // Clear highlights and selection
       state.board.clearSelection();
       state.board.clearHighlights();
-      
+
       return {
         selectedBenchPiece: null,
         validMoves: [],
@@ -352,40 +367,44 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
   selectBenchPiece: (benchPiece: GamePiece) => {
     set((state) => {
       if (state.gamePhase !== GamePhase.PLAYING) return state;
-      
+
       const playerState = state.getCurrentPlayerState();
       const benchPieces = playerState.getBenchPieces();
-      
+
       if (!benchPieces.includes(benchPiece)) return state;
-      
+
       // Calculate valid placement positions
-      const validRows = (state.currentPlayer === Player.BLANCAS 
-        ? GAME_RULES.PLACEMENT_ROWS_PLAYER1 
-        : GAME_RULES.PLACEMENT_ROWS_PLAYER2) as readonly number[];
-      
+      const validRows = (
+        state.currentPlayer === Player.BLANCAS
+          ? GAME_RULES.PLACEMENT_ROWS_PLAYER1
+          : GAME_RULES.PLACEMENT_ROWS_PLAYER2
+      ) as readonly number[];
+
       const validPositions: Position[] = [];
-      
+
       for (const row of validRows) {
         for (let col = 0; col < GAME_CONFIG.BOARD_WIDTH; col++) {
           const pos = new Position(col, row);
           const existingPiece = state.board.getPieceAt(pos);
-          
+
           if (!existingPiece) {
-            const piecesInRow = state.board.getAllPieces().filter(
-              p => p.position && p.position.y === row && p.owner === state.currentPlayer
-            ).length;
-            
+            const piecesInRow = state.board
+              .getAllPieces()
+              .filter(
+                (p) => p.position && p.position.y === row && p.owner === state.currentPlayer,
+              ).length;
+
             if (piecesInRow < GAME_RULES.MAX_PIECES_PER_ROW) {
               validPositions.push(pos);
             }
           }
         }
       }
-      
+
       state.board.clearSelection();
       state.board.clearHighlights();
       state.board.highlightPositions(validPositions);
-      
+
       return {
         selectedBenchPiece: benchPiece,
         selectedPiece: null,
@@ -401,27 +420,27 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
         state.placePieceInSetup(position);
         return {};
       }
-      
+
       if (state.gamePhase === GamePhase.BENCH_SELECTION) {
         return state;
       }
-      
+
       if (state.gamePhase !== GamePhase.PLAYING) return state;
-      
+
       const clickedPiece = state.board.getPieceAt(position);
-      
+
       // Handle bench piece placement
       if (state.selectedBenchPiece) {
         state.placeBenchPiece(position);
         return {};
       }
-      
+
       if (state.selectedPiece) {
-        const isValidMove = state.validMoves.some(pos => pos.equals(position));
+        const isValidMove = state.validMoves.some((pos) => pos.equals(position));
         if (isValidMove) {
           return state;
         }
-        
+
         if (clickedPiece && clickedPiece.owner === state.currentPlayer) {
           state.board.clearSelection();
           state.board.selectTile(position);
@@ -434,7 +453,7 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
             blockedMoves,
           };
         }
-        
+
         state.board.clearSelection();
         state.board.clearHighlights();
         return {
@@ -443,7 +462,7 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
           blockedMoves: [],
         };
       }
-      
+
       if (clickedPiece && clickedPiece.owner === state.currentPlayer) {
         state.board.selectTile(position);
         const validMoves = state.movementEngine.getValidMoves(clickedPiece, state.board);
@@ -462,15 +481,16 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
 
   checkScoring: (piece: GamePiece) => {
     const state = get();
-    const scoringRow = state.currentPlayer === Player.BLANCAS 
-      ? GAME_RULES.SCORING_ZONE_PLAYER1 
-      : GAME_RULES.SCORING_ZONE_PLAYER2;
-      
+    const scoringRow =
+      state.currentPlayer === Player.BLANCAS
+        ? GAME_RULES.SCORING_ZONE_PLAYER1
+        : GAME_RULES.SCORING_ZONE_PLAYER2;
+
     if (piece.position && piece.position.y === scoringRow) {
       const playerState = piece.owner === Player.BLANCAS ? state.player1State : state.player2State;
       playerState.incrementScore();
       state.board.removePiece(piece.id);
-      
+
       set({});
       get().checkGameOver();
     }
@@ -480,22 +500,22 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
     const state = get();
     const p1Score = state.player1State.getScore();
     const p2Score = state.player2State.getScore();
-    
+
     if (p1Score >= GAME_RULES.POINTS_TO_WIN || p2Score >= GAME_RULES.POINTS_TO_WIN) {
       set({ gamePhase: GamePhase.GAME_OVER });
       return;
     }
-    
-    const p1Pieces = state.board.getAllPieces().filter(p => p.owner === Player.BLANCAS);
-    const p2Pieces = state.board.getAllPieces().filter(p => p.owner === Player.NEGRAS);
-    
-    const p1HasMoves = p1Pieces.some(piece => 
-      state.movementEngine.getValidMoves(piece, state.board).length > 0
+
+    const p1Pieces = state.board.getAllPieces().filter((p) => p.owner === Player.BLANCAS);
+    const p2Pieces = state.board.getAllPieces().filter((p) => p.owner === Player.NEGRAS);
+
+    const p1HasMoves = p1Pieces.some(
+      (piece) => state.movementEngine.getValidMoves(piece, state.board).length > 0,
     );
-    const p2HasMoves = p2Pieces.some(piece => 
-      state.movementEngine.getValidMoves(piece, state.board).length > 0
+    const p2HasMoves = p2Pieces.some(
+      (piece) => state.movementEngine.getValidMoves(piece, state.board).length > 0,
     );
-    
+
     if (!p1HasMoves && !p2HasMoves) {
       set({ gamePhase: GamePhase.GAME_OVER });
     }
@@ -506,10 +526,13 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
       if (state.gamePhase !== GamePhase.PLAYING) return state;
       if (!state.selectedPiece) return state;
 
-      const isValidMove = state.validMoves.some(pos => pos.equals(to));
+      const isValidMove = state.validMoves.some((pos) => pos.equals(to));
       if (!isValidMove) return state;
 
-      const fromPosition = new Position(state.selectedPiece.position!.x, state.selectedPiece.position!.y);
+      const fromPosition = new Position(
+        state.selectedPiece.position!.x,
+        state.selectedPiece.position!.y,
+      );
       const capturedPiece = state.board.getPieceAt(to);
 
       // Execute the move first
@@ -524,24 +547,28 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
         pieceType: state.selectedPiece.type,
         from: fromPosition,
         to: new Position(to.x, to.y),
-        captured: capturedPiece ? {
-          pieceId: capturedPiece.id,
-          pieceType: capturedPiece.type,
-          position: new Position(to.x, to.y),
-        } : undefined,
-        boardSnapshot: JSON.stringify(state.board.getAllPieces().map(p => ({
-          id: p.id,
-          type: p.type,
-          owner: p.owner,
-          position: p.position ? { x: p.position.x, y: p.position.y } : null,
-        }))),
+        captured: capturedPiece
+          ? {
+              pieceId: capturedPiece.id,
+              pieceType: capturedPiece.type,
+              position: new Position(to.x, to.y),
+            }
+          : undefined,
+        boardSnapshot: JSON.stringify(
+          state.board.getAllPieces().map((p) => ({
+            id: p.id,
+            type: p.type,
+            owner: p.owner,
+            position: p.position ? { x: p.position.x, y: p.position.y } : null,
+          })),
+        ),
         timestamp: new Date(),
       };
 
       state.moveHistory.addMove(moveRecord);
-      
+
       state.checkScoring(state.selectedPiece);
-      
+
       state.board.clearSelection();
       state.board.clearHighlights();
 
@@ -569,9 +596,9 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
 
   reset: () => {
     const board = createInitialBoard();
-    const player1State = new PlayerState('player1');
-    const player2State = new PlayerState('player2');
-    
+    const player1State = new PlayerState("player1");
+    const player2State = new PlayerState("player2");
+
     set({
       board,
       gamePhase: GamePhase.SETUP,
@@ -587,8 +614,8 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
 
   quickStart: () => {
     const board = createInitialBoard();
-    const player1State = new PlayerState('player1');
-    const player2State = new PlayerState('player2');
+    const player1State = new PlayerState("player1");
+    const player2State = new PlayerState("player2");
     let pieceCounter = 0;
 
     // Player 1 pieces on board (rows 2-4)
@@ -608,13 +635,9 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
     });
 
     // Player 1 bench pieces
-    const p1BenchPieces = [
-      PieceType.VANGUARD,
-      PieceType.APEX,
-      PieceType.BULWARK,
-    ];
+    const p1BenchPieces = [PieceType.VANGUARD, PieceType.APEX, PieceType.BULWARK];
 
-    p1BenchPieces.forEach(type => {
+    p1BenchPieces.forEach((type) => {
       const benchPiece = new GamePiece(`p1-bench-${pieceCounter++}`, type, null, Player.BLANCAS);
       player1State.addBenchPiece(benchPiece);
     });
@@ -636,13 +659,9 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
     });
 
     // Player 2 bench pieces
-    const p2BenchPieces = [
-      PieceType.VANGUARD,
-      PieceType.APEX,
-      PieceType.BULWARK,
-    ];
+    const p2BenchPieces = [PieceType.VANGUARD, PieceType.APEX, PieceType.BULWARK];
 
-    p2BenchPieces.forEach(type => {
+    p2BenchPieces.forEach((type) => {
       const benchPiece = new GamePiece(`p2-bench-${pieceCounter++}`, type, null, Player.NEGRAS);
       player2State.addBenchPiece(benchPiece);
     });
@@ -659,7 +678,7 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
       pieceIdCounter: pieceCounter,
     });
 
-    console.log('🚀 Quick Start: Game initialized with pre-configured pieces');
+    console.log("🚀 Quick Start: Game initialized with pre-configured pieces");
   },
 
   setGameMode: (mode: GameMode) => {
@@ -675,14 +694,14 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
 
     const snapshot = JSON.parse(previousMove.boardSnapshot);
     const newBoard = new Board(GAME_CONFIG.BOARD_WIDTH, GAME_CONFIG.BOARD_HEIGHT);
-    
+
     snapshot.forEach((pieceData: any) => {
       if (pieceData.position) {
         const piece = new GamePiece(
           pieceData.id,
           pieceData.type,
           new Position(pieceData.position.x, pieceData.position.y),
-          pieceData.owner
+          pieceData.owner,
         );
         newBoard.addPiece(piece);
       }
@@ -706,14 +725,14 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
 
     const snapshot = JSON.parse(nextMove.boardSnapshot);
     const newBoard = new Board(GAME_CONFIG.BOARD_WIDTH, GAME_CONFIG.BOARD_HEIGHT);
-    
+
     snapshot.forEach((pieceData: any) => {
       if (pieceData.position) {
         const piece = new GamePiece(
           pieceData.id,
           pieceData.type,
           new Position(pieceData.position.x, pieceData.position.y),
-          pieceData.owner
+          pieceData.owner,
         );
         newBoard.addPiece(piece);
       }
@@ -732,7 +751,7 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
 
   returnToPresent: () => {
     const state = get();
-    
+
     while (state.moveHistory.canGoForward()) {
       state.moveHistory.goForward();
     }
@@ -742,14 +761,14 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
 
     const snapshot = JSON.parse(currentMove.boardSnapshot);
     const newBoard = new Board(GAME_CONFIG.BOARD_WIDTH, GAME_CONFIG.BOARD_HEIGHT);
-    
+
     snapshot.forEach((pieceData: any) => {
       if (pieceData.position) {
         const piece = new GamePiece(
           pieceData.id,
           pieceData.type,
           new Position(pieceData.position.x, pieceData.position.y),
-          pieceData.owner
+          pieceData.owner,
         );
         newBoard.addPiece(piece);
       }

@@ -1,15 +1,24 @@
 import type { GameSnapshot } from "../domain/entities/GameSnapshot";
-import type {
-  RoomRecord,
-  RoomsGateway,
-  RoomSummary,
-  RoomUnsubscribe,
+import {
+  roomAdmitsJoin,
+  roomAdmitsResume,
+  WAITING_ROOM_MAX_AGE_MS,
+  type RoomRecord,
+  type RoomsGateway,
+  type RoomSummary,
+  type RoomUnsubscribe,
+  type CreatedRoom,
 } from "../domain/interfaces/RoomsGateway";
-
-const WAITING_ROOM_MAX_AGE_MS = 30 * 60 * 1000;
 
 type RoomListener = (room: RoomRecord | null) => void;
 type LobbyListener = (rooms: RoomSummary[]) => void;
+
+export interface InMemoryRoomsGatewayOptions {
+  /** Reloj inyectable: los tests controlan el paso del tiempo sin timers. */
+  now?: () => number;
+  /** Generador de credenciales del host; inyectable para tests deterministas. */
+  createToken?: () => string;
+}
 
 /**
  * Adaptador `RoomsGateway` en memoria. Emite a los suscriptores de forma
@@ -21,6 +30,13 @@ export class InMemoryRoomsGateway implements RoomsGateway {
   private roomListeners = new Map<string, Set<RoomListener>>();
   private lobbyListeners = new Set<LobbyListener>();
   private idCounter = 0;
+  private readonly now: () => number;
+  private readonly createToken: () => string;
+
+  constructor(options: InMemoryRoomsGatewayOptions = {}) {
+    this.now = options.now ?? (() => Date.now());
+    this.createToken = options.createToken ?? (() => `host-${Math.random().toString(36).slice(2)}`);
+  }
 
   private emitRoom(roomId: string): void {
     const room = this.rooms.get(roomId) ?? null;
@@ -33,9 +49,9 @@ export class InMemoryRoomsGateway implements RoomsGateway {
   }
 
   private waitingRooms(): RoomSummary[] {
-    const cutoff = Date.now() - WAITING_ROOM_MAX_AGE_MS;
+    const now = this.now();
     return [...this.rooms.entries()]
-      .filter(([, room]) => room.status === "waiting" && room.createdAt >= cutoff)
+      .filter(([, room]) => roomAdmitsJoin(room, now))
       .map(([id, room]) => ({ id, createdAt: room.createdAt, status: room.status }));
   }
 
@@ -44,29 +60,54 @@ export class InMemoryRoomsGateway implements RoomsGateway {
     return this.rooms.get(roomId) ?? null;
   }
 
-  async createRoom(initial: GameSnapshot): Promise<string> {
+  async createRoom(initial: GameSnapshot): Promise<CreatedRoom> {
     const roomId = `room-${++this.idCounter}`;
+    const now = this.now();
+    const hostToken = this.createToken();
     this.rooms.set(roomId, {
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+      createdAt: now,
+      updatedAt: now,
       status: "waiting",
       guestJoinedAt: null,
+      hostConnection: "connected",
+      hostDisconnectedAt: null,
+      expiresAt: now + WAITING_ROOM_MAX_AGE_MS,
+      hostToken,
       state: initial,
     });
     this.emitRoom(roomId);
     this.emitLobby();
-    return roomId;
+    return { roomId, hostToken };
   }
 
-  async joinRoom(roomId: string): Promise<boolean> {
+  async joinRoom(roomId: string): Promise<RoomRecord | null> {
     const room = this.rooms.get(roomId);
-    if (!room || room.status !== "waiting") return false;
+    if (!room || !roomAdmitsJoin(room, this.now())) return null;
     room.status = "playing";
-    room.guestJoinedAt = Date.now();
-    room.updatedAt = Date.now();
+    room.guestJoinedAt = this.now();
+    room.updatedAt = this.now();
     this.emitRoom(roomId);
     this.emitLobby();
-    return true;
+    return room;
+  }
+
+  async resumeRoom(roomId: string, hostToken: string): Promise<RoomRecord | null> {
+    const room = this.rooms.get(roomId);
+    if (!room || !roomAdmitsResume(room, hostToken, this.now())) return null;
+    room.hostConnection = "connected";
+    room.hostDisconnectedAt = null;
+    room.updatedAt = this.now();
+    this.emitRoom(roomId);
+    return room;
+  }
+
+  async disconnectHost(roomId: string): Promise<void> {
+    const room = this.rooms.get(roomId);
+    if (!room || room.status === "abandoned" || room.status === "finished") return;
+    room.hostConnection = "disconnected";
+    room.hostDisconnectedAt = this.now();
+    room.updatedAt = this.now();
+    this.emitRoom(roomId);
   }
 
   subscribeRoom(roomId: string, callback: RoomListener): RoomUnsubscribe {
@@ -91,7 +132,7 @@ export class InMemoryRoomsGateway implements RoomsGateway {
     const room = this.rooms.get(roomId);
     if (!room) throw new Error("La sala no existe");
     room.state = snapshot;
-    room.updatedAt = Date.now();
+    room.updatedAt = this.now();
     this.emitRoom(roomId);
   }
 
@@ -99,7 +140,8 @@ export class InMemoryRoomsGateway implements RoomsGateway {
     const room = this.rooms.get(roomId);
     if (!room) return;
     room.status = "abandoned";
-    room.updatedAt = Date.now();
+    room.hostConnection = "disconnected";
+    room.updatedAt = this.now();
     this.emitRoom(roomId);
     this.emitLobby();
   }

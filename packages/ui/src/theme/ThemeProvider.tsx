@@ -56,8 +56,7 @@ export function ThemeProvider({
     return () => media.removeEventListener("change", onChange);
   }, []);
 
-  const resolvedTheme: ResolvedTheme =
-    themeOverride ?? (theme === "system" ? systemTheme : theme);
+  const resolvedTheme: ResolvedTheme = themeOverride ?? (theme === "system" ? systemTheme : theme);
 
   useEffect(() => {
     const root = document.documentElement;
