@@ -46,6 +46,7 @@ export function ThemeProvider({
 }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<ThemeMode>(readStoredTheme);
   const [systemTheme, setSystemTheme] = useState<ResolvedTheme>(getSystemTheme);
+  const [themeOverride, setThemeOverride] = useState<ResolvedTheme | null>(null);
 
   useEffect(() => {
     const media = window.matchMedia(MEDIA_QUERY);
@@ -55,7 +56,8 @@ export function ThemeProvider({
     return () => media.removeEventListener("change", onChange);
   }, []);
 
-  const resolvedTheme: ResolvedTheme = theme === "system" ? systemTheme : theme;
+  const resolvedTheme: ResolvedTheme =
+    themeOverride ?? (theme === "system" ? systemTheme : theme);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -77,7 +79,7 @@ export function ThemeProvider({
   }, []);
 
   const value = useMemo<ThemeContextValue>(
-    () => ({ theme, resolvedTheme, setTheme }),
+    () => ({ theme, resolvedTheme, setTheme, setThemeOverride }),
     [theme, resolvedTheme, setTheme],
   );
 
