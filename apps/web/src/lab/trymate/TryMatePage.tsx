@@ -126,7 +126,7 @@ export function TryMatePage() {
           </>
         )}
       </main>
-      {screen !== "menu" && <PiecePickerDialog />}
+      {showGame && <PiecePickerDialog />}
     </>
   );
 }
