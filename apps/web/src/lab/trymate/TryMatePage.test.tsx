@@ -1,10 +1,26 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { ThemeProvider } from "@ferpa/ui";
 import { TryMatePage } from "./TryMatePage";
 import { useGameStore } from "./application/GameState";
 import { useRoomStore } from "./application/RoomState";
 import { Player } from "./domain/constants/PieceConstants";
+
+// ThemeProvider llama window.matchMedia; jsdom no lo implementa — stub
+// mínimo antes de montar (mismo patrón que App.test.tsx).
+beforeAll(() => {
+  vi.stubGlobal("matchMedia", (query: string) => ({
+    matches: false,
+    media: query,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    addListener: () => {},
+    removeListener: () => {},
+    onchange: null,
+    dispatchEvent: () => false,
+  }));
+});
 
 beforeEach(() => {
   useGameStore.getState().reset();
@@ -57,5 +73,22 @@ describe("TryMatePage", () => {
     renderPage();
     fireEvent.click(screen.getByRole("button", { name: /play online/i }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("always renders in dark mode and restores the theme on unmount (issue #16)", () => {
+    // El provider queda montado al salir de la página (como en la app real):
+    // el override se limpia y el tema vuelve al del usuario/sistema.
+    function Harness({ show }: { show: boolean }) {
+      return (
+        <ThemeProvider>
+          <MemoryRouter>{show ? <TryMatePage /> : null}</MemoryRouter>
+        </ThemeProvider>
+      );
+    }
+    const { rerender } = render(<Harness show={true} />);
+    expect(document.documentElement.dataset.theme).toBe("dark");
+    rerender(<Harness show={false} />);
+    // El stub devuelve matches:false → sistema light → el restore resuelve light.
+    expect(document.documentElement.dataset.theme).toBe("light");
   });
 });

@@ -3,6 +3,11 @@ import { DarkModeToggle } from "./DarkModeToggle";
 
 export interface NavProps {
   links: { label: string; href: string }[];
+  /**
+   * Oculta el toggle de tema — para secciones con tema forzado donde el
+   * control no tendría efecto visible (ej. TryMate, siempre dark).
+   */
+  hideThemeToggle?: boolean;
 }
 
 const LINK_CLASS =
@@ -12,7 +17,7 @@ const LINK_CLASS =
  * Barra de navegación superior. `no-print` para ocultarla en impresión.
  * Las rutas internas usan React Router; anchors y externos, `<a>`.
  */
-export function Nav({ links }: NavProps) {
+export function Nav({ links, hideThemeToggle = false }: NavProps) {
   return (
     <nav aria-label="Main navigation" className="no-print border-b border-line">
       <div className="mx-auto flex max-w-[880px] justify-end px-[clamp(20px,5vw,32px)] py-4">
@@ -32,7 +37,7 @@ export function Nav({ links }: NavProps) {
               </li>
             ))}
           </ul>
-          <DarkModeToggle />
+          {!hideThemeToggle && <DarkModeToggle />}
         </div>
       </div>
     </nav>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Button } from "@ferpa/ui";
+import { Button, useThemeOverride } from "@ferpa/ui";
 import { Nav } from "../../components";
 import { TryMateBoard } from "./components/TryMateBoard";
 import { PiecePickerDialog } from "./components/PiecePickerDialog";
@@ -33,6 +33,8 @@ const FOCUS =
  * URL entra directo al lobby para conservar el auto-join por link.
  */
 export function TryMatePage() {
+  // TryMate es siempre dark (issue #16): el override se revierte al salir.
+  useThemeOverride("dark");
   const gamePhase = useGameStore((s) => s.gamePhase);
   const roomStatus = useRoomStore((s) => s.status);
   const [params] = useSearchParams();
@@ -62,7 +64,7 @@ export function TryMatePage() {
 
   return (
     <>
-      <Nav links={NAV_LINKS} />
+      <Nav links={NAV_LINKS} hideThemeToggle />
       <main
         id="main-content"
         tabIndex={-1}
