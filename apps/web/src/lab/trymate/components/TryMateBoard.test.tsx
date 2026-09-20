@@ -23,6 +23,20 @@ describe("TryMateBoard", () => {
     expect(screen.getAllByRole("button", { name: /legal move/ }).length).toBeGreaterThan(0);
   });
 
+  it("marks the try-zone rows (1 and 11) as the arrival, not the field", () => {
+    useGameStore.getState().quickStart();
+    render(<TryMateBoard />);
+    const zoneTiles = screen.getAllByRole("button", { name: /try zone/ });
+    expect(zoneTiles).toHaveLength(10);
+    for (const tile of zoneTiles) {
+      const cell = tile.parentElement as HTMLElement;
+      const separator =
+        cell.className.includes("border-b-gold") || cell.className.includes("border-t-gold");
+      const fade = cell.className.includes("to-canvas");
+      expect(separator && fade).toBe(true);
+    }
+  });
+
   it("locks the board while viewing history", () => {
     useGameStore.getState().quickStart();
     useGameStore.setState({ isViewingHistory: true });

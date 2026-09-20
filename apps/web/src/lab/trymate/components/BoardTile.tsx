@@ -1,6 +1,6 @@
 import type { GamePiece } from "../domain/entities/GamePiece";
 import type { Position } from "../domain/entities/Position";
-import { PIECE_LABEL, PLAYER_LABEL, squareName } from "../lib/gameDisplay";
+import { PIECE_LABEL, PLAYER_LABEL, scoringZoneEdge, squareName } from "../lib/gameDisplay";
 import { PieceToken } from "./PieceToken";
 
 export type BoardTileState = "idle" | "selected" | "valid" | "blocked";
@@ -31,15 +31,27 @@ export function BoardTile({
   onFocus,
 }: BoardTileProps) {
   const name = squareName(position);
-  const label = piece
+  const zoneEdge = scoringZoneEdge(position.y);
+  const baseLabel = piece
     ? `${name} — ${PLAYER_LABEL[piece.owner]} ${PIECE_LABEL[piece.type]}`
     : state === "valid"
       ? `${name} — empty, legal move`
       : state === "blocked"
         ? `${name} — blocked`
         : `${name} — empty`;
+  const label = zoneEdge ? `${baseLabel}, try zone` : baseLabel;
 
   const parity = (position.x + position.y) % 2 === 1;
+  // Zona de try: degradé que se apaga hacia el borde externo y línea gold
+  // en el borde interno que la separa del campo de juego.
+  const zoneClass =
+    zoneEdge === "top"
+      ? `bg-gradient-to-t to-canvas border-b-2 border-b-gold ${parity ? "from-pitch" : "from-pitch-alt"}`
+      : zoneEdge === "bottom"
+        ? `bg-gradient-to-b to-canvas border-t-2 border-t-gold ${parity ? "from-pitch" : "from-pitch-alt"}`
+        : parity
+          ? "bg-pitch"
+          : "bg-pitch-alt";
   const stateClass =
     state === "selected"
       ? "ring-2 ring-inset ring-gold-bright"
@@ -51,7 +63,7 @@ export function BoardTile({
     <div
       role="gridcell"
       aria-colindex={position.x + 1}
-      className={`aspect-square border border-line ${parity ? "bg-pitch" : "bg-pitch-alt"} ${stateClass}`}
+      className={`aspect-square border border-line ${zoneClass} ${stateClass}`}
     >
       <button
         type="button"

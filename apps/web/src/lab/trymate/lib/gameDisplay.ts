@@ -1,5 +1,5 @@
 import { PieceType, Player } from "../domain/constants/PieceConstants";
-import { GamePhase } from "../domain/constants/GameRules";
+import { GamePhase, GAME_RULES } from "../domain/constants/GameRules";
 import type { Position } from "../domain/entities/Position";
 
 export const PIECE_ASSET: Record<PieceType, string> = {
@@ -29,4 +29,14 @@ export const PHASE_LABEL: Record<GamePhase, string> = {
 /** Nombre tipo ajedrez: columna a–e + fila 1–11 ("c4"). Para aria-labels. */
 export function squareName(pos: Position): string {
   return `${"abcde"[pos.x] ?? "?"}${pos.y + 1}`;
+}
+
+/**
+ * Si la fila es una zona de anotación (filas 1 y 11) devuelve el borde
+ * externo del tablero hacia el que se "apaga" la casilla; si no, null.
+ */
+export function scoringZoneEdge(y: number): "top" | "bottom" | null {
+  if (y === GAME_RULES.SCORING_ZONE_PLAYER1) return "top";
+  if (y === GAME_RULES.SCORING_ZONE_PLAYER2) return "bottom";
+  return null;
 }
