@@ -23,6 +23,30 @@ describe("TryMateBoard", () => {
     expect(screen.getAllByRole("button", { name: /legal move/ }).length).toBeGreaterThan(0);
   });
 
+  it("renders legal-move dots with a high-contrast halo (visible on dark tiles)", () => {
+    useGameStore.getState().quickStart();
+    render(<TryMateBoard />);
+    fireEvent.click(screen.getByRole("button", { name: "c3 — White Pioneer" }));
+    const moveTile = screen.getAllByRole("button", { name: /legal move/ })[0];
+    const dot = moveTile?.querySelector("span");
+    expect(dot?.className).toContain("bg-gold");
+    expect(dot?.className).toContain("ring-pitch");
+  });
+
+  it("marks the try-zone rows (1 and 11) as the arrival, not the field", () => {
+    useGameStore.getState().quickStart();
+    render(<TryMateBoard />);
+    const zoneTiles = screen.getAllByRole("button", { name: /try zone/ });
+    expect(zoneTiles).toHaveLength(10);
+    for (const tile of zoneTiles) {
+      const cell = tile.parentElement as HTMLElement;
+      const separator =
+        cell.className.includes("border-b-gold") || cell.className.includes("border-t-gold");
+      const fade = cell.className.includes("to-canvas");
+      expect(separator && fade).toBe(true);
+    }
+  });
+
   it("locks the board while viewing history", () => {
     useGameStore.getState().quickStart();
     useGameStore.setState({ isViewingHistory: true });
