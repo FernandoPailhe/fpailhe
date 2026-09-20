@@ -1,5 +1,6 @@
 import type { GamePiece } from "../domain/entities/GamePiece";
 import type { Position } from "../domain/entities/Position";
+import { GAME_CONFIG } from "../domain/constants/GameConstants";
 import { PIECE_LABEL, PLAYER_LABEL, scoringZoneEdge, squareName } from "../lib/gameDisplay";
 import { PieceToken } from "./PieceToken";
 
@@ -11,6 +12,11 @@ export interface BoardTileProps {
   state: BoardTileState;
   disabled: boolean;
   tabIndex: number;
+  /**
+   * Tablero rotado 180° (vista del jugador NEGRAS en online): invierte el
+   * degradé de la zona de try y la posición visual de la columna.
+   */
+  flipped?: boolean;
   onSelect: () => void;
   onFocus: () => void;
 }
@@ -27,11 +33,20 @@ export function BoardTile({
   state,
   disabled,
   tabIndex,
+  flipped = false,
   onSelect,
   onFocus,
 }: BoardTileProps) {
   const name = squareName(position);
-  const zoneEdge = scoringZoneEdge(position.y);
+  const dataEdge = scoringZoneEdge(position.y);
+  // Con el tablero rotado la fila y=10 queda abajo: la zona de try invierte
+  // el borde hacia el que se apaga la casilla.
+  const zoneEdge =
+    flipped && dataEdge === "top"
+      ? "bottom"
+      : flipped && dataEdge === "bottom"
+        ? "top"
+        : dataEdge;
   const baseLabel = piece
     ? `${name} — ${PLAYER_LABEL[piece.owner]} ${PIECE_LABEL[piece.type]}`
     : state === "valid"
@@ -62,7 +77,9 @@ export function BoardTile({
   return (
     <div
       role="gridcell"
-      aria-colindex={position.x + 1}
+      aria-colindex={
+        flipped ? GAME_CONFIG.BOARD_WIDTH - position.x : position.x + 1
+      }
       className={`aspect-square border border-line ${zoneClass} ${stateClass}`}
     >
       <button

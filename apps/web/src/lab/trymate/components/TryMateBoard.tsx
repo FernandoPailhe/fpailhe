@@ -2,6 +2,7 @@ import { useRef, useState, type KeyboardEvent } from "react";
 import { useGameStore } from "../application/GameState";
 import { GAME_CONFIG } from "../domain/constants/GameConstants";
 import { GameMode, GamePhase } from "../domain/constants/GameRules";
+import { Player } from "../domain/constants/PieceConstants";
 import { Position } from "../domain/entities/Position";
 import { BoardTile, type BoardTileState } from "./BoardTile";
 
@@ -21,6 +22,7 @@ export function TryMateBoard() {
     isViewingHistory,
     gamePhase,
     gameMode,
+    localPlayer,
     isLocalPlayerTurn,
     handleTileClick,
   } = useGameStore();
@@ -29,6 +31,9 @@ export function TryMateBoard() {
   const gridRef = useRef<HTMLDivElement>(null);
 
   const notMyTurn = gameMode === GameMode.ONLINE && !isLocalPlayerTurn();
+  // Issue #20: en online cada jugador ve su equipo abajo — el guest (NEGRAS)
+  // recibe el tablero rotado 180° (filas y columnas invertidas).
+  const flipped = gameMode === GameMode.ONLINE && localPlayer === Player.NEGRAS;
   const inert =
     isViewingHistory ||
     notMyTurn ||
@@ -45,24 +50,38 @@ export function TryMateBoard() {
   const onGridKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const { x, y } = focusedPos;
     let next: Position;
+    const up = flipped ? -1 : 1;
+    const right = flipped ? -1 : 1;
     switch (event.key) {
       case "ArrowUp":
-        next = new Position(x, Math.min(y + 1, GAME_CONFIG.BOARD_HEIGHT - 1));
+        next = new Position(
+          x,
+          Math.min(Math.max(y + up, 0), GAME_CONFIG.BOARD_HEIGHT - 1),
+        );
         break;
       case "ArrowDown":
-        next = new Position(x, Math.max(y - 1, 0));
+        next = new Position(
+          x,
+          Math.min(Math.max(y - up, 0), GAME_CONFIG.BOARD_HEIGHT - 1),
+        );
         break;
       case "ArrowLeft":
-        next = new Position(Math.max(x - 1, 0), y);
+        next = new Position(
+          Math.min(Math.max(x - right, 0), GAME_CONFIG.BOARD_WIDTH - 1),
+          y,
+        );
         break;
       case "ArrowRight":
-        next = new Position(Math.min(x + 1, GAME_CONFIG.BOARD_WIDTH - 1), y);
+        next = new Position(
+          Math.min(Math.max(x + right, 0), GAME_CONFIG.BOARD_WIDTH - 1),
+          y,
+        );
         break;
       case "Home":
-        next = new Position(0, y);
+        next = new Position(flipped ? GAME_CONFIG.BOARD_WIDTH - 1 : 0, y);
         break;
       case "End":
-        next = new Position(GAME_CONFIG.BOARD_WIDTH - 1, y);
+        next = new Position(flipped ? 0 : GAME_CONFIG.BOARD_WIDTH - 1, y);
         break;
       default:
         return;
@@ -71,10 +90,23 @@ export function TryMateBoard() {
     moveFocus(next);
   };
 
+  const ys = flipped
+    ? Array.from({ length: GAME_CONFIG.BOARD_HEIGHT }, (_, i) => i)
+    : Array.from(
+        { length: GAME_CONFIG.BOARD_HEIGHT },
+        (_, i) => GAME_CONFIG.BOARD_HEIGHT - 1 - i,
+      );
+  const xs = flipped
+    ? Array.from(
+        { length: GAME_CONFIG.BOARD_WIDTH },
+        (_, i) => GAME_CONFIG.BOARD_WIDTH - 1 - i,
+      )
+    : Array.from({ length: GAME_CONFIG.BOARD_WIDTH }, (_, i) => i);
+
   const rows = [];
-  for (let y = GAME_CONFIG.BOARD_HEIGHT - 1; y >= 0; y--) {
+  for (const y of ys) {
     const cells = [];
-    for (let x = 0; x < GAME_CONFIG.BOARD_WIDTH; x++) {
+    for (const x of xs) {
       const position = new Position(x, y);
       const piece = board.getPieceAt(position);
       const tileState: BoardTileState = selectedPiece?.position?.equals(position)
@@ -91,6 +123,7 @@ export function TryMateBoard() {
           piece={piece}
           state={tileState}
           disabled={inert}
+          flipped={flipped}
           tabIndex={focusedPos.equals(position) ? 0 : -1}
           onSelect={() => handleTileClick(position)}
           onFocus={() => setFocusedPos(position)}
@@ -101,7 +134,7 @@ export function TryMateBoard() {
       <div
         key={y}
         role="row"
-        aria-rowindex={GAME_CONFIG.BOARD_HEIGHT - y}
+        aria-rowindex={flipped ? y + 1 : GAME_CONFIG.BOARD_HEIGHT - y}
         className="grid grid-cols-5"
       >
         {cells}

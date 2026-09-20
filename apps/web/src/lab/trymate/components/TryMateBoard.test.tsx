@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { TryMateBoard } from "./TryMateBoard";
 import { useGameStore } from "../application/GameState";
+import { Player } from "../domain/constants/PieceConstants";
 
 beforeEach(() => {
   useGameStore.getState().reset();
@@ -45,6 +46,37 @@ describe("TryMateBoard", () => {
       const fade = cell.className.includes("to-canvas");
       expect(separator && fade).toBe(true);
     }
+  });
+
+  it("keeps White at the bottom in local play", () => {
+    useGameStore.getState().quickStart();
+    render(<TryMateBoard />);
+    const rows = screen.getAllByRole("row");
+    // White Pioneer (2,2) en DOM row 9; Black Pioneer (2,8) en DOM row 3.
+    expect(
+      rows[8]!.querySelector('[data-square="2,2"]'),
+    ).toBeInTheDocument();
+    expect(
+      rows[2]!.querySelector('[data-square="2,8"]'),
+    ).toBeInTheDocument();
+  });
+
+  it("rotates the board 180° for the Black player online (issue #20)", () => {
+    useGameStore.getState().quickStart();
+    useGameStore.getState().setOnlineContext("room-1", Player.NEGRAS);
+    render(<TryMateBoard />);
+    const rows = screen.getAllByRole("row");
+    // Rotado: y=0 arriba, y=10 abajo — las piezas del guest quedan abajo.
+    expect(
+      rows[8]!.querySelector('[data-square="2,8"]'),
+    ).toBeInTheDocument();
+    expect(
+      rows[2]!.querySelector('[data-square="2,2"]'),
+    ).toBeInTheDocument();
+    // Columnas también invertidas: x=0 queda en la última celda visual.
+    const rowCells = rows[8]!.querySelectorAll('[role="gridcell"]');
+    expect(rowCells[4]!.querySelector('[data-square="0,8"]')).not.toBeNull();
+    expect(rowCells[0]!.querySelector('[data-square="4,8"]')).not.toBeNull();
   });
 
   it("locks the board while viewing history", () => {
