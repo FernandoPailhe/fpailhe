@@ -78,7 +78,10 @@ export function BoardTile({
         {piece ? (
           <PieceToken type={piece.type} owner={piece.owner} />
         ) : state === "valid" ? (
-          <span aria-hidden="true" className="h-2/5 w-2/5 rounded-full bg-gold-soft" />
+          <span
+            aria-hidden="true"
+            className="h-2/5 w-2/5 rounded-full bg-gold ring-2 ring-pitch"
+          />
         ) : state === "blocked" ? (
           <span aria-hidden="true" className="font-ui text-ink-dim">
             ×

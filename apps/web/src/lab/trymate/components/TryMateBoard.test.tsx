@@ -23,6 +23,16 @@ describe("TryMateBoard", () => {
     expect(screen.getAllByRole("button", { name: /legal move/ }).length).toBeGreaterThan(0);
   });
 
+  it("renders legal-move dots with a high-contrast halo (visible on dark tiles)", () => {
+    useGameStore.getState().quickStart();
+    render(<TryMateBoard />);
+    fireEvent.click(screen.getByRole("button", { name: "c3 — White Pioneer" }));
+    const moveTile = screen.getAllByRole("button", { name: /legal move/ })[0];
+    const dot = moveTile.querySelector("span");
+    expect(dot?.className).toContain("bg-gold");
+    expect(dot?.className).toContain("ring-pitch");
+  });
+
   it("marks the try-zone rows (1 and 11) as the arrival, not the field", () => {
     useGameStore.getState().quickStart();
     render(<TryMateBoard />);
