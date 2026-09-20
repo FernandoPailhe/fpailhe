@@ -17,9 +17,9 @@ describe("PiecePickerDialog", () => {
     const dialog = screen.getByRole("dialog", { name: "Choose your piece" });
     expect(dialog).toHaveAttribute("aria-modal", "true");
     expect(within(dialog).getByText(/pick a piece type/)).toBeInTheDocument();
-    expect(within(dialog).getByRole("button", { name: /Bulwark/ })).toBeInTheDocument();
-    expect(within(dialog).getByRole("button", { name: /Vanguard/ })).toBeInTheDocument();
-    expect(within(dialog).getByRole("button", { name: /Apex/ })).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: /Fort/ })).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: /Striker/ })).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: /Pioneer/ })).toBeInTheDocument();
   });
 
   it("cannot be dismissed with Escape or a click on the overlay", () => {
@@ -52,8 +52,8 @@ describe("PiecePickerDialog", () => {
 
   it("closes after choosing a type and reopens once the piece is placed", () => {
     render(<PiecePickerDialog />);
-    fireEvent.click(screen.getByRole("button", { name: /Bulwark/ }));
-    expect(useGameStore.getState().selectedPieceTypeForPlacement).toBe(PieceType.BULWARK);
+    fireEvent.click(screen.getByRole("button", { name: /Fort/ }));
+    expect(useGameStore.getState().selectedPieceTypeForPlacement).toBe(PieceType.FORT);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 
     act(() => {

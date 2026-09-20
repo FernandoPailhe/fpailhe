@@ -12,7 +12,7 @@ import { BoardTile, type BoardTileState } from "./BoardTile";
  * Teclado: patrón ARIA grid — un solo tab stop (roving tabindex) y
  * flechas/Home/End para mover el foco; Enter/Space activa la casilla.
  */
-export function RugbyChessBoard() {
+export function TryMateBoard() {
   const {
     board,
     selectedPiece,
@@ -113,7 +113,7 @@ export function RugbyChessBoard() {
     <div
       ref={gridRef}
       role="grid"
-      aria-label="Rugby chess board"
+      aria-label="TryMate board"
       aria-rowcount={GAME_CONFIG.BOARD_HEIGHT}
       aria-colcount={GAME_CONFIG.BOARD_WIDTH}
       aria-disabled={inert}

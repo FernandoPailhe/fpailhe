@@ -30,9 +30,9 @@ function renderAt(route: string) {
 }
 
 describe("App router", () => {
-  it("mounts RugbyChessPage at /lab/rugby-chess", () => {
-    renderAt("/lab/rugby-chess");
-    expect(screen.getByRole("heading", { name: "Rugby Chess" })).toBeInTheDocument();
+  it("mounts TryMatePage at /lab/trymate", () => {
+    renderAt("/lab/trymate");
+    expect(screen.getByRole("heading", { name: "TryMate" })).toBeInTheDocument();
   });
 
   it("renders the app 404 for unknown routes", () => {

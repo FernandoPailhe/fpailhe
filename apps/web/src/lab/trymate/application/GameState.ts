@@ -723,11 +723,11 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
 
     // Player 1 pieces on board (rows 2-4)
     const p1BoardPieces = [
-      { type: PieceType.BULWARK, pos: new Position(1, 1) },
-      { type: PieceType.VANGUARD, pos: new Position(3, 1) },
-      { type: PieceType.APEX, pos: new Position(2, 2) },
-      { type: PieceType.BULWARK, pos: new Position(0, 3) },
-      { type: PieceType.VANGUARD, pos: new Position(4, 3) },
+      { type: PieceType.FORT, pos: new Position(1, 1) },
+      { type: PieceType.STRIKER, pos: new Position(3, 1) },
+      { type: PieceType.PIONEER, pos: new Position(2, 2) },
+      { type: PieceType.FORT, pos: new Position(0, 3) },
+      { type: PieceType.STRIKER, pos: new Position(4, 3) },
     ];
 
     p1BoardPieces.forEach(({ type, pos }) => {
@@ -738,7 +738,7 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
     });
 
     // Player 1 bench pieces
-    const p1BenchPieces = [PieceType.VANGUARD, PieceType.APEX, PieceType.BULWARK];
+    const p1BenchPieces = [PieceType.STRIKER, PieceType.PIONEER, PieceType.FORT];
 
     p1BenchPieces.forEach((type) => {
       const benchPiece = new GamePiece(`p1-bench-${pieceCounter++}`, type, null, Player.BLANCAS);
@@ -747,11 +747,11 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
 
     // Player 2 pieces on board (rows 8-10)
     const p2BoardPieces = [
-      { type: PieceType.BULWARK, pos: new Position(1, 9) },
-      { type: PieceType.VANGUARD, pos: new Position(3, 9) },
-      { type: PieceType.APEX, pos: new Position(2, 8) },
-      { type: PieceType.BULWARK, pos: new Position(0, 7) },
-      { type: PieceType.VANGUARD, pos: new Position(4, 7) },
+      { type: PieceType.FORT, pos: new Position(1, 9) },
+      { type: PieceType.STRIKER, pos: new Position(3, 9) },
+      { type: PieceType.PIONEER, pos: new Position(2, 8) },
+      { type: PieceType.FORT, pos: new Position(0, 7) },
+      { type: PieceType.STRIKER, pos: new Position(4, 7) },
     ];
 
     p2BoardPieces.forEach(({ type, pos }) => {
@@ -762,7 +762,7 @@ export const useGameStore = create<GameStateStore>((set, get) => ({
     });
 
     // Player 2 bench pieces
-    const p2BenchPieces = [PieceType.VANGUARD, PieceType.APEX, PieceType.BULWARK];
+    const p2BenchPieces = [PieceType.STRIKER, PieceType.PIONEER, PieceType.FORT];
 
     p2BenchPieces.forEach((type) => {
       const benchPiece = new GamePiece(`p2-bench-${pieceCounter++}`, type, null, Player.NEGRAS);

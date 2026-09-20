@@ -16,9 +16,9 @@ export class MovementRuleEngine implements IMovementRule {
       return [];
     }
 
-    // Special handling for APEX - uses L-shape movement (forward first, then lateral)
-    if (piece.type === PieceType.APEX) {
-      return this.getApexValidMoves(piece, board);
+    // Special handling for PIONEER - uses L-shape movement (forward first, then lateral)
+    if (piece.type === PieceType.PIONEER) {
+      return this.getPioneerValidMoves(piece, board);
     }
 
     const validMoves: Position[] = [];
@@ -52,9 +52,9 @@ export class MovementRuleEngine implements IMovementRule {
 
           if (!this.canPassThrough(piece, newPos, board)) continue;
 
-          // Check if path is clear for VANGUARD alternative movement
+          // Check if path is clear for STRIKER alternative movement
           if (piece.position) {
-            if (piece.type === PieceType.VANGUARD && isAlternative) {
+            if (piece.type === PieceType.STRIKER && isAlternative) {
               if (!this.isPathClear(piece.position, newPos, board, piece)) continue;
             }
           }
@@ -78,14 +78,14 @@ export class MovementRuleEngine implements IMovementRule {
   }
 
   /**
-   * Special movement logic for APEX piece:
+   * Special movement logic for PIONEER piece:
    * - MUST move at least 1 square forward (required)
    * - CAN move laterally (optional) but only AFTER moving forward
    * - Maximum 3 squares total (forward + lateral)
    * - Does NOT move diagonally - moves in L-shape (forward then lateral)
    * - Path must be clear of pieces and blocks
    */
-  private getApexValidMoves(piece: GamePiece, board: Board): Position[] {
+  private getPioneerValidMoves(piece: GamePiece, board: Board): Position[] {
     const validMoves: Position[] = [];
     const directionMultiplier = piece.getDirectionMultiplier();
     const startX = piece.position!.x;
@@ -102,7 +102,7 @@ export class MovementRuleEngine implements IMovementRule {
     // Check if first forward position is blocked by a piece
     if (board.getPieceAt(firstForwardPos)) return [];
 
-    // Check if first forward position is blocked by Bulwark/Vanguard
+    // Check if first forward position is blocked by Fort/Striker
     if (!this.canPassThrough(piece, firstForwardPos, board)) return [];
 
     // Generate all valid L-shape moves
@@ -138,7 +138,7 @@ export class MovementRuleEngine implements IMovementRule {
           break;
         }
 
-        // Check for Bulwark/Vanguard blocking
+        // Check for Fort/Striker blocking
         if (!this.canPassThrough(piece, stepPos, board)) {
           pathClear = false;
           break;
@@ -155,7 +155,7 @@ export class MovementRuleEngine implements IMovementRule {
       validMoves.push(forwardPos);
 
       // Now check lateral moves from this forward position
-      // APEX can only move max 1 square laterally
+      // PIONEER can only move max 1 square laterally
       const maxLateralDistance = 1;
 
       for (let lateralDist = 1; lateralDist <= maxLateralDistance; lateralDist++) {
@@ -178,7 +178,7 @@ export class MovementRuleEngine implements IMovementRule {
                 break;
               }
 
-              // Check for Bulwark/Vanguard blocking
+              // Check for Fort/Striker blocking
               if (!this.canPassThrough(piece, latStepPos, board)) {
                 lateralPathClear = false;
                 break;
@@ -207,7 +207,7 @@ export class MovementRuleEngine implements IMovementRule {
               break;
             }
 
-            // Check for Bulwark/Vanguard blocking
+            // Check for Fort/Striker blocking
             if (!this.canPassThrough(piece, latStepPos, board)) {
               lateralPathClear = false;
               break;
@@ -274,9 +274,9 @@ export class MovementRuleEngine implements IMovementRule {
 
     const stepY = deltaY === 0 ? 0 : deltaY / Math.abs(deltaY);
 
-    // For APEX: check each forward step in the path
-    // APEX moves forward first, then can move laterally at the end
-    if (piece.type === PieceType.APEX) {
+    // For PIONEER: check each forward step in the path
+    // PIONEER moves forward first, then can move laterally at the end
+    if (piece.type === PieceType.PIONEER) {
       // Check each forward position (staying in same column until final step)
       for (let i = 1; i < forwardSteps; i++) {
         const checkX = from.x;
@@ -291,7 +291,7 @@ export class MovementRuleEngine implements IMovementRule {
           return false;
         }
 
-        // Check if this position is blocked by Bulwark
+        // Check if this position is blocked by Fort
         if (!this.canPassThrough(piece, checkPos, board)) {
           return false;
         }
@@ -330,8 +330,8 @@ export class MovementRuleEngine implements IMovementRule {
     const config = PIECE_MOVEMENT_CONFIG[piece.type];
     const directionMultiplier = piece.getDirectionMultiplier();
 
-    // Special handling for APEX: if forward position is blocked, ALL moves are blocked
-    if (piece.type === PieceType.APEX) {
+    // Special handling for PIONEER: if forward position is blocked, ALL moves are blocked
+    if (piece.type === PieceType.PIONEER) {
       const startX = piece.position.x;
       const startY = piece.position.y;
       const maxTotalDistance = 3;
@@ -344,7 +344,7 @@ export class MovementRuleEngine implements IMovementRule {
           const forwardPiece = board.getPieceAt(forwardPos);
           const canPassForward = this.canPassThrough(piece, forwardPos, board);
 
-          // If forward position is blocked (by piece or Bulwark/Vanguard), ALL potential moves are blocked
+          // If forward position is blocked (by piece or Fort/Striker), ALL potential moves are blocked
           if (forwardPiece !== undefined || !canPassForward) {
             // Add all potential L-shape move positions as blocked
             for (let fwd = 1; fwd <= maxTotalDistance; fwd++) {
@@ -356,7 +356,7 @@ export class MovementRuleEngine implements IMovementRule {
                 blockedPositions.push(fwdPos);
               }
 
-              // Add lateral positions (max 1 square lateral for APEX)
+              // Add lateral positions (max 1 square lateral for PIONEER)
               const maxLateralDistance = 1;
               for (let lat = 1; lat <= maxLateralDistance; lat++) {
                 // Only add if total distance doesn't exceed max
@@ -379,7 +379,7 @@ export class MovementRuleEngine implements IMovementRule {
         }
       }
 
-      // For APEX, return empty blocked positions if forward is not blocked
+      // For PIONEER, return empty blocked positions if forward is not blocked
       // (the getValidMoves function already handles all the blocking logic)
       return [];
     }
@@ -408,15 +408,15 @@ export class MovementRuleEngine implements IMovementRule {
             continue;
           }
 
-          // For APEX, only add to blocked if cannot pass through (Bulwark blocking)
-          // Don't use isPathClear for diagonal moves since APEX doesn't move diagonally
-          if (piece.type === PieceType.APEX) {
+          // For PIONEER, only add to blocked if cannot pass through (Fort blocking)
+          // Don't use isPathClear for diagonal moves since PIONEER doesn't move diagonally
+          if (piece.type === PieceType.PIONEER) {
             const canPass = this.canPassThrough(piece, newPos, board);
             if (!canPass) {
               blockedPositions.push(newPos);
             }
           } else {
-            // For other pieces, check both path and Bulwark blocking
+            // For other pieces, check both path and Fort blocking
             const pathClear = this.isPathClear(piece.position!, newPos, board, piece);
             const canPass = this.canPassThrough(piece, newPos, board);
 
@@ -456,8 +456,8 @@ export class MovementRuleEngine implements IMovementRule {
     for (const potentialBlocker of allPieces) {
       if (potentialBlocker.owner === piece.owner) continue;
 
-      // Only BULWARK can block sides
-      if (potentialBlocker.type !== PieceType.BULWARK) continue;
+      // Only FORT can block sides
+      if (potentialBlocker.type !== PieceType.FORT) continue;
 
       const config = PIECE_MOVEMENT_CONFIG[potentialBlocker.type];
       if (!config.blocksSides) continue;
@@ -489,20 +489,20 @@ export class MovementRuleEngine implements IMovementRule {
     targetPosition: Position,
     board: Board,
   ): boolean {
-    if (movingPiece.type === PieceType.BULWARK) {
+    if (movingPiece.type === PieceType.FORT) {
       const targetPiece = board.getPieceAt(targetPosition);
       if (targetPiece && targetPiece.owner !== movingPiece.owner) {
         return true;
       }
     }
 
-    if (movingPiece.type === PieceType.APEX) {
+    if (movingPiece.type === PieceType.PIONEER) {
       const directionMultiplier = movingPiece.getDirectionMultiplier();
-      // Distance from APEX to Bulwark (in forward direction)
+      // Distance from PIONEER to Fort (in forward direction)
       const blockerDeltaY = (blocker.position!.y - movingPiece.position!.y) * directionMultiplier;
 
-      // APEX can only bypass Bulwark if it's at MORE than 1 row distance
-      // If Bulwark is at 2+ rows ahead -> can bypass
+      // PIONEER can only bypass Fort if it's at MORE than 1 row distance
+      // If Fort is at 2+ rows ahead -> can bypass
       // Otherwise (0, 1 row, or behind) -> blocked
       return blockerDeltaY >= 2;
     }

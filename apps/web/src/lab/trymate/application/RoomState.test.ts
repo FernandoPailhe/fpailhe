@@ -44,7 +44,7 @@ describe("useRoomStore", () => {
     const roomId = R().roomId!;
 
     // El host coloca una pieza antes de que entre el guest (join tardío).
-    G().selectPieceTypeForSetup(PieceType.BULWARK);
+    G().selectPieceTypeForSetup(PieceType.FORT);
     G().handleTileClick(new Position(0, 1));
 
     // Simulamos el segundo cliente con otro store-scope no: el mismo store
@@ -59,7 +59,7 @@ describe("useRoomStore", () => {
     expect(G().gameMode).toBe(GameMode.ONLINE);
     expect(G().localPlayer).toBe(Player.NEGRAS);
     // Snapshot del host aplicado: la pieza colocada por el host está en el board.
-    expect(G().board.getPieceAt(new Position(0, 1))?.type).toBe(PieceType.BULWARK);
+    expect(G().board.getPieceAt(new Position(0, 1))?.type).toBe(PieceType.FORT);
     expect(G().currentPlayer).toBe(Player.NEGRAS);
     expect(G().isLocalPlayerTurn()).toBe(true);
   });
@@ -122,8 +122,8 @@ describe("useRoomStore", () => {
     expect(R().error).toBe("Multiplayer is not configured");
     expect(G().gameMode).toBe(GameMode.PVP);
     // Modo local sigue funcionando.
-    G().selectPieceTypeForSetup(PieceType.BULWARK);
-    expect(G().selectedPieceTypeForPlacement).toBe(PieceType.BULWARK);
+    G().selectPieceTypeForSetup(PieceType.FORT);
+    expect(G().selectedPieceTypeForPlacement).toBe(PieceType.FORT);
   });
 });
 
@@ -132,13 +132,13 @@ describe("roomSync", () => {
     await R().createRoom();
     const roomId = R().roomId!;
 
-    G().selectPieceTypeForSetup(PieceType.BULWARK);
+    G().selectPieceTypeForSetup(PieceType.FORT);
     G().handleTileClick(new Position(0, 1));
 
     const remote = gateway.getRoom(roomId);
-    expect(remote?.state?.board.some((p) => p.position?.x === 0 && p.position?.y === 1)).toBe(
-      true,
-    );
+    expect(
+      (remote?.state?.board ?? []).some((p) => p.position?.x === 0 && p.position?.y === 1),
+    ).toBe(true);
     expect(remote?.state?.currentPlayer).toBe(Player.NEGRAS);
   });
 
@@ -149,12 +149,15 @@ describe("roomSync", () => {
 
     // Snapshot "remoto": el rival colocó una pieza y pasó el turno.
     const remote = G().toSnapshot();
-    remote.board.push({
-      id: "remote-1",
-      type: PieceType.VANGUARD,
-      owner: Player.NEGRAS,
-      position: { x: 4, y: 9 },
-    });
+    remote.board = [
+      ...(remote.board ?? []),
+      {
+        id: "remote-1",
+        type: PieceType.STRIKER,
+        owner: Player.NEGRAS,
+        position: { x: 4, y: 9 },
+      },
+    ];
     remote.currentPlayer = Player.BLANCAS;
     remote.pieceIdCounter += 1;
 
@@ -172,7 +175,7 @@ describe("roomSync", () => {
     stopRoomSync();
 
     const before = gateway.getRoom(roomId)?.state;
-    G().selectPieceTypeForSetup(PieceType.BULWARK);
+    G().selectPieceTypeForSetup(PieceType.FORT);
     G().handleTileClick(new Position(0, 1));
     expect(gateway.getRoom(roomId)?.state).toBe(before);
   });
@@ -184,7 +187,7 @@ describe("startRoomSync standalone", () => {
     const spy = vi.spyOn(gateway, "writeGameState");
 
     // Cambio efímero que no entra en el snapshot (selección sin colocar).
-    G().selectPieceTypeForSetup(PieceType.BULWARK);
+    G().selectPieceTypeForSetup(PieceType.FORT);
     expect(spy).not.toHaveBeenCalled();
 
     // Una colocación real sí cambia el snapshot.

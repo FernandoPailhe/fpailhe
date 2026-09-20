@@ -33,13 +33,13 @@ export enum GameMode {
 }
 
 export interface PieceCount {
-  BULWARK: number;
-  VANGUARD: number;
-  APEX: number;
+  FORT: number;
+  STRIKER: number;
+  PIONEER: number;
 }
 
 export const INITIAL_PIECE_COUNT: PieceCount = {
-  BULWARK: 0,
-  VANGUARD: 0,
-  APEX: 0,
+  FORT: 0,
+  STRIKER: 0,
+  PIONEER: 0,
 };
