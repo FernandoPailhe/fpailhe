@@ -1,12 +1,12 @@
 export enum PieceType {
-  BULWARK = 'BULWARK',
-  VANGUARD = 'VANGUARD',
-  APEX = 'APEX',
+  BULWARK = "BULWARK",
+  VANGUARD = "VANGUARD",
+  APEX = "APEX",
 }
 
 export enum Player {
-  BLANCAS = 'BLANCAS',
-  NEGRAS = 'NEGRAS',
+  BLANCAS = "BLANCAS",
+  NEGRAS = "NEGRAS",
 }
 
 export interface DirectionVector {
@@ -30,9 +30,7 @@ export interface CapturePattern {
 export const PIECE_MOVEMENT_CONFIG = {
   [PieceType.BULWARK]: {
     movement: {
-      directions: [
-        { dx: 0, dy: 1 },
-      ],
+      directions: [{ dx: 0, dy: 1 }],
       minDistance: 1,
       maxDistance: 1,
       canCapture: false,
@@ -63,17 +61,13 @@ export const PIECE_MOVEMENT_CONFIG = {
       canCapture: false,
     } as MovementPattern,
     alternativeMovement: {
-      directions: [
-        { dx: 0, dy: 1 },
-      ],
+      directions: [{ dx: 0, dy: 1 }],
       minDistance: 2,
       maxDistance: 2,
       canCapture: false,
     } as MovementPattern,
     capture: {
-      directions: [
-        { dx: 0, dy: 1 },
-      ],
+      directions: [{ dx: 0, dy: 1 }],
       minDistance: 1,
       maxDistance: 1,
     } as CapturePattern,
@@ -98,23 +92,23 @@ export const PIECE_MOVEMENT_CONFIG = {
 
 export const PIECE_COLORS = {
   [Player.BLANCAS]: 0xffffff, // White pieces
-  [Player.NEGRAS]: 0x333333,  // Black pieces
+  [Player.NEGRAS]: 0x333333, // Black pieces
 };
 
 export const PIECE_VISUAL_CONFIG = {
   [PieceType.BULWARK]: {
-    geometry: 'box',
+    geometry: "box",
     scale: { x: 1.0, y: 0.8, z: 0.3 },
     heightOffset: 0.5,
   },
   [PieceType.VANGUARD]: {
-    geometry: 'cone',
+    geometry: "cone",
     scale: { x: 0.5, y: 1.0, z: 0.5 },
     heightOffset: 0.6,
   },
   [PieceType.APEX]: {
-    geometry: 'cylinder',
+    geometry: "cylinder",
     scale: { x: 0.5, y: 0.25, z: 0.5 },
-    heightOffset: 0.50,
+    heightOffset: 0.5,
   },
 } as const;

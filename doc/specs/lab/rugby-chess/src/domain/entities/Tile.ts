@@ -1,10 +1,10 @@
-import { Position } from './Position';
+import { Position } from "./Position";
 
 export enum TileState {
-  EMPTY = 'EMPTY',
-  OCCUPIED = 'OCCUPIED',
-  SELECTED = 'SELECTED',
-  HIGHLIGHTED = 'HIGHLIGHTED',
+  EMPTY = "EMPTY",
+  OCCUPIED = "OCCUPIED",
+  SELECTED = "SELECTED",
+  HIGHLIGHTED = "HIGHLIGHTED",
 }
 
 export class Tile {
@@ -12,7 +12,7 @@ export class Tile {
 
   constructor(
     public readonly position: Position,
-    state: TileState = TileState.EMPTY
+    state: TileState = TileState.EMPTY,
   ) {
     this.state = state;
   }

@@ -167,12 +167,7 @@ export const MOVE_DIAGRAMS: Record<PieceType, MoveDiagramSpec> = {
   },
   [PieceType.STRIKER]: {
     piece: { x: 2, y: 1 },
-    cells: [
-      pos(2, 2, "capture"),
-      pos(1, 2, "move"),
-      pos(3, 2, "move"),
-      pos(2, 3, "move"),
-    ],
+    cells: [pos(2, 2, "capture"), pos(1, 2, "move"), pos(3, 2, "move"), pos(2, 3, "move")],
   },
   [PieceType.PIONEER]: {
     piece: { x: 2, y: 0 },

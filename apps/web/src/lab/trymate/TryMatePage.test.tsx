@@ -1,11 +1,11 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { ThemeProvider } from "@ferpa/ui";
 import { TryMatePage } from "./TryMatePage";
 import { useGameStore } from "./application/GameState";
 import { useRoomStore } from "./application/RoomState";
-import { Player } from "./domain/constants/PieceConstants";
+import { PieceType, Player } from "./domain/constants/PieceConstants";
 
 // ThemeProvider llama window.matchMedia; jsdom no lo implementa — stub
 // mínimo antes de montar (mismo patrón que App.test.tsx).
@@ -73,6 +73,31 @@ describe("TryMatePage", () => {
     renderPage();
     fireEvent.click(screen.getByRole("button", { name: /play online/i }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("quick-start online muestra el tablero sin picker de setup ni bench", () => {
+    useGameStore.getState().prepareOnlineGame("quick");
+    useGameStore.getState().setOnlineContext("room-1", Player.NEGRAS);
+    useRoomStore.setState({ status: "connected", roomId: "room-1", role: "guest" });
+    renderPage();
+    fireEvent.click(screen.getByRole("button", { name: /play online/i }));
+    expect(screen.getByRole("grid", { name: "TryMate board" })).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("manual setup online: el host elige pieza, se cierra el modal y quedan destinos", () => {
+    useGameStore.getState().prepareOnlineGame("manual");
+    useGameStore.getState().setOnlineContext("room-1", Player.BLANCAS);
+    useRoomStore.setState({ status: "connected", roomId: "room-1", role: "host" });
+    renderPage();
+    fireEvent.click(screen.getByRole("button", { name: /play online/i }));
+
+    const dialog = screen.getByRole("dialog", { name: "Choose your piece" });
+    fireEvent.click(within(dialog).getByRole("button", { name: /Fort/ }));
+
+    expect(useGameStore.getState().selectedPieceTypeForPlacement).toBe(PieceType.FORT);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(useGameStore.getState().validMoves.length).toBeGreaterThan(0);
   });
 
   it("always renders in dark mode and restores the theme on unmount (issue #16)", () => {

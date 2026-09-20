@@ -59,12 +59,8 @@ describe("TryMateBoard", () => {
     render(<TryMateBoard />);
     const rows = screen.getAllByRole("row");
     // White Pioneer (2,2) en DOM row 9; Black Pioneer (2,8) en DOM row 3.
-    expect(
-      rows[8]!.querySelector('[data-square="2,2"]'),
-    ).toBeInTheDocument();
-    expect(
-      rows[2]!.querySelector('[data-square="2,8"]'),
-    ).toBeInTheDocument();
+    expect(rows[8]!.querySelector('[data-square="2,2"]')).toBeInTheDocument();
+    expect(rows[2]!.querySelector('[data-square="2,8"]')).toBeInTheDocument();
   });
 
   it("rotates the board 180° for the Black player online (issue #20)", () => {
@@ -73,12 +69,8 @@ describe("TryMateBoard", () => {
     render(<TryMateBoard />);
     const rows = screen.getAllByRole("row");
     // Rotado: y=0 arriba, y=10 abajo — las piezas del guest quedan abajo.
-    expect(
-      rows[8]!.querySelector('[data-square="2,8"]'),
-    ).toBeInTheDocument();
-    expect(
-      rows[2]!.querySelector('[data-square="2,2"]'),
-    ).toBeInTheDocument();
+    expect(rows[8]!.querySelector('[data-square="2,8"]')).toBeInTheDocument();
+    expect(rows[2]!.querySelector('[data-square="2,2"]')).toBeInTheDocument();
     // Columnas también invertidas: x=0 queda en la última celda visual.
     const rowCells = rows[8]!.querySelectorAll('[role="gridcell"]');
     expect(rowCells[4]!.querySelector('[data-square="0,8"]')).not.toBeNull();

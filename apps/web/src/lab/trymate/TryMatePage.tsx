@@ -39,9 +39,7 @@ export function TryMatePage() {
   const gamePhase = useGameStore((s) => s.gamePhase);
   const roomStatus = useRoomStore((s) => s.status);
   const [params] = useSearchParams();
-  const [screen, setScreen] = useState<Screen>(() =>
-    params.get("room") ? "online" : "menu",
-  );
+  const [screen, setScreen] = useState<Screen>(() => (params.get("room") ? "online" : "menu"));
   const [showRules, setShowRules] = useState(false);
 
   // Composition root: inyecta el adaptador concreto del puerto RoomsGateway.

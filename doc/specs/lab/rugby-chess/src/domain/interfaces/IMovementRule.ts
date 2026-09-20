@@ -1,6 +1,6 @@
-import { GamePiece } from '../entities/GamePiece';
-import { Position } from '../entities/Position';
-import { Board } from '../entities/Board';
+import { GamePiece } from "../entities/GamePiece";
+import { Position } from "../entities/Position";
+import { Board } from "../entities/Board";
 
 export interface MoveValidationContext {
   piece: GamePiece;

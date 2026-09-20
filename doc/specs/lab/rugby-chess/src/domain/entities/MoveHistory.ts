@@ -1,5 +1,5 @@
-import { Position } from './Position';
-import { Player, PieceType } from '../constants/PieceConstants';
+import { Position } from "./Position";
+import { Player, PieceType } from "../constants/PieceConstants";
 
 export interface MoveRecord {
   moveNumber: number;
@@ -24,7 +24,7 @@ export class MoveHistory {
   addMove(move: MoveRecord): void {
     // Remove any moves after current index (if we went back and made a new move)
     this.moves = this.moves.slice(0, this.currentIndex + 1);
-    
+
     this.moves.push(move);
     this.currentIndex = this.moves.length - 1;
   }

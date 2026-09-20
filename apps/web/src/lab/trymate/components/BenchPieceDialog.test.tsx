@@ -24,21 +24,15 @@ describe("BenchPieceDialog (issue #21)", () => {
   it("opens as a blocking modal when the player must place a bench piece", () => {
     stateWithBenchToPlace();
     render(<BenchPieceDialog />);
-    expect(
-      screen.getByRole("dialog", { name: "Place a bench piece" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Place a bench piece" })).toBeInTheDocument();
     // Lista las 3 piezas de la banca del jugador actual.
-    expect(
-      screen.getAllByRole("button", { name: /place bench/i }),
-    ).toHaveLength(3);
+    expect(screen.getAllByRole("button", { name: /place bench/i })).toHaveLength(3);
   });
 
   it("closes after choosing a piece and marks valid squares", () => {
     stateWithBenchToPlace();
     render(<BenchPieceDialog />);
-    fireEvent.click(
-      screen.getAllByRole("button", { name: /place bench/i })[0]!,
-    );
+    fireEvent.click(screen.getAllByRole("button", { name: /place bench/i })[0]!);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(G().selectedBenchPiece).not.toBeNull();
     expect(G().validMoves.length).toBeGreaterThan(0);

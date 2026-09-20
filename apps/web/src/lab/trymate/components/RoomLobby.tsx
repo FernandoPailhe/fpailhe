@@ -31,12 +31,13 @@ export function RoomLobby() {
   const [quickStart, setQuickStart] = useState(false);
   const [params] = useSearchParams();
 
-  // Auto-join por link compartido: /lab/trymate?room=<id>
+  // Auto-enter por link compartido: /lab/trymate?room=<id>. Con credencial de
+  // host guardada reanuda el rol; si no, entra como guest.
   useEffect(() => {
     const roomParam = params.get("room");
     if (!roomParam || !gateway) return;
     if (useRoomStore.getState().status !== "idle") return;
-    void useRoomStore.getState().joinRoom(roomParam);
+    void useRoomStore.getState().enterRoom(roomParam);
   }, [params, gateway]);
 
   // Suscripción al lobby mientras se puede crear/unirse.
@@ -56,9 +57,7 @@ export function RoomLobby() {
     );
   }
 
-  const shareUrl = roomId
-    ? `${window.location.origin}/lab/trymate?room=${roomId}`
-    : null;
+  const shareUrl = roomId ? `${window.location.origin}/lab/trymate?room=${roomId}` : null;
 
   const copyLink = async () => {
     if (!shareUrl) return;
@@ -77,15 +76,7 @@ export function RoomLobby() {
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between gap-3">
             <h2 className="font-ui text-sm font-semibold text-ink">Play online</h2>
-            <Button
-              type="button"
-              onClick={() => {
-                // quickStart antes de createRoom: el snapshot inicial de la
-                // sala ya nace en PLAYING con los ejércitos colocados.
-                if (quickStart) useGameStore.getState().quickStart();
-                void createRoom();
-              }}
-            >
+            <Button type="button" onClick={() => void createRoom(quickStart ? "quick" : "manual")}>
               Create a room
             </Button>
           </div>
@@ -140,9 +131,13 @@ export function RoomLobby() {
         </div>
       )}
 
-      {(status === "creating" || status === "joining") && (
+      {(status === "creating" || status === "joining" || status === "resuming") && (
         <p className="font-ui text-sm text-ink-dim" role="status">
-          {status === "creating" ? "Creating room…" : "Joining room…"}
+          {status === "creating"
+            ? "Creating room…"
+            : status === "resuming"
+              ? "Reconnecting…"
+              : "Joining room…"}
         </p>
       )}
 
@@ -180,9 +175,7 @@ export function RoomLobby() {
           <p className="font-ui text-sm text-ink">
             Online{role === "host" ? " (host)" : ""} — you play{" "}
             <span className="font-semibold">
-              {gameMode === GameMode.ONLINE && localPlayer
-                ? PLAYER_LABEL[localPlayer]
-                : "—"}
+              {gameMode === GameMode.ONLINE && localPlayer ? PLAYER_LABEL[localPlayer] : "—"}
             </span>
           </p>
           <button
