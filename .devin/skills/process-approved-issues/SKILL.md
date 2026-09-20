@@ -1,12 +1,12 @@
 ---
 name: process-approved-issues
-description: Procesa los issues de GitHub con etiqueta agent-approved por lotes (publish primero), los implementa en orden, genera releases y publica a main cuando corresponde
+description: Procesa los issues abiertos de GitHub por lotes (los publicables primero y los not-publish en segunda etapa), los implementa en orden, genera releases y publica a main cuando corresponde
 argument-hint: "[owner/repo]"
 ---
 
 # Procesar issues aprobados por el agente
 
-Pipeline iterativo sobre los issues de GitHub etiquetados `agent-approved`: se trabaja por lotes (primero los que además tienen `publish`), con implementación incremental, una release por lote y publicación a `main` cuando corresponde. Tras publicar, el proceso se reinicia con los issues restantes.
+Pipeline iterativo sobre los issues abiertos de GitHub: cualquier issue sin la etiqueta `human` lo toma el agente. Se trabaja por lotes — primero los publicables y en una segunda etapa los marcados `not-publish` — con implementación incremental, una release por lote y publicación a `main` cuando corresponde. Tras publicar, el proceso se reinicia con los issues restantes.
 
 ## 0. Setup
 
@@ -23,13 +23,15 @@ Cada iteración procesa **un solo lote**. Tras un lote publicado, vuelve al paso
 
 ### 1. Obtener el lote
 
-1. Lista los issues **abiertos** con la etiqueta `agent-approved` usando el MCP de GitHub.
-2. Excluye los issues ya completados en esta ejecución (los registrados como completados en `.devin/agent-work/priorities.md`) y los que tengan la etiqueta `status:blocked` (requieren intervención humana — anótalos en el reporte).
-3. Issues que tienen `publish` pero **no** `agent-approved`: nunca se implementan. Anótalos como omitidos en el reporte.
-4. Determina el lote actual:
-   - Si existe al menos un issue con `agent-approved` + `publish` → el lote son **solo** esos issues (lote *publish*).
-   - Si ninguno tiene `publish` → el lote son todos los `agent-approved` restantes (lote *final*: se hace release pero no se publica a `main`).
-5. Si no quedan issues por procesar, ve al reporte final.
+1. Lista los issues **abiertos** del repositorio usando el MCP de GitHub.
+2. Excluye:
+   - Los que tengan la etiqueta `human` (son para trabajo humano — anótalos como omitidos en el reporte).
+   - Los que tengan la etiqueta `status:blocked` (requieren intervención humana — anótalos en el reporte).
+   - Los ya completados en esta ejecución (los registrados como completados en `.devin/agent-work/priorities.md`).
+3. Determina el lote actual:
+   - Si existe al menos un issue sin la etiqueta `not-publish` → el lote son **solo** esos issues (lote *publish*: se publica a `main`).
+   - Si todos los restantes tienen `not-publish` → el lote son todos ellos (segunda etapa: se hace release pero no se publica a `main`).
+4. Si no quedan issues por procesar, ve al reporte final.
 
 ### 2. Priorizar el lote
 
@@ -69,12 +71,12 @@ Para cada issue del lote:
 
 ### 5. Crear la rama de release
 
-1. Lee la versión base desde `package.json` (`version`, formato `M.x.y`).
+1. Lee la versión base desde `package.json` (`version`, formato `n.x.y`).
 2. Calcula la nueva versión:
-   - Si **algún** issue del lote fue una funcionalidad nueva (etiquetas `feature`, `enhancement`, `feat`, o tipo equivalente): incrementa `x` y resetea `y` a 0 → `M.(x+1).0`.
-   - Si **todos** fueron fixes de bugs (etiquetas `bug`, `fix`, `hotfix`): incrementa `y` → `M.x.(y+1)`.
-   - Si el issue no tiene etiqueta de tipo, infiérelo del título/contenido.
-3. Crea la rama `release/v<M.x.y>` desde el tip de la rama de trabajo (contiene todo el trabajo acumulado).
+   - **Por defecto**: incrementa `y` → `n.x.(y+1)`.
+   - Incrementa `x` y resetea `y` a 0 → `n.(x+1).0` **solo** cuando el lote incluye una funcionalidad relativamente grande (etiquetas `feature`, `enhancement`, `feat`, o un alcance que lo justifique según el contenido de los issues).
+   - `n` nunca se incrementa automáticamente.
+3. Crea la rama `release/v<n.x.y>` desde el tip de la rama de trabajo (contiene todo el trabajo acumulado).
 4. Actualiza el número de versión:
    - Si el proyecto tiene un script `update-version` (en `scripts` de `package.json` o un archivo tipo `scripts/update-version*`), úsalo para bump a la nueva versión.
    - Si no existe, edita el campo `version` de `package.json` directamente.
@@ -83,16 +85,16 @@ Para cada issue del lote:
 ### 6. Publicación y reinicio
 
 - **Si el lote era *publish***:
-  1. Haz checkout de `main`, mergea la rama `release/v<M.x.y>` y pushea `main`.
+  1. Haz checkout de `main`, mergea la rama `release/v<n.x.y>` y pushea `main`.
   2. Si el merge falla, resuélvelo (el trabajo es acumulativo desde la última release/main; si hay conflictos, favorece el trabajo nuevo).
   3. Si el proyecto tiene la skill `publish-app` disponible, ejecútala.
-  4. **Vuelve al paso 1**: re-consulta los issues `agent-approved` en GitHub (pueden haber aparecido nuevos) y procesa el siguiente lote.
-- **Si el lote era *final*** (sin `publish`): no toques `main`. Ve al reporte final.
+  4. **Vuelve al paso 1**: re-consulta los issues abiertos en GitHub (pueden haber aparecido nuevos) y procesa el siguiente lote.
+- **Si el lote era de segunda etapa** (`not-publish`): no toques `main`. Ve al reporte final.
 
 ## Reporte final
 
 Resume al usuario:
 - Lotes procesados y, por cada uno: issues (número → título → commit), rama de trabajo, rama de release y versión.
 - Si se publicó a `main` y si se corrió `publish-app`.
-- Issues omitidos por tener `publish` sin `agent-approved`, y los que quedaron en `status:blocked` pendientes de ayuda humana.
+- Issues omitidos por tener la etiqueta `human`, y los que quedaron en `status:blocked` pendientes de ayuda humana.
 - Cualquier fallo que hayas tenido que resolver en el camino.
