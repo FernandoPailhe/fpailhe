@@ -7,7 +7,7 @@ import { NotFoundPage } from "./NotFoundPage";
 const NAV_LINKS = [
   { label: "Home", href: "/" },
   { label: "CV", href: "/cv" },
-  { label: "Lab", href: "/lab/rugby-chess" },
+  { label: "Lab", href: "/lab/trymate" },
 ];
 
 export function ProjectDetailPage() {

@@ -30,7 +30,7 @@ export function RoomLobby() {
   const [copied, setCopied] = useState(false);
   const [params] = useSearchParams();
 
-  // Auto-join por link compartido: /lab/rugby-chess?room=<id>
+  // Auto-join por link compartido: /lab/trymate?room=<id>
   useEffect(() => {
     const roomParam = params.get("room");
     if (!roomParam || !gateway) return;
@@ -56,7 +56,7 @@ export function RoomLobby() {
   }
 
   const shareUrl = roomId
-    ? `${window.location.origin}/lab/rugby-chess?room=${roomId}`
+    ? `${window.location.origin}/lab/trymate?room=${roomId}`
     : null;
 
   const copyLink = async () => {

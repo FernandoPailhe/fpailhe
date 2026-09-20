@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Nav } from "../../components";
-import { RugbyChessBoard } from "./components/RugbyChessBoard";
+import { TryMateBoard } from "./components/TryMateBoard";
 import { PiecePickerDialog } from "./components/PiecePickerDialog";
 import { BenchPanel } from "./components/BenchPanel";
 import { GameStatusBar } from "./components/GameStatusBar";
@@ -18,10 +18,10 @@ const NAV_LINKS = [
 ];
 
 /**
- * Página del módulo rugby-chess (ruta `/lab/rugby-chess`).
+ * Página del módulo trymate (ruta `/lab/trymate`).
  * Módulo independiente: su dominio y componentes viven en esta carpeta.
  */
-export function RugbyChessPage() {
+export function TryMatePage() {
   const gamePhase = useGameStore((s) => s.gamePhase);
 
   // Composition root: inyecta el adaptador concreto del puerto RoomsGateway.
@@ -40,7 +40,7 @@ export function RugbyChessPage() {
       >
         <header>
           <p className="font-ui text-xs uppercase tracking-widest text-gold-bright">Lab</p>
-          <h1 className="font-display text-3xl font-bold text-ink">Rugby Chess</h1>
+          <h1 className="font-display text-3xl font-bold text-ink">TryMate</h1>
           <p className="mt-2 text-ink-dim">
             Experimental module: chess-like tactics on a 5×11 rugby field.
           </p>
@@ -48,7 +48,7 @@ export function RugbyChessPage() {
         <GameStatusBar />
         <RoomLobby />
         {gamePhase === GamePhase.PLAYING && <BenchPanel />}
-        <RugbyChessBoard />
+        <TryMateBoard />
         {(gamePhase === GamePhase.PLAYING || gamePhase === GamePhase.GAME_OVER) && (
           <MoveHistoryPanel />
         )}

@@ -3,9 +3,9 @@ import { GamePhase } from "../domain/constants/GameRules";
 import type { Position } from "../domain/entities/Position";
 
 export const PIECE_ASSET: Record<PieceType, string> = {
-  [PieceType.BULWARK]: "/lab/rugby-chess/pieces/muralla.svg",
-  [PieceType.VANGUARD]: "/lab/rugby-chess/pieces/ariete.svg",
-  [PieceType.APEX]: "/lab/rugby-chess/pieces/explorador.svg",
+  [PieceType.BULWARK]: "/lab/trymate/pieces/muralla.svg",
+  [PieceType.VANGUARD]: "/lab/trymate/pieces/ariete.svg",
+  [PieceType.APEX]: "/lab/trymate/pieces/explorador.svg",
 };
 
 export const PIECE_LABEL: Record<PieceType, string> = {
