@@ -12,7 +12,7 @@ export function RulesPanel() {
   return (
     <section
       aria-label={rules.title}
-      className="w-full max-w-4xl rounded-2xl border border-line bg-panel p-6 text-left"
+      className="w-full max-w-4xl rounded-2xl border border-line bg-canvas p-6 text-left"
     >
       <div className="mb-4 flex items-center justify-between">
         <h2 className="font-display text-xl text-ink">{rules.title}</h2>

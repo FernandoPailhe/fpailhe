@@ -28,7 +28,7 @@ describe("TryMateBoard", () => {
     render(<TryMateBoard />);
     fireEvent.click(screen.getByRole("button", { name: "c3 — White Pioneer" }));
     const moveTile = screen.getAllByRole("button", { name: /legal move/ })[0];
-    const dot = moveTile.querySelector("span");
+    const dot = moveTile?.querySelector("span");
     expect(dot?.className).toContain("bg-gold");
     expect(dot?.className).toContain("ring-pitch");
   });

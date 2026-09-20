@@ -30,19 +30,24 @@ export function MoveDiagram({ spec, pieceType, legend }: MoveDiagramProps) {
           const y = Math.floor(i / GRID);
           const kind = cells.get(`${x},${y}`);
           const isPiece = spec.piece.x === x && spec.piece.y === y;
+          const parity = (x + y) % 2 === 1;
           return (
             <div
               key={i}
-              className={`flex h-7 w-7 items-center justify-center rounded-sm ${
-                kind === "block" ? "bg-ink-dim/25" : "bg-panel"
+              className={`flex h-7 w-7 items-center justify-center rounded-sm border border-line ${
+                parity ? "bg-pitch" : "bg-pitch-alt"
               }`}
             >
               {isPiece ? (
                 <PieceToken type={pieceType} owner={Player.BLANCAS} />
               ) : kind === "move" ? (
-                <span className="h-2 w-2 rounded-full bg-gold" />
+                <span className="h-2 w-2 rounded-full bg-gold ring-2 ring-pitch" />
               ) : kind === "capture" ? (
-                <span className="h-2.5 w-2.5 rounded-full border-2 border-red-400" />
+                <span className="h-2.5 w-2.5 rounded-full border-2 border-crimson-bright" />
+              ) : kind === "block" ? (
+                <span aria-hidden="true" className="font-ui text-xs text-ink-dim">
+                  ×
+                </span>
               ) : null}
             </div>
           );
@@ -50,13 +55,17 @@ export function MoveDiagram({ spec, pieceType, legend }: MoveDiagramProps) {
       </div>
       <figcaption className="flex items-center gap-3 font-ui text-[10px] text-ink-dim">
         <span className="flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full bg-gold" /> {legend.move}
+          <span className="h-2 w-2 rounded-full bg-gold ring-1 ring-pitch" /> {legend.move}
         </span>
         <span className="flex items-center gap-1">
-          <span className="h-2.5 w-2.5 rounded-full border-2 border-red-400" /> {legend.capture}
+          <span className="h-2.5 w-2.5 rounded-full border-2 border-crimson-bright" />{" "}
+          {legend.capture}
         </span>
         <span className="flex items-center gap-1">
-          <span className="h-2 w-2 rounded-sm bg-ink-dim/40" /> {legend.block}
+          <span className="flex h-3 w-3 items-center justify-center rounded-sm border border-line bg-pitch-alt font-ui text-[9px] leading-none text-ink-dim">
+            ×
+          </span>
+          {legend.block}
         </span>
       </figcaption>
     </figure>

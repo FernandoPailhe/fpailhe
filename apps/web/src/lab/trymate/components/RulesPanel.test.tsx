@@ -11,6 +11,19 @@ describe("RulesPanel", () => {
     expect(screen.getAllByRole("img", { name: /movement example/ })).toHaveLength(3);
   });
 
+  it("renders the movement diagrams with board-like squares", () => {
+    render(<RulesPanel />);
+    for (const diagram of screen.getAllByRole("img", { name: /movement example/ })) {
+      const cells = Array.from(diagram.children) as HTMLElement[];
+      expect(cells).toHaveLength(25);
+      for (const cell of cells) {
+        expect(cell.className.includes("bg-pitch") || cell.className.includes("bg-pitch-alt")).toBe(
+          true,
+        );
+      }
+    }
+  });
+
   it("switches to Spanish and back", () => {
     useUiPrefsStore.getState().setRulesLang("en");
     render(<RulesPanel />);
