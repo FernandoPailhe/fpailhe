@@ -34,11 +34,7 @@ export function TryMateBoard() {
   // Issue #20: en online cada jugador ve su equipo abajo — el guest (NEGRAS)
   // recibe el tablero rotado 180° (filas y columnas invertidas).
   const flipped = gameMode === GameMode.ONLINE && localPlayer === Player.NEGRAS;
-  const inert =
-    isViewingHistory ||
-    notMyTurn ||
-    gamePhase === GamePhase.BENCH_SELECTION ||
-    gamePhase === GamePhase.GAME_OVER;
+  const inert = isViewingHistory || notMyTurn || gamePhase === GamePhase.GAME_OVER;
 
   const moveFocus = (next: Position) => {
     setFocusedPos(next);
@@ -133,7 +129,7 @@ export function TryMateBoard() {
       aria-colcount={GAME_CONFIG.BOARD_WIDTH}
       aria-disabled={inert}
       onKeyDown={onGridKeyDown}
-      className={`mx-auto w-full max-w-[420px] ${isViewingHistory || notMyTurn ? "opacity-60" : ""}`}
+      className={`mx-auto w-full max-w-[420px] ${inert ? "opacity-60" : ""}`}
     >
       {rows}
     </div>
