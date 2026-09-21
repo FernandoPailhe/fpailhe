@@ -77,6 +77,51 @@ describe("TryMateBoard", () => {
     expect(rowCells[0]!.querySelector('[data-square="4,8"]')).not.toBeNull();
   });
 
+  it("labels ranks on the visual right edge and files on the visual bottom edge", () => {
+    useGameStore.getState().quickStart();
+    render(<TryMateBoard />);
+    const tile = (square: string) =>
+      document.querySelector(`[data-square="${square}"]`) as HTMLElement;
+
+    // Columna derecha (x=4): número de fila arriba a la derecha.
+    const rank = tile("4,3").querySelector("span")!;
+    expect(rank.textContent).toBe("4");
+    expect(rank.className).toContain("top-");
+    expect(rank.className).toContain("right-");
+
+    // Fila inferior (y=0): letra de columna abajo a la izquierda.
+    const file = tile("2,0").querySelector("span")!;
+    expect(file.textContent).toBe("c");
+    expect(file.className).toContain("bottom-");
+    expect(file.className).toContain("left-");
+
+    // Texto con el tono de la casilla contraria: e4 es pitch (claro) →
+    // label pitch-alt; c1 es pitch-alt (oscuro) → label pitch.
+    expect(rank.className).toContain("text-pitch-alt");
+    expect(file.className).toContain("text-pitch");
+
+    // Casillas interiores no llevan etiqueta.
+    expect(tile("2,5").querySelector("span")).toBeNull();
+    expect(tile("0,5").querySelector("span")).toBeNull();
+  });
+
+  it("keeps coordinates on the same visual edges when the board is flipped", () => {
+    useGameStore.getState().quickStart();
+    useGameStore.getState().setOnlineContext("room-1", Player.NEGRAS);
+    render(<TryMateBoard />);
+    const tile = (square: string) =>
+      document.querySelector(`[data-square="${square}"]`) as HTMLElement;
+
+    // Rotado: el borde derecho visual es x=0, el inferior es y=10.
+    const rank = tile("0,5").querySelector("span")!;
+    expect(rank.textContent).toBe("6");
+    const file = tile("3,10").querySelector("span")!;
+    expect(file.textContent).toBe("d");
+    // Los bordes lógicos originales ya no llevan etiqueta.
+    expect(tile("4,5").querySelector("span")).toBeNull();
+    expect(tile("3,0").querySelector("span")).toBeNull();
+  });
+
   it("locks the board while viewing history", () => {
     useGameStore.getState().quickStart();
     useGameStore.setState({ isViewingHistory: true });

@@ -1,7 +1,14 @@
 import type { GamePiece } from "../domain/entities/GamePiece";
 import type { Position } from "../domain/entities/Position";
 import { GAME_CONFIG } from "../domain/constants/GameConstants";
-import { PIECE_LABEL, PLAYER_LABEL, scoringZoneEdge, squareName } from "../lib/gameDisplay";
+import {
+  fileLabel,
+  PIECE_LABEL,
+  PLAYER_LABEL,
+  rankLabel,
+  scoringZoneEdge,
+  squareName,
+} from "../lib/gameDisplay";
 import { PieceToken } from "./PieceToken";
 
 export type BoardTileState = "idle" | "selected" | "valid" | "blocked";
@@ -53,6 +60,13 @@ export function BoardTile({
   const label = zoneEdge ? `${baseLabel}, try zone` : baseLabel;
 
   const parity = (position.x + position.y) % 2 === 1;
+  // Coordenadas en el borde visual (como chess.com): número de fila en la
+  // esquina superior derecha de la columna derecha, letra de columna en la
+  // esquina inferior izquierda de la fila inferior. Con el tablero rotado
+  // los bordes visuales corresponden a x=0 e y=BOARD_HEIGHT-1.
+  const showRank = position.x === (flipped ? 0 : GAME_CONFIG.BOARD_WIDTH - 1);
+  const showFile = position.y === (flipped ? GAME_CONFIG.BOARD_HEIGHT - 1 : 0);
+  const coordClass = parity ? "text-pitch-alt" : "text-pitch";
   // Zona de try: degradé que se apaga hacia el borde externo y línea gold
   // en el borde interno que la separa del campo de juego.
   const zoneClass =
@@ -84,8 +98,24 @@ export function BoardTile({
         data-square={`${position.x},${position.y}`}
         onClick={onSelect}
         onFocus={onFocus}
-        className="flex h-full w-full items-center justify-center p-[6%] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+        className="relative flex h-full w-full items-center justify-center p-[6%] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
       >
+        {showRank ? (
+          <span
+            aria-hidden="true"
+            className={`absolute right-[5%] top-[5%] font-ui text-[9px] font-semibold leading-none ${coordClass}`}
+          >
+            {rankLabel(position.y)}
+          </span>
+        ) : null}
+        {showFile ? (
+          <span
+            aria-hidden="true"
+            className={`absolute bottom-[5%] left-[5%] font-ui text-[9px] font-semibold leading-none ${coordClass}`}
+          >
+            {fileLabel(position.x)}
+          </span>
+        ) : null}
         {piece ? (
           <PieceToken type={piece.type} owner={piece.owner} />
         ) : state === "valid" ? (

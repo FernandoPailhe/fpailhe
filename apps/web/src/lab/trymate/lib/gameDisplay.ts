@@ -26,9 +26,19 @@ export const PHASE_LABEL: Record<GamePhase, string> = {
   [GamePhase.GAME_OVER]: "Game over",
 };
 
+/** Letra de columna (a–e) tal como se etiqueta en el borde inferior. */
+export function fileLabel(x: number): string {
+  return "abcde"[x] ?? "?";
+}
+
+/** Número de fila (1–11) tal como se etiqueta en el borde derecho. */
+export function rankLabel(y: number): string {
+  return String(y + 1);
+}
+
 /** Nombre tipo ajedrez: columna a–e + fila 1–11 ("c4"). Para aria-labels. */
 export function squareName(pos: Position): string {
-  return `${"abcde"[pos.x] ?? "?"}${pos.y + 1}`;
+  return `${fileLabel(pos.x)}${rankLabel(pos.y)}`;
 }
 
 /**
