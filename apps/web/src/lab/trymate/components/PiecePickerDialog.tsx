@@ -25,7 +25,13 @@ export function PiecePickerDialog() {
       gamePhase === GamePhase.BENCH_SELECTION);
 
   return (
-    <Dialog open={open} onClose={() => {}} blocking labelledBy="piece-picker-title">
+    <Dialog
+      open={open}
+      onClose={() => {}}
+      blocking
+      labelledBy="piece-picker-title"
+      position="center"
+    >
       <div className="border border-line bg-surface px-6 py-5">
         <h2 id="piece-picker-title" className="font-display text-xl font-bold text-ink">
           Choose your piece

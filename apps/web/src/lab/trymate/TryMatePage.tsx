@@ -6,9 +6,9 @@ import { TryMateBoard } from "./components/TryMateBoard";
 import { PiecePickerDialog } from "./components/PiecePickerDialog";
 import { BenchPieceDialog } from "./components/BenchPieceDialog";
 import { BenchPanel } from "./components/BenchPanel";
-import { GameStatusBar } from "./components/GameStatusBar";
+import { GameSidebar } from "./components/GameSidebar";
 import { GameOverPanel } from "./components/GameOverPanel";
-import { MoveHistoryPanel } from "./components/MoveHistoryPanel";
+import { useBoardSize } from "./lib/useBoardSize";
 import { RoomLobby } from "./components/RoomLobby";
 import { RulesPanel } from "./components/RulesPanel";
 import { SetupModeSelector } from "./components/SetupModeSelector";
@@ -87,6 +87,12 @@ export function TryMatePage() {
     isSetupTurnForLocalPlayer() && (!isLocalPVP || setupPassAcknowledged);
   const showBoard = !isHiddenSetup || showHiddenBoard;
 
+  // Columna del tablero: su ancho determina el segundo límite del tamaño del
+  // board (el primero es el 90 % del alto de ventana) y el alto máximo del
+  // sidebar. Callback ref porque la columna solo se monta con `showGame`.
+  const [boardColumnEl, setBoardColumnEl] = useState<HTMLDivElement | null>(null);
+  const boardSize = useBoardSize(boardColumnEl);
+
   return (
     <>
       <Nav links={NAV_LINKS} hideThemeToggle />
@@ -143,15 +149,19 @@ export function TryMatePage() {
         )}
 
         {showGame && showBoard && (
-          <>
-            <GameStatusBar />
-            {gamePhase === GamePhase.PLAYING && <BenchPanel />}
-            <TryMateBoard />
-            {(gamePhase === GamePhase.PLAYING || gamePhase === GamePhase.GAME_OVER) && (
-              <MoveHistoryPanel />
-            )}
-            {gamePhase === GamePhase.GAME_OVER && <GameOverPanel />}
-          </>
+          <div className="grid grid-cols-[minmax(0,1fr)_minmax(12rem,16rem)] items-start gap-6 mobile:grid-cols-1">
+            <div
+              ref={setBoardColumnEl}
+              className="flex min-w-0 flex-col items-end gap-4 mobile:items-center"
+            >
+              <TryMateBoard />
+              {gamePhase === GamePhase.PLAYING && (
+                <BenchPanel width={boardSize.boardWidth} />
+              )}
+              {gamePhase === GamePhase.GAME_OVER && <GameOverPanel />}
+            </div>
+            <GameSidebar maxHeight={boardSize.boardHeight} />
+          </div>
         )}
 
         {showGame && isHiddenSetup && !showHiddenBoard && (

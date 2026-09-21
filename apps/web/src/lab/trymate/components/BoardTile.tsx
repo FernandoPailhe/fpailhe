@@ -17,6 +17,12 @@ export interface BoardTileProps {
   position: Position;
   piece: GamePiece | undefined;
   state: BoardTileState;
+  /**
+   * La casilla participa de la jugada activa del historial (origen o destino
+   * de la última jugada, o de la jugada seleccionada al navegar). Se pinta
+   * como overlay para no pisar la paridad ni la zona de try.
+   */
+  isLastMove?: boolean;
   disabled: boolean;
   tabIndex: number;
   /**
@@ -38,6 +44,7 @@ export function BoardTile({
   position,
   piece,
   state,
+  isLastMove = false,
   disabled,
   tabIndex,
   flipped = false,
@@ -57,7 +64,8 @@ export function BoardTile({
       : state === "blocked"
         ? `${name} — blocked`
         : `${name} — empty`;
-  const label = zoneEdge ? `${baseLabel}, try zone` : baseLabel;
+  const base = zoneEdge ? `${baseLabel}, try zone` : baseLabel;
+  const label = isLastMove ? `${base}, last move` : base;
 
   const parity = (position.x + position.y) % 2 === 1;
   // Coordenadas en el borde visual (como chess.com): número de fila en la
@@ -100,6 +108,12 @@ export function BoardTile({
         onFocus={onFocus}
         className="relative flex h-full w-full items-center justify-center p-[6%] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
       >
+        {isLastMove ? (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 bg-gold-soft ring-1 ring-inset ring-gold"
+          />
+        ) : null}
         {showRank ? (
           <span
             aria-hidden="true"

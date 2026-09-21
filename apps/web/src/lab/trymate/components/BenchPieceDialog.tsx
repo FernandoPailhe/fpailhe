@@ -35,7 +35,13 @@ export function BenchPieceDialog() {
   const benchPieces = getCurrentPlayerState().getBenchPieces();
 
   return (
-    <Dialog open={open} onClose={() => {}} blocking labelledBy="bench-piece-title">
+    <Dialog
+      open={open}
+      onClose={() => {}}
+      blocking
+      labelledBy="bench-piece-title"
+      position="center"
+    >
       <div className="border border-line bg-surface px-6 py-5">
         <h2 id="bench-piece-title" className="font-display text-xl font-bold text-ink">
           Place a bench piece

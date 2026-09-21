@@ -4,6 +4,7 @@ import { GAME_CONFIG } from "../domain/constants/GameConstants";
 import { GameMode, GamePhase, SetupTurnMode } from "../domain/constants/GameRules";
 import { Player } from "../domain/constants/PieceConstants";
 import { Position } from "../domain/entities/Position";
+import { useBoardSize } from "../lib/useBoardSize";
 import { BoardTile, type BoardTileState } from "./BoardTile";
 
 /**
@@ -20,6 +21,7 @@ export function TryMateBoard() {
     validMoves,
     blockedMoves,
     isViewingHistory,
+    moveHistory,
     gamePhase,
     gameMode,
     setupMode,
@@ -31,6 +33,11 @@ export function TryMateBoard() {
 
   const [focusedPos, setFocusedPos] = useState(() => new Position(0, 0));
   const gridRef = useRef<HTMLDivElement>(null);
+  // El wrapper a ancho completo es el contenedor medido; el grid recibe un
+  // ancho explícito derivado del alto de ventana (máx. 90vh de alto total).
+  // Callback ref (no RefObject) para que el hook re-mida al montar el nodo.
+  const [containerEl, setContainerEl] = useState<HTMLDivElement | null>(null);
+  const boardSize = useBoardSize(containerEl);
 
   // Setup oculto: durante la configuración solo se ven las piezas del
   // jugador que está configurando; las del rival quedan enmascaradas.
@@ -41,6 +48,10 @@ export function TryMateBoard() {
   // recibe el tablero rotado 180° (filas y columnas invertidas).
   const flipped = gameMode === GameMode.ONLINE && localPlayer === Player.NEGRAS;
   const inert = isViewingHistory || notMyTurn || gamePhase === GamePhase.GAME_OVER;
+
+  // Jugada activa del historial: la última en el presente, o la seleccionada
+  // al navegar hacia atrás/adelante. Sus casillas from/to se resaltan.
+  const currentMove = moveHistory.getCurrentMove();
 
   const moveFocus = (next: Position) => {
     setFocusedPos(next);
@@ -101,12 +112,15 @@ export function TryMateBoard() {
           : blockedMoves.some((p) => p.equals(position))
             ? "blocked"
             : "idle";
+      const isLastMove =
+        !!currentMove && (currentMove.from.equals(position) || currentMove.to.equals(position));
       cells.push(
         <BoardTile
           key={`${x}-${y}`}
           position={position}
           piece={piece}
           state={tileState}
+          isLastMove={isLastMove}
           disabled={inert}
           flipped={flipped}
           tabIndex={focusedPos.equals(position) ? 0 : -1}
@@ -128,17 +142,20 @@ export function TryMateBoard() {
   }
 
   return (
-    <div
-      ref={gridRef}
-      role="grid"
-      aria-label="TryMate board"
-      aria-rowcount={GAME_CONFIG.BOARD_HEIGHT}
-      aria-colcount={GAME_CONFIG.BOARD_WIDTH}
-      aria-disabled={inert}
-      onKeyDown={onGridKeyDown}
-      className={`mx-auto w-full max-w-[420px] ${inert ? "opacity-60" : ""}`}
-    >
-      {rows}
+    <div ref={setContainerEl} className="w-full">
+      <div
+        ref={gridRef}
+        role="grid"
+        aria-label="TryMate board"
+        aria-rowcount={GAME_CONFIG.BOARD_HEIGHT}
+        aria-colcount={GAME_CONFIG.BOARD_WIDTH}
+        aria-disabled={inert}
+        onKeyDown={onGridKeyDown}
+        className={`ml-auto ${inert ? "opacity-60" : ""} mobile:mx-auto`}
+        style={{ width: boardSize.boardWidth }}
+      >
+        {rows}
+      </div>
     </div>
   );
 }

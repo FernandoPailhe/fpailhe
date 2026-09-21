@@ -15,6 +15,12 @@ export interface DialogProps {
    * El focus trap se mantiene: el usuario solo puede interactuar dentro.
    */
   blocking?: boolean;
+  /**
+   * Posición vertical del panel dentro del viewport:
+   * - `"top"` (default): alineado arriba con `py-[5vh]`.
+   * - `"center"`: centrado vertical y horizontalmente.
+   */
+  position?: "top" | "center";
 }
 
 const FOCUSABLE_SELECTOR =
@@ -33,6 +39,7 @@ export function Dialog({
   children,
   panelClassName = "",
   blocking = false,
+  position = "top",
 }: DialogProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
@@ -78,7 +85,9 @@ export function Dialog({
   return createPortal(
     <div
       role="presentation"
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto px-5 py-[5vh]"
+      className={`fixed inset-0 z-50 flex justify-center overflow-y-auto px-5 ${
+        position === "center" ? "items-center" : "items-start py-[5vh]"
+      }`}
       style={{ backgroundColor: "rgba(6,7,9,.72)", backdropFilter: "blur(2px)" }}
       onMouseDown={(event) => {
         if (!blocking && event.target === event.currentTarget) onClose();

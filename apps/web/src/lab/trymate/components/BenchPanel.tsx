@@ -2,11 +2,16 @@ import { useGameStore } from "../application/GameState";
 import { PIECE_LABEL, PLAYER_LABEL } from "../lib/gameDisplay";
 import { PieceToken } from "./PieceToken";
 
+export interface BenchPanelProps {
+  /** Ancho en píxeles para alinear la banca con el tablero (misma medida). */
+  width?: number;
+}
+
 /**
  * Banca del jugador actual (fase PLAYING). Colocar una pieza de banca es
  * una acción gratuita: no consume el turno.
  */
-export function BenchPanel() {
+export function BenchPanel({ width }: BenchPanelProps) {
   const {
     currentPlayer,
     getCurrentPlayerState,
@@ -23,7 +28,8 @@ export function BenchPanel() {
   return (
     <section
       aria-label={`${PLAYER_LABEL[currentPlayer]} bench`}
-      className="mx-auto w-full max-w-[420px]"
+      className="ml-auto w-full mobile:mx-auto"
+      style={width ? { maxWidth: width } : undefined}
     >
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="font-ui text-sm font-semibold text-ink">

@@ -41,7 +41,7 @@ export function GameStatusBar() {
     !canPlaceBenchPiece();
 
   return (
-    <div className="mx-auto flex w-full max-w-[420px] flex-wrap items-center justify-between gap-2 font-ui text-sm">
+    <div className="flex w-full flex-wrap items-center justify-between gap-2 font-ui text-sm">
       <div aria-live="polite" className="flex flex-wrap items-center gap-3">
         <span className="font-semibold text-ink">{PHASE_LABEL[gamePhase]}</span>
         <span className="text-ink-dim">{turnLabel}</span>
