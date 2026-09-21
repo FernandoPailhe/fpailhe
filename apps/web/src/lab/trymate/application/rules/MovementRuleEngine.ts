@@ -362,12 +362,17 @@ export class MovementRuleEngine implements IMovementRule {
                 // Only add if total distance doesn't exceed max
                 if (fwd + lat > maxTotalDistance) continue;
 
-                const leftPos = new Position(startX - lat, fwdY);
-                const rightPos = new Position(startX + lat, fwdY);
-
-                if (board.isValidPosition(leftPos)) {
-                  blockedPositions.push(leftPos);
+                // El constructor de Position lanza con coordenadas negativas:
+                // hay que chequear el borde izquierdo ANTES de construir.
+                const leftX = startX - lat;
+                if (leftX >= 0) {
+                  const leftPos = new Position(leftX, fwdY);
+                  if (board.isValidPosition(leftPos)) {
+                    blockedPositions.push(leftPos);
+                  }
                 }
+
+                const rightPos = new Position(startX + lat, fwdY);
                 if (board.isValidPosition(rightPos)) {
                   blockedPositions.push(rightPos);
                 }

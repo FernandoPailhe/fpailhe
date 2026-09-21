@@ -184,6 +184,21 @@ describe("getBlockedMoves", () => {
     expect(at(blocked, 1, 5)).toBe(true);
     expect(at(blocked, 0, 5)).toBe(false);
   });
+
+  it("does not throw for a blocked pioneer on the left edge near the try line", () => {
+    // Regresión: pioneer NEGRAS en columna 0 con el frente bloqueado —
+    // la rama lateral construía Position(-1, y) y lanzaba antes de validar.
+    const pioneer = add(PieceType.PIONEER, 0, 1, Player.NEGRAS);
+    add(PieceType.FORT, 0, 0, Player.BLANCAS); // bloquea el frente
+
+    let blocked: Position[] = [];
+    expect(() => {
+      blocked = engine.getBlockedMoves(pioneer, board);
+    }).not.toThrow();
+    expect(at(blocked, 0, 0)).toBe(true); // frente bloqueado
+    expect(at(blocked, 1, 0)).toBe(true); // lateral derecha
+    expect(blocked.every((p) => p.x >= 0 && p.y >= 0)).toBe(true);
+  });
 });
 
 describe("board limits", () => {
