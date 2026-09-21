@@ -18,6 +18,33 @@ export interface InMemoryRoomsGatewayOptions {
   now?: () => number;
   /** Generador de credenciales del host; inyectable para tests deterministas. */
   createToken?: () => string;
+  /**
+   * Simula la semántica de RTDB: al persistir elimina null/undefined, arrays
+   * vacíos y objetos que quedan vacíos. Sin esto los tests no reproducen el
+   * eco que revertía las selecciones del usuario con Firebase real.
+   */
+  simulateRtdbStrip?: boolean;
+}
+
+/**
+ * Replica lo que RTDB hace con un valor al escribirlo: null/undefined, arrays
+ * vacíos y objetos sin claves se descartan; arrays con elementos se conservan.
+ */
+function stripRtdb(value: unknown): unknown {
+  if (value === null || value === undefined) return undefined;
+  if (Array.isArray(value)) {
+    if (value.length === 0) return undefined;
+    return value.map((item) => stripRtdb(item));
+  }
+  if (typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [key, v] of Object.entries(value)) {
+      const stripped = stripRtdb(v);
+      if (stripped !== undefined) out[key] = stripped;
+    }
+    return Object.keys(out).length === 0 ? undefined : out;
+  }
+  return value;
 }
 
 /**
@@ -32,10 +59,17 @@ export class InMemoryRoomsGateway implements RoomsGateway {
   private idCounter = 0;
   private readonly now: () => number;
   private readonly createToken: () => string;
+  private readonly strip: boolean;
 
   constructor(options: InMemoryRoomsGatewayOptions = {}) {
     this.now = options.now ?? (() => Date.now());
     this.createToken = options.createToken ?? (() => `host-${Math.random().toString(36).slice(2)}`);
+    this.strip = options.simulateRtdbStrip ?? false;
+  }
+
+  private persistState(snapshot: GameSnapshot): GameSnapshot | null {
+    if (!this.strip) return snapshot;
+    return (stripRtdb(snapshot) as GameSnapshot | undefined) ?? null;
   }
 
   private emitRoom(roomId: string): void {
@@ -64,7 +98,7 @@ export class InMemoryRoomsGateway implements RoomsGateway {
     const roomId = `room-${++this.idCounter}`;
     const now = this.now();
     const hostToken = this.createToken();
-    this.rooms.set(roomId, {
+    const record: RoomRecord = {
       createdAt: now,
       updatedAt: now,
       status: "waiting",
@@ -73,8 +107,10 @@ export class InMemoryRoomsGateway implements RoomsGateway {
       hostDisconnectedAt: null,
       expiresAt: now + WAITING_ROOM_MAX_AGE_MS,
       hostToken,
-      state: initial,
-    });
+      state: this.persistState(initial),
+    };
+    // RTDB descarta los null del record completo, no solo los del state.
+    this.rooms.set(roomId, this.strip ? (stripRtdb(record) as RoomRecord) : record);
     this.emitRoom(roomId);
     this.emitLobby();
     return { roomId, hostToken };
@@ -131,7 +167,7 @@ export class InMemoryRoomsGateway implements RoomsGateway {
   async writeGameState(roomId: string, snapshot: GameSnapshot): Promise<void> {
     const room = this.rooms.get(roomId);
     if (!room) throw new Error("La sala no existe");
-    room.state = snapshot;
+    room.state = this.persistState(snapshot);
     room.updatedAt = this.now();
     this.emitRoom(roomId);
   }

@@ -1,4 +1,9 @@
 import type { RoomsGateway } from "../domain/interfaces/RoomsGateway";
+import {
+  deserializeGameSnapshot,
+  serializeGameSnapshot,
+  type GameSnapshot,
+} from "../domain/entities/GameSnapshot";
 import { useGameStore } from "./GameState";
 
 type GameStoreApi = typeof useGameStore;
@@ -19,6 +24,18 @@ const activeSyncs = new Map<GameStoreApi, () => void>();
 const defaultOnError = (error: unknown): void => {
   console.error("roomSync error", error);
 };
+
+/**
+ * JSON canónico de un snapshot: la misma forma que produce `toSnapshot()`.
+ * RTDB elimina nulls, arrays vacíos y objetos vacíos al persistir, así que
+ * el valor crudo que llega por `onValue` nunca es idéntico al local aunque
+ * el estado sea el mismo. Comparar raw JSON hacía que cada write rebotara
+ * como "cambio remoto" y `applyRemoteSnapshot` pisara la selección efímera
+ * del usuario — los clicks parecían no hacer nada.
+ */
+function canonicalJson(snapshot: GameSnapshot): string {
+  return JSON.stringify(serializeGameSnapshot(deserializeGameSnapshot(snapshot)));
+}
 
 /**
  * Bridge useGameStore ↔ RoomsGateway. Push: serializa el snapshot en cada
@@ -47,7 +64,14 @@ export function startRoomSync(
     (room) => {
       const remote = room?.state;
       if (!remote) return;
-      const json = JSON.stringify(remote);
+      let json: string;
+      try {
+        json = canonicalJson(remote);
+      } catch (error) {
+        // Snapshot remoto malformado: no tocar el estado local.
+        onError(error);
+        return;
+      }
       if (json === lastSyncedJson) return;
       lastSyncedJson = json;
       applyingRemote = true;

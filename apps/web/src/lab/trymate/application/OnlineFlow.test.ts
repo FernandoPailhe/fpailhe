@@ -198,6 +198,70 @@ describe("online two-client flow", () => {
   });
 });
 
+describe("eco de snapshot con semántica RTDB (regresión: clicks revertidos)", () => {
+  it("la selección efímera no se revierte por el eco del write propio", async () => {
+    // RTDB elimina null/[] vacíos/{ } al persistir: el state que vuelve por
+    // onValue difiere en bytes del local aunque sea el mismo estado.
+    const rtdbGateway = new InMemoryRoomsGateway({ simulateRtdbStrip: true });
+    const host = createGameStore();
+    host.getState().prepareOnlineGame("manual");
+    const { roomId } = await rtdbGateway.createRoom(host.getState().toSnapshot());
+    host.getState().setOnlineContext(roomId, Player.BLANCAS);
+    const stop = startRoomSync(rtdbGateway, roomId, { store: host });
+    const writeSpy = vi.spyOn(rtdbGateway, "writeGameState");
+
+    // El eco del snapshot inicial (stripped) no debe revertir nada ni escribir.
+    expect(host.getState().selectedPieceTypeForPlacement).toBeNull();
+    expect(writeSpy).not.toHaveBeenCalled();
+
+    // Elegir tipo de pieza es efímero: no entra al snapshot, no escribe, y
+    // sobre todo NO se revierte cuando el eco del estado llega de vuelta.
+    host.getState().selectPieceTypeForSetup(PieceType.FORT);
+    expect(host.getState().selectedPieceTypeForPlacement).toBe(PieceType.FORT);
+    expect(host.getState().validMoves.length).toBeGreaterThan(0);
+    expect(writeSpy).not.toHaveBeenCalled();
+
+    // Colocar sí cambia el snapshot → un write; el eco stripped no debe
+    // volver a aplicar ni pisar el estado.
+    host.getState().handleTileClick(pos(0, 1));
+    expect(writeSpy).toHaveBeenCalledTimes(1);
+    expect(host.getState().currentPlayer).toBe(Player.NEGRAS);
+    expect(host.getState().board.getPieceAt(pos(0, 1))?.type).toBe(PieceType.FORT);
+
+    stop();
+  });
+
+  it("quick: el host puede seleccionar y completar un movimiento sin eco", async () => {
+    const rtdbGateway = new InMemoryRoomsGateway({ simulateRtdbStrip: true });
+    const host = createGameStore();
+    host.getState().prepareOnlineGame("quick");
+    const { roomId } = await rtdbGateway.createRoom(host.getState().toSnapshot());
+    host.getState().setOnlineContext(roomId, Player.BLANCAS);
+    const stopHost = startRoomSync(rtdbGateway, roomId, { store: host });
+
+    const guest = createGameStore();
+    const room = await rtdbGateway.joinRoom(roomId);
+    if (room?.state) guest.getState().applyRemoteSnapshot(room.state);
+    guest.getState().setOnlineContext(roomId, Player.NEGRAS);
+    const stopGuest = startRoomSync(rtdbGateway, roomId, { store: guest });
+
+    // Click 1: selecciona la pieza. Antes del fix el eco revertía esto.
+    host.getState().handleTileClick(pos(2, 2));
+    expect(host.getState().selectedPiece?.type).toBe(PieceType.PIONEER);
+    expect(host.getState().validMoves.length).toBeGreaterThan(0);
+
+    // Click 2: el movimiento se completa y el guest lo recibe.
+    host.getState().handleTileClick(pos(2, 4));
+    expect(host.getState().currentPlayer).toBe(Player.NEGRAS);
+    expect(guest.getState().board.getPieceAt(pos(2, 4))?.type).toBe(PieceType.PIONEER);
+    expect(guest.getState().currentPlayer).toBe(Player.NEGRAS);
+    expect(guest.getState().isLocalPlayerTurn()).toBe(true);
+
+    stopHost();
+    stopGuest();
+  });
+});
+
 describe("single-store smoke tests (RoomState wiring)", () => {
   it("host can move after guest joins a quick-start room", async () => {
     await R().createRoom("quick");

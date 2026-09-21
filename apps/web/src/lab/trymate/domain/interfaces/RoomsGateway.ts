@@ -56,14 +56,18 @@ export type RoomUnsubscribe = () => void;
  */
 export function roomAdmissionDeadline(room: RoomRecord): number | null {
   if (room.status === "abandoned" || room.status === "finished") return null;
+  // RTDB elimina las claves con valor null: hostDisconnectedAt puede venir
+  // ausente (undefined) aunque el schema lo declare null.
   if (room.status === "waiting") {
-    const disconnectedAt = room.hostConnection === "disconnected" ? room.hostDisconnectedAt : null;
+    const disconnectedAt =
+      room.hostConnection === "disconnected" ? (room.hostDisconnectedAt ?? null) : null;
     return disconnectedAt === null
       ? room.expiresAt
       : Math.min(room.expiresAt, disconnectedAt + ROOM_RECONNECT_GRACE_MS);
   }
-  if (room.hostDisconnectedAt === null) return Number.POSITIVE_INFINITY;
-  return room.hostDisconnectedAt + ROOM_RECONNECT_GRACE_MS;
+  const disconnectedAt = room.hostDisconnectedAt ?? null;
+  if (disconnectedAt === null) return Number.POSITIVE_INFINITY;
+  return disconnectedAt + ROOM_RECONNECT_GRACE_MS;
 }
 
 /** Una sala "waiting" admite un join mientras no se venza su deadline. */
