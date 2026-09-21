@@ -5,7 +5,7 @@ import { Position } from "./Position";
 import { PlayerState } from "./PlayerState";
 import { MoveHistory, type MoveRecord } from "./MoveHistory";
 import { PieceType, Player } from "../constants/PieceConstants";
-import { GamePhase } from "../constants/GameRules";
+import { GamePhase, SetupTurnMode } from "../constants/GameRules";
 import { GAME_CONFIG } from "../constants/GameConstants";
 import {
   deserializeGameSnapshot,
@@ -165,6 +165,26 @@ describe("GameSnapshot", () => {
     expect(restored.moveHistory.getTotalMoves()).toBe(0);
     expect(restored.player1State.getTotalSelectedCount()).toBe(0);
     expect(restored.player1State.getScore()).toBe(0);
+  });
+
+  it("round-trips setup mode and completion", () => {
+    const source = emptySource();
+    source.setupMode = SetupTurnMode.HIDDEN;
+    source.setupCompleted = { player1: true, player2: false };
+
+    const wire = JSON.parse(JSON.stringify(serializeGameSnapshot(source)));
+    const restored = deserializeGameSnapshot(wire);
+    expect(restored.setupMode).toBe(SetupTurnMode.HIDDEN);
+    expect(restored.setupCompleted).toEqual({ player1: true, player2: false });
+  });
+
+  it("defaults setupMode to ALTERNATING when absent (old rooms)", () => {
+    const snap = serializeGameSnapshot(emptySource());
+    delete snap.setupMode;
+    delete snap.setupCompleted;
+    const restored = deserializeGameSnapshot(snap);
+    expect(restored.setupMode).toBe(SetupTurnMode.ALTERNATING);
+    expect(restored.setupCompleted).toEqual({ player1: false, player2: false });
   });
 
   it("omits the captured key on moves without a capture (RTDB rejects undefined)", () => {

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { Player } from "../domain/constants/PieceConstants";
-import type { RoomSetupMode } from "../domain/constants/GameRules";
+import { SetupTurnMode, type RoomSetupMode } from "../domain/constants/GameRules";
 import {
   roomAdmissionDeadline,
   type RoomRecord,
@@ -27,7 +27,7 @@ interface RoomStore {
   error: string | null;
 
   setGateway: (gateway: RoomsGateway | null) => void;
-  createRoom: (setupMode: RoomSetupMode) => Promise<void>;
+  createRoom: (setupMode: RoomSetupMode, setupTurnMode?: SetupTurnMode) => Promise<void>;
   joinRoom: (roomId: string) => Promise<void>;
   resumeRoom: (roomId: string) => Promise<boolean>;
   /** Entry point del link compartido: resume como host si hay credencial local, si no join como guest. */
@@ -115,7 +115,7 @@ export const useRoomStore = create<RoomStore>((set, get) => {
 
     setGateway: (gateway) => set({ gateway }),
 
-    createRoom: async (setupMode) => {
+    createRoom: async (setupMode, setupTurnMode) => {
       const { gateway } = get();
       if (!gateway) {
         set({ status: "error", error: "Multiplayer is not configured" });
@@ -127,7 +127,7 @@ export const useRoomStore = create<RoomStore>((set, get) => {
         // Único entry point online: prepara el juego, captura el snapshot y
         // recién entonces crea la sala e inicia la sincronización.
         const game = useGameStore.getState();
-        game.prepareOnlineGame(setupMode);
+        game.prepareOnlineGame(setupMode, setupTurnMode);
         const snapshot = useGameStore.getState().toSnapshot();
         const { roomId, hostToken } = await gateway.createRoom(snapshot);
         saveHostCredential({ roomId, hostToken });

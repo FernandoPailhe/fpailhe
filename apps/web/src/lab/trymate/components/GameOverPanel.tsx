@@ -3,7 +3,7 @@ import { GamePhase } from "../domain/constants/GameRules";
 
 /** Resultado de la partida + reinicio. Solo se monta en GAME_OVER. */
 export function GameOverPanel() {
-  const { gamePhase, player1State, player2State, reset } = useGameStore();
+  const { gamePhase, setupMode, player1State, player2State, reset } = useGameStore();
 
   if (gamePhase !== GamePhase.GAME_OVER) return null;
 
@@ -23,7 +23,7 @@ export function GameOverPanel() {
       </p>
       <button
         type="button"
-        onClick={reset}
+        onClick={() => reset(setupMode)}
         className="mt-4 border border-line bg-surface-raised px-4 py-2 font-ui text-sm font-semibold text-ink hover:border-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
       >
         Play again

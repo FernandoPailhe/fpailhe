@@ -4,7 +4,7 @@ import { Position } from "./Position";
 import { PlayerState } from "./PlayerState";
 import { MoveHistory, type MoveRecord } from "./MoveHistory";
 import { PieceType, Player } from "../constants/PieceConstants";
-import { GamePhase } from "../constants/GameRules";
+import { GamePhase, SetupTurnMode } from "../constants/GameRules";
 import { GAME_CONFIG } from "../constants/GameConstants";
 
 export interface PieceSnapshot {
@@ -43,6 +43,8 @@ export interface GameSnapshot {
   gamePhase: GamePhase;
   pieceIdCounter: number;
   moveHistory?: MoveRecordSnapshot[];
+  setupMode?: SetupTurnMode;
+  setupCompleted?: { player1: boolean; player2: boolean };
 }
 
 function pieceToSnapshot(piece: GamePiece): PieceSnapshot {
@@ -125,6 +127,8 @@ export interface GameSnapshotSource {
   gamePhase: GamePhase;
   pieceIdCounter: number;
   moveHistory: MoveHistory;
+  setupMode?: SetupTurnMode;
+  setupCompleted?: { player1: boolean; player2: boolean };
 }
 
 export function serializeGameSnapshot(source: GameSnapshotSource): GameSnapshot {
@@ -136,6 +140,8 @@ export function serializeGameSnapshot(source: GameSnapshotSource): GameSnapshot 
     gamePhase: source.gamePhase,
     pieceIdCounter: source.pieceIdCounter,
     moveHistory: source.moveHistory.getAllMoves().map(moveRecordToSnapshot),
+    setupMode: source.setupMode ?? SetupTurnMode.ALTERNATING,
+    setupCompleted: source.setupCompleted ?? { player1: false, player2: false },
   };
 }
 
@@ -147,6 +153,8 @@ export interface DeserializedGameState {
   gamePhase: GamePhase;
   pieceIdCounter: number;
   moveHistory: MoveHistory;
+  setupMode: SetupTurnMode;
+  setupCompleted: { player1: boolean; player2: boolean };
 }
 
 export function deserializeGameSnapshot(snap: GameSnapshot): DeserializedGameState {
@@ -167,5 +175,7 @@ export function deserializeGameSnapshot(snap: GameSnapshot): DeserializedGameSta
     gamePhase: snap.gamePhase,
     pieceIdCounter: snap.pieceIdCounter,
     moveHistory,
+    setupMode: snap.setupMode ?? SetupTurnMode.ALTERNATING,
+    setupCompleted: snap.setupCompleted ?? { player1: false, player2: false },
   };
 }

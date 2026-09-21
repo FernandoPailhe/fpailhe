@@ -5,7 +5,7 @@ import { startRoomSync, stopRoomSync } from "./roomSync";
 import { clearHostCredential } from "./hostCredential";
 import { InMemoryRoomsGateway } from "../infrastructure/InMemoryRoomsGateway";
 import { PieceType, Player } from "../domain/constants/PieceConstants";
-import { GamePhase, type RoomSetupMode } from "../domain/constants/GameRules";
+import { GamePhase, SetupTurnMode, type RoomSetupMode } from "../domain/constants/GameRules";
 import { Position } from "../domain/entities/Position";
 
 const G = () => useGameStore.getState();
@@ -44,9 +44,10 @@ type ClientStore = ReturnType<typeof createGameStore>;
  */
 async function connectHost(
   setupMode: RoomSetupMode,
+  setupTurnMode: SetupTurnMode = SetupTurnMode.ALTERNATING,
 ): Promise<{ store: ClientStore; roomId: string; hostToken: string; stop: () => void }> {
   const store = createGameStore();
-  store.getState().prepareOnlineGame(setupMode);
+  store.getState().prepareOnlineGame(setupMode, setupTurnMode);
   const { roomId, hostToken } = await gateway.createRoom(store.getState().toSnapshot());
   store.getState().setOnlineContext(roomId, Player.BLANCAS);
   const stop = startRoomSync(gateway, roomId, { store });
@@ -163,6 +164,58 @@ describe("online two-client flow", () => {
       expect(store.getState().currentPlayer).toBe(Player.BLANCAS);
       expect(store.getState().player1State.getBenchPieces()).toHaveLength(3);
       expect(store.getState().player2State.getBenchPieces()).toHaveLength(3);
+    }
+  });
+
+  it("hidden: cada cliente configura 5+3 en su turno; ambos llegan a PLAYING", async () => {
+    const host = await connectHost("manual", SetupTurnMode.HIDDEN);
+    const guest = await connectGuest(host.roomId);
+
+    // El guest hereda el modo del snapshot del host y espera su turno.
+    expect(guest.getState().setupMode).toBe(SetupTurnMode.HIDDEN);
+    expect(guest.getState().gamePhase).toBe(GamePhase.SETUP);
+    expect(guest.getState().isSetupTurnForLocalPlayer()).toBe(false);
+    expect(host.store.getState().isSetupTurnForLocalPlayer()).toBe(true);
+
+    const whiteSpots = [pos(0, 1), pos(1, 1), pos(0, 2), pos(1, 2), pos(0, 3)];
+    const blackSpots = [pos(0, 7), pos(1, 7), pos(0, 8), pos(1, 8), pos(0, 9)];
+    const types = [
+      PieceType.FORT,
+      PieceType.STRIKER,
+      PieceType.PIONEER,
+      PieceType.FORT,
+      PieceType.STRIKER,
+    ];
+
+    // Host (BLANCAS) completa su setup: el guest sigue sin poder actuar.
+    types.forEach((type, i) => {
+      host.store.getState().selectPieceTypeForSetup(type);
+      host.store.getState().handleTileClick(whiteSpots[i]!);
+      expect(host.store.getState().currentPlayer).toBe(Player.BLANCAS);
+    });
+    [PieceType.FORT, PieceType.STRIKER, PieceType.PIONEER].forEach((type) =>
+      host.store.getState().selectPieceTypeForBench(type),
+    );
+
+    expect(guest.getState().setupCompleted).toEqual({ player1: true, player2: false });
+    expect(guest.getState().currentPlayer).toBe(Player.NEGRAS);
+    expect(guest.getState().isSetupTurnForLocalPlayer()).toBe(true);
+    expect(host.store.getState().isSetupTurnForLocalPlayer()).toBe(false);
+
+    // Guest (NEGRAS) completa el suyo → PLAYING en ambos lados.
+    types.forEach((type, i) => {
+      guest.getState().selectPieceTypeForSetup(type);
+      guest.getState().handleTileClick(blackSpots[i]!);
+    });
+    [PieceType.FORT, PieceType.STRIKER, PieceType.PIONEER].forEach((type) =>
+      guest.getState().selectPieceTypeForBench(type),
+    );
+
+    for (const store of [host.store, guest]) {
+      expect(store.getState().setupCompleted).toEqual({ player1: true, player2: true });
+      expect(store.getState().gamePhase).toBe(GamePhase.PLAYING);
+      expect(store.getState().currentPlayer).toBe(Player.BLANCAS);
+      expect(store.getState().board.getAllPieces()).toHaveLength(10);
     }
   });
 

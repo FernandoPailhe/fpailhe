@@ -2,7 +2,9 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { TryMateBoard } from "./TryMateBoard";
 import { useGameStore } from "../application/GameState";
-import { Player } from "../domain/constants/PieceConstants";
+import { PieceType, Player } from "../domain/constants/PieceConstants";
+import { SetupTurnMode } from "../domain/constants/GameRules";
+import { Position } from "../domain/entities/Position";
 
 beforeEach(() => {
   useGameStore.getState().reset();
@@ -120,6 +122,25 @@ describe("TryMateBoard", () => {
     // Los bordes lógicos originales ya no llevan etiqueta.
     expect(tile("4,5").querySelector("span")).toBeNull();
     expect(tile("3,0").querySelector("span")).toBeNull();
+  });
+
+  it("masks opponent pieces during hidden setup", () => {
+    const s = () => useGameStore.getState();
+    s().reset(SetupTurnMode.HIDDEN);
+    // BLANCAS coloca una pieza (en HIDDEN no alterna tras colocar).
+    s().selectPieceTypeForSetup(PieceType.FORT);
+    s().handleTileClick(new Position(0, 1));
+    // Simula el turno de NEGRAS: configura sin ver lo de BLANCAS.
+    useGameStore.setState({ currentPlayer: Player.NEGRAS });
+    s().selectPieceTypeForSetup(PieceType.FORT);
+    s().handleTileClick(new Position(0, 7));
+
+    render(<TryMateBoard />);
+    // La pieza de BLANCAS queda enmascarada: la casilla figura vacía.
+    expect(screen.queryByRole("button", { name: /White/ })).toBeNull();
+    expect(screen.getByRole("button", { name: "a2 — empty" })).toBeInTheDocument();
+    // La propia pieza de NEGRAS sí se ve.
+    expect(screen.getByRole("button", { name: "a8 — Black Fort" })).toBeInTheDocument();
   });
 
   it("locks the board while viewing history", () => {

@@ -1,5 +1,5 @@
 import { useGameStore } from "../application/GameState";
-import { GameMode, GamePhase } from "../domain/constants/GameRules";
+import { GameMode, GamePhase, SetupTurnMode } from "../domain/constants/GameRules";
 import { PHASE_LABEL, PLAYER_LABEL } from "../lib/gameDisplay";
 
 /**
@@ -9,6 +9,7 @@ import { PHASE_LABEL, PLAYER_LABEL } from "../lib/gameDisplay";
 export function GameStatusBar() {
   const {
     gamePhase,
+    setupMode,
     currentPlayer,
     player1State,
     player2State,
@@ -24,6 +25,7 @@ export function GameStatusBar() {
   } = useGameStore();
 
   const online = gameMode === GameMode.ONLINE;
+  const hiddenSetup = gamePhase === GamePhase.SETUP && setupMode === SetupTurnMode.HIDDEN;
   const turnLabel = online
     ? isLocalPlayerTurn()
       ? "Your turn"
@@ -43,6 +45,11 @@ export function GameStatusBar() {
       <div aria-live="polite" className="flex flex-wrap items-center gap-3">
         <span className="font-semibold text-ink">{PHASE_LABEL[gamePhase]}</span>
         <span className="text-ink-dim">{turnLabel}</span>
+        {hiddenSetup && (
+          <span className="bg-gold-soft px-2 py-0.5 text-xs font-semibold text-gold-bright">
+            Hidden setup — {PLAYER_LABEL[currentPlayer]} placing army
+          </span>
+        )}
         {online && localPlayer && (
           <span className="bg-gold-soft px-2 py-0.5 text-xs font-semibold text-gold-bright">
             You are {PLAYER_LABEL[localPlayer]}
@@ -75,7 +82,7 @@ export function GameStatusBar() {
         {!online && (
           <button
             type="button"
-            onClick={reset}
+            onClick={() => reset(setupMode)}
             className="text-xs text-ink-dim underline underline-offset-2 hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
           >
             Reset

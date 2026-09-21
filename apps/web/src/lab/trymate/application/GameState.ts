@@ -6,7 +6,13 @@ import { PlayerState } from "../domain/entities/PlayerState";
 import { IGameState } from "../domain/interfaces/IGameState";
 import { GAME_CONFIG } from "../domain/constants/GameConstants";
 import { Player, PieceType } from "../domain/constants/PieceConstants";
-import { GamePhase, GAME_RULES, GameMode, type RoomSetupMode } from "../domain/constants/GameRules";
+import {
+  GamePhase,
+  GAME_RULES,
+  GameMode,
+  SetupTurnMode,
+  type RoomSetupMode,
+} from "../domain/constants/GameRules";
 import { MovementRuleEngine } from "./rules/MovementRuleEngine";
 import { MoveHistory, MoveRecord } from "../domain/entities/MoveHistory";
 import {
@@ -36,6 +42,12 @@ interface GameStateStore {
   /** Bando que controla este cliente en ONLINE; null = modo local. */
   localPlayer: Player | null;
   roomId: string | null;
+  /** Modo de turnos del setup: alternado (default) u oculto por jugador. */
+  setupMode: SetupTurnMode;
+  /** Progreso del setup en modo HIDDEN (sin efecto en ALTERNATING). */
+  setupCompleted: { player1: boolean; player2: boolean };
+  /** Jugador que está configurando en modo HIDDEN (BLANCAS primero). */
+  setupPlayer: Player;
 
   selectPieceTypeForSetup: (type: PieceType) => void;
   selectPieceTypeForBench: (type: PieceType) => void;
@@ -47,10 +59,14 @@ interface GameStateStore {
   hoverTile: (position: Position | null) => void;
   movePiece: (to: Position) => void;
   startGame: () => void;
-  reset: () => void;
+  reset: (setupMode?: SetupTurnMode) => void;
   quickStart: () => void;
   /** Prepara el estado inicial de una sala online de forma determinista. */
-  prepareOnlineGame: (setupMode: RoomSetupMode) => void;
+  prepareOnlineGame: (setupMode: RoomSetupMode, setupTurnMode?: SetupTurnMode) => void;
+  /** Cambia el modo de turnos del setup; solo válido antes de colocar piezas. */
+  setSetupMode: (mode: SetupTurnMode) => void;
+  /** True si el jugador local debe ver/actuar en el setup (siempre true en local). */
+  isSetupTurnForLocalPlayer: () => boolean;
   getCurrentPlayerState: () => PlayerState;
   getOpponentPlayerState: () => PlayerState;
   checkScoring: (piece: GamePiece) => void;
@@ -177,6 +193,9 @@ const gameStoreInitializer: StateCreator<GameStateStore> = (set, get) => ({
   isViewingHistory: false,
   localPlayer: null,
   roomId: null,
+  setupMode: SetupTurnMode.ALTERNATING,
+  setupCompleted: { player1: false, player2: false },
+  setupPlayer: Player.BLANCAS,
 
   isLocalPlayerTurn: () => {
     const state = get();
@@ -185,6 +204,29 @@ const gameStoreInitializer: StateCreator<GameStateStore> = (set, get) => ({
       state.localPlayer === null ||
       state.localPlayer === state.currentPlayer
     );
+  },
+
+  isSetupTurnForLocalPlayer: () => {
+    const state = get();
+    if (state.gameMode !== GameMode.ONLINE || state.localPlayer === null) return true;
+    return state.currentPlayer === state.localPlayer;
+  },
+
+  setSetupMode: (mode: SetupTurnMode) => {
+    set((state) => {
+      if (state.gamePhase !== GamePhase.SETUP) return state;
+      if (
+        state.player1State.getPlacedPiecesCount() > 0 ||
+        state.player2State.getPlacedPiecesCount() > 0
+      ) {
+        return state;
+      }
+      return {
+        setupMode: mode,
+        setupCompleted: { player1: false, player2: false },
+        setupPlayer: Player.BLANCAS,
+      };
+    });
   },
 
   setOnlineContext: (roomId: string | null, localPlayer: Player | null) => {
@@ -205,6 +247,9 @@ const gameStoreInitializer: StateCreator<GameStateStore> = (set, get) => ({
       gamePhase: restored.gamePhase,
       pieceIdCounter: restored.pieceIdCounter,
       moveHistory: restored.moveHistory,
+      setupMode: restored.setupMode,
+      setupCompleted: restored.setupCompleted,
+      setupPlayer: restored.currentPlayer,
       selectedPiece: null,
       selectedPieceTypeForPlacement: null,
       selectedBenchPiece: null,
@@ -224,6 +269,8 @@ const gameStoreInitializer: StateCreator<GameStateStore> = (set, get) => ({
       gamePhase: state.gamePhase,
       pieceIdCounter: state.pieceIdCounter,
       moveHistory: state.moveHistory,
+      setupMode: state.setupMode,
+      setupCompleted: state.setupCompleted,
     });
   },
 
@@ -249,17 +296,33 @@ const gameStoreInitializer: StateCreator<GameStateStore> = (set, get) => ({
     if (currentCount >= GAME_RULES.MAX_PIECES_PER_TYPE) return false;
     if (playerState.getTotalSelectedCount() >= GAME_RULES.TOTAL_PIECES_PER_PLAYER) return false;
 
+    // HIDDEN: al completar las 5 piezas se pasa a banca; no se puede elegir
+    // más tipos para colocar.
+    if (
+      state.setupMode === SetupTurnMode.HIDDEN &&
+      playerState.getPlacedPiecesCount() >= GAME_RULES.PIECES_TO_PLACE
+    ) {
+      return false;
+    }
+
     return true;
   },
 
   canSelectBenchPieceType: (type: PieceType) => {
     const state = get();
     if (!state.isLocalPlayerTurn()) return false;
-    if (state.gamePhase !== GamePhase.BENCH_SELECTION) {
-      return false;
-    }
+
+    const validPhase =
+      state.gamePhase === GamePhase.BENCH_SELECTION ||
+      (state.gamePhase === GamePhase.SETUP && state.setupMode === SetupTurnMode.HIDDEN);
+    if (!validPhase) return false;
 
     const playerState = state.getCurrentPlayerState();
+
+    // HIDDEN: la banca se elige dentro de SETUP, solo tras colocar las 5 piezas.
+    if (state.setupMode === SetupTurnMode.HIDDEN && state.gamePhase === GamePhase.SETUP) {
+      if (playerState.getPlacedPiecesCount() < GAME_RULES.PIECES_TO_PLACE) return false;
+    }
     const benchCount = playerState.getBenchPieces().length;
     const currentBenchTypeCount = playerState
       .getBenchPieces()
@@ -378,7 +441,23 @@ const gameStoreInitializer: StateCreator<GameStateStore> = (set, get) => ({
       };
 
       if (benchCount >= GAME_RULES.PIECES_IN_BENCH) {
-        if (state.currentPlayer === Player.BLANCAS) {
+        if (state.setupMode === SetupTurnMode.HIDDEN) {
+          // Fin del setup oculto del jugador actual.
+          const playerKey = state.currentPlayer === Player.BLANCAS ? "player1" : "player2";
+          const updatedCompleted = { ...state.setupCompleted, [playerKey]: true };
+
+          if (updatedCompleted.player1 && updatedCompleted.player2) {
+            newState.setupCompleted = updatedCompleted;
+            newState.gamePhase = GamePhase.PLAYING;
+            newState.currentPlayer = Player.BLANCAS;
+          } else {
+            const nextPlayer =
+              state.currentPlayer === Player.BLANCAS ? Player.NEGRAS : Player.BLANCAS;
+            newState.setupCompleted = updatedCompleted;
+            newState.currentPlayer = nextPlayer;
+            newState.setupPlayer = nextPlayer;
+          }
+        } else if (state.currentPlayer === Player.BLANCAS) {
           newState.currentPlayer = Player.NEGRAS;
         } else {
           newState.gamePhase = GamePhase.PLAYING;
@@ -442,7 +521,12 @@ const gameStoreInitializer: StateCreator<GameStateStore> = (set, get) => ({
         blockedMoves: [],
       };
 
-      if (totalPlaced >= GAME_RULES.PIECES_TO_PLACE * 2) {
+      if (state.setupMode === SetupTurnMode.HIDDEN) {
+        // HIDDEN: el mismo jugador sigue hasta completar su setup (5 piezas +
+        // 3 banca); el cambio de jugador ocurre al terminar la banca.
+        state.board.clearSelection();
+        state.board.clearHighlights();
+      } else if (totalPlaced >= GAME_RULES.PIECES_TO_PLACE * 2) {
         newState.gamePhase = GamePhase.BENCH_SELECTION;
         newState.currentPlayer = Player.BLANCAS;
         // Clear highlights when moving to bench selection
@@ -771,7 +855,7 @@ const gameStoreInitializer: StateCreator<GameStateStore> = (set, get) => ({
     });
   },
 
-  reset: () => {
+  reset: (setupMode: SetupTurnMode = SetupTurnMode.ALTERNATING) => {
     const board = createInitialBoard();
     const player1State = new PlayerState("player1");
     const player2State = new PlayerState("player2");
@@ -793,6 +877,9 @@ const gameStoreInitializer: StateCreator<GameStateStore> = (set, get) => ({
       isViewingHistory: false,
       localPlayer: null,
       roomId: null,
+      setupMode,
+      setupCompleted: { player1: false, player2: false },
+      setupPlayer: Player.BLANCAS,
     });
   },
 
@@ -814,10 +901,16 @@ const gameStoreInitializer: StateCreator<GameStateStore> = (set, get) => ({
       pieceIdCounter: quick.pieceIdCounter,
       moveHistory: new MoveHistory(),
       isViewingHistory: false,
+      setupMode: SetupTurnMode.ALTERNATING,
+      setupCompleted: { player1: false, player2: false },
+      setupPlayer: Player.BLANCAS,
     });
   },
 
-  prepareOnlineGame: (setupMode: RoomSetupMode) => {
+  prepareOnlineGame: (
+    setupMode: RoomSetupMode,
+    setupTurnMode: SetupTurnMode = SetupTurnMode.ALTERNATING,
+  ) => {
     const initial = setupMode === "quick" ? buildQuickStartState() : buildManualStartState();
 
     set({
@@ -837,6 +930,9 @@ const gameStoreInitializer: StateCreator<GameStateStore> = (set, get) => ({
       isViewingHistory: false,
       localPlayer: null,
       roomId: null,
+      setupMode: setupTurnMode,
+      setupCompleted: { player1: false, player2: false },
+      setupPlayer: Player.BLANCAS,
     });
   },
 

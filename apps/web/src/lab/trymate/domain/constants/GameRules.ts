@@ -32,6 +32,14 @@ export enum GameMode {
   ONLINE = "ONLINE",
 }
 
+/** Modo de turnos durante el setup. No confundir con `RoomSetupMode`
+ *  ("manual" | "quick"), que indica si se usan posiciones
+ *  predeterminadas o personalizadas. */
+export enum SetupTurnMode {
+  ALTERNATING = "ALTERNATING",
+  HIDDEN = "HIDDEN",
+}
+
 /** Modo de configuración inicial de una sala online. */
 export type RoomSetupMode = "manual" | "quick";
 

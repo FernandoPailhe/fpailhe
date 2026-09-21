@@ -1,7 +1,7 @@
 import { useGameStore } from "../application/GameState";
 import { useUiPrefsStore } from "../application/uiPrefs";
 import { PieceType } from "../domain/constants/PieceConstants";
-import { GamePhase, GAME_RULES } from "../domain/constants/GameRules";
+import { GamePhase, GAME_RULES, SetupTurnMode } from "../domain/constants/GameRules";
 import { PIECE_LABEL, PLAYER_LABEL } from "../lib/gameDisplay";
 import { RULES_CONTENT } from "../lib/rulesContent";
 import { PieceToken } from "./PieceToken";
@@ -9,12 +9,14 @@ import { PieceToken } from "./PieceToken";
 const PIECE_TYPES = [PieceType.FORT, PieceType.STRIKER, PieceType.PIONEER];
 
 /**
- * Selector de tipo de pieza para SETUP y BENCH_SELECTION.
- * Lee la fase del store y usa el par de acciones correspondiente.
+ * Selector de tipo de pieza para colocación y banca. En setup alternado la
+ * elección depende de la fase (SETUP vs. BENCH_SELECTION); en setup oculto
+ * ambas ocurren dentro de SETUP y la banca se activa tras colocar las 5.
  */
 export function PieceTypePicker() {
   const {
     gamePhase,
+    setupMode,
     currentPlayer,
     selectedPieceTypeForPlacement,
     canSelectPieceType,
@@ -27,9 +29,15 @@ export function PieceTypePicker() {
   const rulesLang = useUiPrefsStore((s) => s.rulesLang);
   const pieceRules = RULES_CONTENT[rulesLang].pieces;
 
-  const isSetup = gamePhase === GamePhase.SETUP;
   const playerState = getCurrentPlayerState();
   const benchPieces = playerState.getBenchPieces();
+
+  const isBench =
+    gamePhase === GamePhase.BENCH_SELECTION ||
+    (gamePhase === GamePhase.SETUP &&
+      setupMode === SetupTurnMode.HIDDEN &&
+      playerState.getPlacedPiecesCount() >= GAME_RULES.PIECES_TO_PLACE);
+  const isSetup = !isBench;
 
   return (
     <section

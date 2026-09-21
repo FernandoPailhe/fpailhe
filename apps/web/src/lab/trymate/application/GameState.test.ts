@@ -5,7 +5,7 @@ import { Board } from "../domain/entities/Board";
 import { GamePiece } from "../domain/entities/GamePiece";
 import { PlayerState } from "../domain/entities/PlayerState";
 import { PieceType, Player } from "../domain/constants/PieceConstants";
-import { GamePhase, GAME_RULES, GameMode } from "../domain/constants/GameRules";
+import { GamePhase, GAME_RULES, GameMode, SetupTurnMode } from "../domain/constants/GameRules";
 import { GAME_CONFIG } from "../domain/constants/GameConstants";
 
 const S = () => useGameStore.getState();
@@ -92,6 +92,82 @@ describe("SETUP phase", () => {
     expect(S().gamePhase).toBe(GamePhase.BENCH_SELECTION);
     expect(S().currentPlayer).toBe(Player.BLANCAS);
     expect(S().board.getAllPieces()).toHaveLength(10);
+  });
+});
+
+describe("SETUP hidden mode", () => {
+  const whiteSpots = [pos(0, 1), pos(1, 1), pos(0, 2), pos(1, 2), pos(0, 3)];
+  const blackSpots = [pos(0, 7), pos(1, 7), pos(0, 8), pos(1, 8), pos(0, 9)];
+  const types = [
+    PieceType.FORT,
+    PieceType.STRIKER,
+    PieceType.PIONEER,
+    PieceType.FORT,
+    PieceType.STRIKER,
+  ];
+
+  /** Coloca 5 piezas del jugador actual en HIDDEN (sin alternar). */
+  const hiddenPlaceAll = (spots: Position[]) => {
+    types.forEach((type, i) => setupPlace(type, spots[i]!.x, spots[i]!.y));
+  };
+
+  it("keeps the same player across all 5 placements, then allows bench picks in SETUP", () => {
+    S().reset(SetupTurnMode.HIDDEN);
+
+    hiddenPlaceAll(whiteSpots);
+    expect(S().currentPlayer).toBe(Player.BLANCAS);
+    expect(S().gamePhase).toBe(GamePhase.SETUP);
+
+    // Con 5 piezas ya no puede elegir más tipos para colocar…
+    expect(S().canSelectPieceType(PieceType.FORT)).toBe(false);
+    // …pero sí elegir banca dentro de SETUP.
+    expect(S().canSelectBenchPieceType(PieceType.FORT)).toBe(true);
+  });
+
+  it("switches to the opponent after 3 bench picks and finishes in PLAYING", () => {
+    S().reset(SetupTurnMode.HIDDEN);
+
+    hiddenPlaceAll(whiteSpots);
+    // Bench obliga el mínimo por tipo: F,S,P.
+    S().selectPieceTypeForBench(PieceType.FORT);
+    S().selectPieceTypeForBench(PieceType.STRIKER);
+    S().selectPieceTypeForBench(PieceType.PIONEER);
+
+    expect(S().setupCompleted).toEqual({ player1: true, player2: false });
+    expect(S().currentPlayer).toBe(Player.NEGRAS);
+    expect(S().setupPlayer).toBe(Player.NEGRAS);
+    expect(S().gamePhase).toBe(GamePhase.SETUP);
+
+    hiddenPlaceAll(blackSpots);
+    S().selectPieceTypeForBench(PieceType.FORT);
+    S().selectPieceTypeForBench(PieceType.STRIKER);
+    S().selectPieceTypeForBench(PieceType.PIONEER);
+
+    expect(S().setupCompleted).toEqual({ player1: true, player2: true });
+    expect(S().gamePhase).toBe(GamePhase.PLAYING);
+    expect(S().currentPlayer).toBe(Player.BLANCAS);
+    expect(S().board.getAllPieces()).toHaveLength(10);
+    expect(S().player1State.getBenchPieces()).toHaveLength(3);
+    expect(S().player2State.getBenchPieces()).toHaveLength(3);
+  });
+
+  it("rejects bench picks before placing all 5 pieces", () => {
+    S().reset(SetupTurnMode.HIDDEN);
+    setupPlace(PieceType.FORT, 0, 1);
+    expect(S().canSelectBenchPieceType(PieceType.FORT)).toBe(false);
+    S().selectPieceTypeForBench(PieceType.FORT);
+    expect(S().player1State.getBenchPieces()).toHaveLength(0);
+  });
+
+  it("setSetupMode only works before any placement", () => {
+    S().reset();
+    S().setSetupMode(SetupTurnMode.HIDDEN);
+    expect(S().setupMode).toBe(SetupTurnMode.HIDDEN);
+
+    S().reset();
+    setupPlace(PieceType.FORT, 0, 1);
+    S().setSetupMode(SetupTurnMode.HIDDEN);
+    expect(S().setupMode).toBe(SetupTurnMode.ALTERNATING);
   });
 });
 

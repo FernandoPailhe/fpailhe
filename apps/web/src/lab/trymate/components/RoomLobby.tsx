@@ -3,8 +3,9 @@ import { useSearchParams } from "react-router-dom";
 import { Button } from "@ferpa/ui";
 import { useGameStore } from "../application/GameState";
 import { useRoomStore } from "../application/RoomState";
-import { GameMode } from "../domain/constants/GameRules";
+import { GameMode, SetupTurnMode } from "../domain/constants/GameRules";
 import { PLAYER_LABEL } from "../lib/gameDisplay";
+import { SetupModeSelector } from "./SetupModeSelector";
 
 const SECTION_CLASS = "mx-auto w-full max-w-[420px] border border-line bg-surface px-6 py-5";
 const FOCUS =
@@ -29,6 +30,7 @@ export function RoomLobby() {
   const gameMode = useGameStore((s) => s.gameMode);
   const [copied, setCopied] = useState(false);
   const [quickStart, setQuickStart] = useState(false);
+  const [setupTurnMode, setSetupTurnMode] = useState<SetupTurnMode>(SetupTurnMode.ALTERNATING);
   const [params] = useSearchParams();
 
   // Auto-enter por link compartido: /lab/trymate?room=<id>. Con credencial de
@@ -76,7 +78,10 @@ export function RoomLobby() {
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between gap-3">
             <h2 className="font-ui text-sm font-semibold text-ink">Play online</h2>
-            <Button type="button" onClick={() => void createRoom(quickStart ? "quick" : "manual")}>
+            <Button
+              type="button"
+              onClick={() => void createRoom(quickStart ? "quick" : "manual", setupTurnMode)}
+            >
               Create a room
             </Button>
           </div>
@@ -89,6 +94,7 @@ export function RoomLobby() {
             />
             Quick start — skip setup, armies placed and ready to play
           </label>
+          {!quickStart && <SetupModeSelector value={setupTurnMode} onChange={setSetupTurnMode} />}
           {error && (
             <div className="flex items-center justify-between gap-3" role="alert">
               <p className="font-ui text-xs text-gold-bright">{error}</p>

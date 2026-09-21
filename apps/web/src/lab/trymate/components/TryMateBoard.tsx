@@ -1,7 +1,7 @@
 import { useRef, useState, type KeyboardEvent } from "react";
 import { useGameStore } from "../application/GameState";
 import { GAME_CONFIG } from "../domain/constants/GameConstants";
-import { GameMode, GamePhase } from "../domain/constants/GameRules";
+import { GameMode, GamePhase, SetupTurnMode } from "../domain/constants/GameRules";
 import { Player } from "../domain/constants/PieceConstants";
 import { Position } from "../domain/entities/Position";
 import { BoardTile, type BoardTileState } from "./BoardTile";
@@ -22,6 +22,8 @@ export function TryMateBoard() {
     isViewingHistory,
     gamePhase,
     gameMode,
+    setupMode,
+    currentPlayer,
     localPlayer,
     isLocalPlayerTurn,
     handleTileClick,
@@ -29,6 +31,10 @@ export function TryMateBoard() {
 
   const [focusedPos, setFocusedPos] = useState(() => new Position(0, 0));
   const gridRef = useRef<HTMLDivElement>(null);
+
+  // Setup oculto: durante la configuración solo se ven las piezas del
+  // jugador que está configurando; las del rival quedan enmascaradas.
+  const hiddenSetup = gamePhase === GamePhase.SETUP && setupMode === SetupTurnMode.HIDDEN;
 
   const notMyTurn = gameMode === GameMode.ONLINE && !isLocalPlayerTurn();
   // Issue #20: en online cada jugador ve su equipo abajo — el guest (NEGRAS)
@@ -86,7 +92,8 @@ export function TryMateBoard() {
     const cells = [];
     for (const x of xs) {
       const position = new Position(x, y);
-      const piece = board.getPieceAt(position);
+      const pieceOnTile = board.getPieceAt(position);
+      const piece = hiddenSetup && pieceOnTile?.owner !== currentPlayer ? undefined : pieceOnTile;
       const tileState: BoardTileState = selectedPiece?.position?.equals(position)
         ? "selected"
         : validMoves.some((p) => p.equals(position))

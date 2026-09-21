@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Button, useThemeOverride } from "@ferpa/ui";
 import { Nav } from "../../components";
@@ -11,10 +11,12 @@ import { GameOverPanel } from "./components/GameOverPanel";
 import { MoveHistoryPanel } from "./components/MoveHistoryPanel";
 import { RoomLobby } from "./components/RoomLobby";
 import { RulesPanel } from "./components/RulesPanel";
+import { SetupModeSelector } from "./components/SetupModeSelector";
+import { SetupPassScreen } from "./components/SetupPassScreen";
 import { useGameStore } from "./application/GameState";
 import { useRoomStore } from "./application/RoomState";
 import { createFirebaseRoomsGateway } from "./infrastructure/firebase/FirebaseRoomsGateway";
-import { GamePhase } from "./domain/constants/GameRules";
+import { GameMode, GamePhase, SetupTurnMode } from "./domain/constants/GameRules";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
@@ -37,10 +39,15 @@ export function TryMatePage() {
   // TryMate es siempre dark (issue #16): el override se revierte al salir.
   useThemeOverride("dark");
   const gamePhase = useGameStore((s) => s.gamePhase);
+  const setupMode = useGameStore((s) => s.setupMode);
+  const currentPlayer = useGameStore((s) => s.currentPlayer);
+  const gameMode = useGameStore((s) => s.gameMode);
+  const isSetupTurnForLocalPlayer = useGameStore((s) => s.isSetupTurnForLocalPlayer);
   const roomStatus = useRoomStore((s) => s.status);
   const [params] = useSearchParams();
   const [screen, setScreen] = useState<Screen>(() => (params.get("room") ? "online" : "menu"));
   const [showRules, setShowRules] = useState(false);
+  const [menuSetupMode, setMenuSetupMode] = useState<SetupTurnMode>(SetupTurnMode.ALTERNATING);
 
   // Composition root: inyecta el adaptador concreto del puerto RoomsGateway.
   // Sin credenciales devuelve null → el lobby avisa y el modo local sigue.
@@ -49,7 +56,8 @@ export function TryMatePage() {
   }, []);
 
   const goLocal = () => {
-    useGameStore.getState().reset();
+    useGameStore.getState().reset(menuSetupMode);
+    setSetupPassAcknowledged(true);
     setScreen("local");
   };
 
@@ -60,6 +68,24 @@ export function TryMatePage() {
   };
 
   const showGame = screen === "local" || (screen === "online" && roomStatus === "connected");
+
+  // Setup oculto: el tablero solo se muestra al jugador que configura. En
+  // local PVP además hay que confirmar el pase de dispositivo; el flag se
+  // reinicia cada vez que cambia el jugador que configura.
+  const isHiddenSetup = gamePhase === GamePhase.SETUP && setupMode === SetupTurnMode.HIDDEN;
+  const isLocalPVP = gameMode !== GameMode.ONLINE;
+  const [setupPassAcknowledged, setSetupPassAcknowledged] = useState(true);
+  const prevPlayerRef = useRef(currentPlayer);
+  useEffect(() => {
+    if (isHiddenSetup && isLocalPVP && prevPlayerRef.current !== currentPlayer) {
+      setSetupPassAcknowledged(false);
+    }
+    prevPlayerRef.current = currentPlayer;
+  }, [currentPlayer, isHiddenSetup, isLocalPVP]);
+
+  const showHiddenBoard =
+    isSetupTurnForLocalPlayer() && (!isLocalPVP || setupPassAcknowledged);
+  const showBoard = !isHiddenSetup || showHiddenBoard;
 
   return (
     <>
@@ -95,6 +121,7 @@ export function TryMatePage() {
             <Button type="button" onClick={() => setScreen("online")}>
               Play online
             </Button>
+            <SetupModeSelector value={menuSetupMode} onChange={setMenuSetupMode} />
             <Button type="button" onClick={goLocal}>
               Play local 1v1
             </Button>
@@ -115,7 +142,7 @@ export function TryMatePage() {
           </div>
         )}
 
-        {showGame && (
+        {showGame && showBoard && (
           <>
             <GameStatusBar />
             {gamePhase === GamePhase.PLAYING && <BenchPanel />}
@@ -126,9 +153,17 @@ export function TryMatePage() {
             {gamePhase === GamePhase.GAME_OVER && <GameOverPanel />}
           </>
         )}
+
+        {showGame && isHiddenSetup && !showHiddenBoard && (
+          <SetupPassScreen
+            waitingFor={currentPlayer}
+            localMode={isLocalPVP}
+            onContinue={() => setSetupPassAcknowledged(true)}
+          />
+        )}
       </main>
-      {showGame && <PiecePickerDialog />}
-      {showGame && <BenchPieceDialog />}
+      {showGame && showBoard && <PiecePickerDialog />}
+      {showGame && showBoard && <BenchPieceDialog />}
     </>
   );
 }
