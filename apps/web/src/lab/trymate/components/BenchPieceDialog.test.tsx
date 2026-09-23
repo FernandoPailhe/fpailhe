@@ -9,7 +9,7 @@ const G = () => useGameStore.getState();
 
 /** PLAYING con banca llena pero una pieza menos en el tablero → debe colocar. */
 const stateWithBenchToPlace = () => {
-  G().quickStart();
+  G().quickStart("classic", "classic");
   const piece = G().board.getPieceAt(new Position(0, 3));
   if (!piece) throw new Error("quickStart board changed");
   G().board.removePiece(piece.id);

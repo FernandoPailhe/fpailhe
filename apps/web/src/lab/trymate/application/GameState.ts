@@ -14,6 +14,10 @@ import {
   type RoomSetupMode,
 } from "../domain/constants/GameRules";
 import { MovementRuleEngine } from "./rules/MovementRuleEngine";
+import {
+  resolveQuickStartLayout,
+  type QuickStartLayoutSelection,
+} from "../domain/config/QuickStartLayout";
 import { MoveHistory, MoveRecord } from "../domain/entities/MoveHistory";
 import {
   boardFromPieceSnapshots,
@@ -60,9 +64,17 @@ interface GameStateStore {
   movePiece: (to: Position) => void;
   startGame: () => void;
   reset: (setupMode?: SetupTurnMode) => void;
-  quickStart: () => void;
+  /**
+   * Inicia una partida local con ejércitos predeterminados. Sin ids, cada
+   * equipo sortea un layout del JSON de configuración (pueden repetirse).
+   */
+  quickStart: (player1LayoutId?: string, player2LayoutId?: string) => void;
   /** Prepara el estado inicial de una sala online de forma determinista. */
-  prepareOnlineGame: (setupMode: RoomSetupMode, setupTurnMode?: SetupTurnMode) => void;
+  prepareOnlineGame: (
+    setupMode: RoomSetupMode,
+    setupTurnMode?: SetupTurnMode,
+    quickStartLayouts?: QuickStartLayoutSelection,
+  ) => void;
   /** Cambia el modo de turnos del setup; solo válido antes de colocar piezas. */
   setSetupMode: (mode: SetupTurnMode) => void;
   /** True si el jugador local debe ver/actuar en el setup (siempre true en local). */
@@ -113,64 +125,40 @@ function buildManualStartState(): InitialGameState {
 }
 
 /**
- * Layout fijo de quick start: 5 piezas por lado en el tablero y 3 en la
- * banca de cada jugador. Compartido entre `quickStart` (local) y
+ * Arma los ejércitos de quick start desde los layouts del JSON de
+ * configuración (`domain/config/quickstart-layouts.json`). Sin ids en
+ * `selection`, cada equipo sortea un layout independiente — puede tocar el
+ * mismo o distinto. Compartido entre `quickStart` (local) y
  * `prepareOnlineGame("quick")` para que ambos modos no dupliquen la
  * disposición ni los contadores.
  */
-function buildQuickStartState(): InitialGameState {
+function buildQuickStartState(selection: QuickStartLayoutSelection = {}): InitialGameState {
   const board = createInitialBoard();
   const player1State = new PlayerState("player1");
   const player2State = new PlayerState("player2");
   let pieceCounter = 0;
 
-  // Player 1 pieces on board (rows 2-4)
-  const p1BoardPieces = [
-    { type: PieceType.FORT, pos: new Position(1, 1) },
-    { type: PieceType.STRIKER, pos: new Position(3, 1) },
-    { type: PieceType.PIONEER, pos: new Position(2, 2) },
-    { type: PieceType.FORT, pos: new Position(0, 3) },
-    { type: PieceType.STRIKER, pos: new Position(4, 3) },
-  ];
+  const applyLayout = (
+    player: Player,
+    playerState: PlayerState,
+    idPrefix: string,
+    layoutId?: string,
+  ): void => {
+    const layout = resolveQuickStartLayout(player, layoutId);
+    layout.boardPieces.forEach(({ type, position }) => {
+      const piece = new GamePiece(`${idPrefix}-${pieceCounter++}`, type, position, player);
+      board.addPiece(piece);
+      playerState.addSelectedPiece(type);
+      playerState.addPlacedPiece(piece);
+    });
+    layout.benchPieces.forEach((type) => {
+      const benchPiece = new GamePiece(`${idPrefix}-bench-${pieceCounter++}`, type, null, player);
+      playerState.addBenchPiece(benchPiece);
+    });
+  };
 
-  p1BoardPieces.forEach(({ type, pos }) => {
-    const piece = new GamePiece(`p1-${pieceCounter++}`, type, pos, Player.BLANCAS);
-    board.addPiece(piece);
-    player1State.addSelectedPiece(type);
-    player1State.addPlacedPiece(piece);
-  });
-
-  // Player 1 bench pieces
-  const p1BenchPieces = [PieceType.STRIKER, PieceType.PIONEER, PieceType.FORT];
-
-  p1BenchPieces.forEach((type) => {
-    const benchPiece = new GamePiece(`p1-bench-${pieceCounter++}`, type, null, Player.BLANCAS);
-    player1State.addBenchPiece(benchPiece);
-  });
-
-  // Player 2 pieces on board (rows 8-10)
-  const p2BoardPieces = [
-    { type: PieceType.FORT, pos: new Position(1, 9) },
-    { type: PieceType.STRIKER, pos: new Position(3, 9) },
-    { type: PieceType.PIONEER, pos: new Position(2, 8) },
-    { type: PieceType.FORT, pos: new Position(0, 7) },
-    { type: PieceType.STRIKER, pos: new Position(4, 7) },
-  ];
-
-  p2BoardPieces.forEach(({ type, pos }) => {
-    const piece = new GamePiece(`p2-${pieceCounter++}`, type, pos, Player.NEGRAS);
-    board.addPiece(piece);
-    player2State.addSelectedPiece(type);
-    player2State.addPlacedPiece(piece);
-  });
-
-  // Player 2 bench pieces
-  const p2BenchPieces = [PieceType.STRIKER, PieceType.PIONEER, PieceType.FORT];
-
-  p2BenchPieces.forEach((type) => {
-    const benchPiece = new GamePiece(`p2-bench-${pieceCounter++}`, type, null, Player.NEGRAS);
-    player2State.addBenchPiece(benchPiece);
-  });
+  applyLayout(Player.BLANCAS, player1State, "p1", selection.player1);
+  applyLayout(Player.NEGRAS, player2State, "p2", selection.player2);
 
   return { board, player1State, player2State, pieceIdCounter: pieceCounter };
 }
@@ -883,9 +871,12 @@ const gameStoreInitializer: StateCreator<GameStateStore> = (set, get) => ({
     });
   },
 
-  quickStart: () => {
+  quickStart: (player1LayoutId, player2LayoutId) => {
     if (get().gameMode === GameMode.ONLINE) return;
-    const quick = buildQuickStartState();
+    const quick = buildQuickStartState({
+      player1: player1LayoutId,
+      player2: player2LayoutId,
+    });
 
     set({
       board: quick.board,
@@ -910,8 +901,10 @@ const gameStoreInitializer: StateCreator<GameStateStore> = (set, get) => ({
   prepareOnlineGame: (
     setupMode: RoomSetupMode,
     setupTurnMode: SetupTurnMode = SetupTurnMode.ALTERNATING,
+    quickStartLayouts?: QuickStartLayoutSelection,
   ) => {
-    const initial = setupMode === "quick" ? buildQuickStartState() : buildManualStartState();
+    const initial =
+      setupMode === "quick" ? buildQuickStartState(quickStartLayouts) : buildManualStartState();
 
     set({
       board: initial.board,

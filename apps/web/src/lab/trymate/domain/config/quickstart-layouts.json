@@ -1,0 +1,172 @@
+{
+  "layouts": [
+    {
+      "id": "classic",
+      "name": "Classic",
+      "boardPieces": [
+        { "type": "FORT", "x": 1, "y": 1 },
+        { "type": "STRIKER", "x": 3, "y": 1 },
+        { "type": "PIONEER", "x": 2, "y": 2 },
+        { "type": "FORT", "x": 0, "y": 3 },
+        { "type": "STRIKER", "x": 4, "y": 3 }
+      ],
+      "benchPieces": ["STRIKER", "PIONEER", "FORT"]
+    },
+    {
+      "id": "vanguard",
+      "name": "Vanguard",
+      "boardPieces": [
+        { "type": "STRIKER", "x": 2, "y": 1 },
+        { "type": "PIONEER", "x": 0, "y": 2 },
+        { "type": "PIONEER", "x": 4, "y": 2 },
+        { "type": "FORT", "x": 1, "y": 3 },
+        { "type": "STRIKER", "x": 3, "y": 3 }
+      ],
+      "benchPieces": ["FORT", "FORT", "STRIKER"]
+    },
+    {
+      "id": "fortress",
+      "name": "Fortress",
+      "boardPieces": [
+        { "type": "FORT", "x": 0, "y": 1 },
+        { "type": "FORT", "x": 4, "y": 1 },
+        { "type": "PIONEER", "x": 2, "y": 2 },
+        { "type": "STRIKER", "x": 1, "y": 3 },
+        { "type": "STRIKER", "x": 3, "y": 3 }
+      ],
+      "benchPieces": ["PIONEER", "PIONEER", "FORT"]
+    },
+    {
+      "id": "center-wall",
+      "name": "Center wall",
+      "boardPieces": [
+        { "type": "FORT", "x": 2, "y": 1 },
+        { "type": "STRIKER", "x": 0, "y": 2 },
+        { "type": "STRIKER", "x": 4, "y": 2 },
+        { "type": "PIONEER", "x": 1, "y": 3 },
+        { "type": "FORT", "x": 3, "y": 3 }
+      ],
+      "benchPieces": ["PIONEER", "STRIKER", "FORT"]
+    },
+    {
+      "id": "twin-forts",
+      "name": "Twin forts",
+      "boardPieces": [
+        { "type": "FORT", "x": 1, "y": 1 },
+        { "type": "FORT", "x": 3, "y": 1 },
+        { "type": "PIONEER", "x": 0, "y": 2 },
+        { "type": "PIONEER", "x": 4, "y": 2 },
+        { "type": "STRIKER", "x": 2, "y": 3 }
+      ],
+      "benchPieces": ["FORT", "STRIKER", "STRIKER"]
+    },
+    {
+      "id": "arrowhead",
+      "name": "Arrowhead",
+      "boardPieces": [
+        { "type": "STRIKER", "x": 2, "y": 1 },
+        { "type": "PIONEER", "x": 1, "y": 2 },
+        { "type": "PIONEER", "x": 3, "y": 2 },
+        { "type": "FORT", "x": 0, "y": 3 },
+        { "type": "FORT", "x": 4, "y": 3 }
+      ],
+      "benchPieces": ["PIONEER", "PIONEER", "STRIKER"]
+    },
+    {
+      "id": "castle-gate",
+      "name": "Castle gate",
+      "boardPieces": [
+        { "type": "FORT", "x": 0, "y": 1 },
+        { "type": "FORT", "x": 4, "y": 1 },
+        { "type": "STRIKER", "x": 2, "y": 2 },
+        { "type": "PIONEER", "x": 1, "y": 3 },
+        { "type": "PIONEER", "x": 3, "y": 3 }
+      ],
+      "benchPieces": ["FORT", "FORT", "STRIKER"]
+    },
+    {
+      "id": "chevron",
+      "name": "Chevron",
+      "boardPieces": [
+        { "type": "STRIKER", "x": 1, "y": 1 },
+        { "type": "STRIKER", "x": 3, "y": 1 },
+        { "type": "FORT", "x": 2, "y": 2 },
+        { "type": "PIONEER", "x": 0, "y": 3 },
+        { "type": "PIONEER", "x": 4, "y": 3 }
+      ],
+      "benchPieces": ["FORT", "STRIKER", "STRIKER"]
+    },
+    {
+      "id": "hourglass",
+      "name": "Hourglass",
+      "boardPieces": [
+        { "type": "PIONEER", "x": 0, "y": 1 },
+        { "type": "PIONEER", "x": 4, "y": 1 },
+        { "type": "STRIKER", "x": 2, "y": 2 },
+        { "type": "FORT", "x": 1, "y": 3 },
+        { "type": "FORT", "x": 3, "y": 3 }
+      ],
+      "benchPieces": ["STRIKER", "STRIKER", "PIONEER"]
+    },
+    {
+      "id": "flank-left",
+      "name": "Flank left",
+      "boardPieces": [
+        { "type": "STRIKER", "x": 0, "y": 1 },
+        { "type": "STRIKER", "x": 1, "y": 1 },
+        { "type": "FORT", "x": 0, "y": 2 },
+        { "type": "PIONEER", "x": 2, "y": 3 },
+        { "type": "PIONEER", "x": 4, "y": 3 }
+      ],
+      "benchPieces": ["FORT", "FORT", "PIONEER"]
+    },
+    {
+      "id": "sweep",
+      "name": "Sweep",
+      "boardPieces": [
+        { "type": "STRIKER", "x": 4, "y": 1 },
+        { "type": "PIONEER", "x": 3, "y": 1 },
+        { "type": "FORT", "x": 4, "y": 2 },
+        { "type": "STRIKER", "x": 2, "y": 3 },
+        { "type": "FORT", "x": 0, "y": 3 }
+      ],
+      "benchPieces": ["PIONEER", "STRIKER", "FORT"]
+    },
+    {
+      "id": "lance",
+      "name": "Lance",
+      "boardPieces": [
+        { "type": "PIONEER", "x": 2, "y": 1 },
+        { "type": "STRIKER", "x": 2, "y": 2 },
+        { "type": "STRIKER", "x": 3, "y": 2 },
+        { "type": "FORT", "x": 0, "y": 3 },
+        { "type": "PIONEER", "x": 1, "y": 3 }
+      ],
+      "benchPieces": ["FORT", "FORT", "STRIKER"]
+    },
+    {
+      "id": "anvil",
+      "name": "Anvil",
+      "boardPieces": [
+        { "type": "FORT", "x": 1, "y": 1 },
+        { "type": "PIONEER", "x": 0, "y": 2 },
+        { "type": "FORT", "x": 4, "y": 2 },
+        { "type": "STRIKER", "x": 3, "y": 3 },
+        { "type": "PIONEER", "x": 0, "y": 3 }
+      ],
+      "benchPieces": ["STRIKER", "STRIKER", "PIONEER"]
+    },
+    {
+      "id": "wedge",
+      "name": "Wedge",
+      "boardPieces": [
+        { "type": "STRIKER", "x": 2, "y": 1 },
+        { "type": "FORT", "x": 1, "y": 2 },
+        { "type": "PIONEER", "x": 3, "y": 2 },
+        { "type": "STRIKER", "x": 0, "y": 3 },
+        { "type": "FORT", "x": 4, "y": 3 }
+      ],
+      "benchPieces": ["PIONEER", "PIONEER", "PIONEER"]
+    }
+  ]
+}

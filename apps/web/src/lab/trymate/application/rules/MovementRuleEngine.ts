@@ -313,6 +313,10 @@ export class MovementRuleEngine implements IMovementRule {
       if (board.getPieceAt(checkPos)) {
         return false;
       }
+
+      if (!this.canPassThrough(piece, checkPos, board)) {
+        return false;
+      }
     }
 
     return true;
@@ -434,6 +438,10 @@ export class MovementRuleEngine implements IMovementRule {
     };
 
     checkPattern(config.movement);
+
+    if ("alternativeMovement" in config && config.alternativeMovement) {
+      checkPattern(config.alternativeMovement);
+    }
 
     return blockedPositions;
   }

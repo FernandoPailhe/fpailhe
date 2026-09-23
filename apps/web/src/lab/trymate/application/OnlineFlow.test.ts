@@ -6,6 +6,7 @@ import { clearHostCredential } from "./hostCredential";
 import { InMemoryRoomsGateway } from "../infrastructure/InMemoryRoomsGateway";
 import { PieceType, Player } from "../domain/constants/PieceConstants";
 import { GamePhase, SetupTurnMode, type RoomSetupMode } from "../domain/constants/GameRules";
+import type { QuickStartLayoutSelection } from "../domain/config/QuickStartLayout";
 import { Position } from "../domain/entities/Position";
 
 const G = () => useGameStore.getState();
@@ -45,9 +46,10 @@ type ClientStore = ReturnType<typeof createGameStore>;
 async function connectHost(
   setupMode: RoomSetupMode,
   setupTurnMode: SetupTurnMode = SetupTurnMode.ALTERNATING,
+  quickStartLayouts?: QuickStartLayoutSelection,
 ): Promise<{ store: ClientStore; roomId: string; hostToken: string; stop: () => void }> {
   const store = createGameStore();
-  store.getState().prepareOnlineGame(setupMode, setupTurnMode);
+  store.getState().prepareOnlineGame(setupMode, setupTurnMode, quickStartLayouts);
   const { roomId, hostToken } = await gateway.createRoom(store.getState().toSnapshot());
   store.getState().setOnlineContext(roomId, Player.BLANCAS);
   const stop = startRoomSync(gateway, roomId, { store });
@@ -84,7 +86,10 @@ describe("online two-client flow", () => {
   });
 
   it("quick: guest no puede actuar fuera de turno; movimientos alternan ambos lados", async () => {
-    const host = await connectHost("quick");
+    const host = await connectHost("quick", SetupTurnMode.ALTERNATING, {
+      player1: "classic",
+      player2: "classic",
+    });
     const guest = await connectGuest(host.roomId);
 
     // Turno de BLANCAS: el guest está bloqueado.
@@ -287,7 +292,10 @@ describe("eco de snapshot con semántica RTDB (regresión: clicks revertidos)", 
   it("quick: el host puede seleccionar y completar un movimiento sin eco", async () => {
     const rtdbGateway = new InMemoryRoomsGateway({ simulateRtdbStrip: true });
     const host = createGameStore();
-    host.getState().prepareOnlineGame("quick");
+    host.getState().prepareOnlineGame("quick", undefined, {
+      player1: "classic",
+      player2: "classic",
+    });
     const { roomId } = await rtdbGateway.createRoom(host.getState().toSnapshot());
     host.getState().setOnlineContext(roomId, Player.BLANCAS);
     const stopHost = startRoomSync(rtdbGateway, roomId, { store: host });
@@ -317,7 +325,7 @@ describe("eco de snapshot con semántica RTDB (regresión: clicks revertidos)", 
 
 describe("single-store smoke tests (RoomState wiring)", () => {
   it("host can move after guest joins a quick-start room", async () => {
-    await R().createRoom("quick");
+    await R().createRoom("quick", undefined, { player1: "classic", player2: "classic" });
     const roomId = R().roomId!;
 
     await gateway.joinRoom(roomId);

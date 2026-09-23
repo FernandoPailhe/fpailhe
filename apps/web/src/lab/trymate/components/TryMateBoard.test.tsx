@@ -12,13 +12,13 @@ beforeEach(() => {
 
 describe("TryMateBoard", () => {
   it("renders the 55 grid cells", () => {
-    useGameStore.getState().quickStart();
+    useGameStore.getState().quickStart("classic", "classic");
     render(<TryMateBoard />);
     expect(screen.getAllByRole("gridcell")).toHaveLength(55);
   });
 
   it("selects an own piece and marks its legal moves", () => {
-    useGameStore.getState().quickStart();
+    useGameStore.getState().quickStart("classic", "classic");
     render(<TryMateBoard />);
     // quickStart places a White Pioneer on c3 (x=2, y=2)
     fireEvent.click(screen.getByRole("button", { name: "c3 — White Pioneer" }));
@@ -27,7 +27,7 @@ describe("TryMateBoard", () => {
   });
 
   it("renders legal-move dots with a halo that contrasts each tile tone (issues #15, #18)", () => {
-    useGameStore.getState().quickStart();
+    useGameStore.getState().quickStart("classic", "classic");
     render(<TryMateBoard />);
     fireEvent.click(screen.getByRole("button", { name: "c3 — White Pioneer" }));
     const moveTiles = screen.getAllByRole("button", { name: /legal move/ });
@@ -43,7 +43,7 @@ describe("TryMateBoard", () => {
   });
 
   it("marks the try-zone rows (1 and 11) as the arrival, not the field", () => {
-    useGameStore.getState().quickStart();
+    useGameStore.getState().quickStart("classic", "classic");
     render(<TryMateBoard />);
     const zoneTiles = screen.getAllByRole("button", { name: /try zone/ });
     expect(zoneTiles).toHaveLength(10);
@@ -57,7 +57,7 @@ describe("TryMateBoard", () => {
   });
 
   it("keeps White at the bottom in local play", () => {
-    useGameStore.getState().quickStart();
+    useGameStore.getState().quickStart("classic", "classic");
     render(<TryMateBoard />);
     const rows = screen.getAllByRole("row");
     // White Pioneer (2,2) en DOM row 9; Black Pioneer (2,8) en DOM row 3.
@@ -66,7 +66,7 @@ describe("TryMateBoard", () => {
   });
 
   it("rotates the board 180° for the Black player online (issue #20)", () => {
-    useGameStore.getState().quickStart();
+    useGameStore.getState().quickStart("classic", "classic");
     useGameStore.getState().setOnlineContext("room-1", Player.NEGRAS);
     render(<TryMateBoard />);
     const rows = screen.getAllByRole("row");
@@ -80,7 +80,7 @@ describe("TryMateBoard", () => {
   });
 
   it("labels ranks on the visual right edge and files on the visual bottom edge", () => {
-    useGameStore.getState().quickStart();
+    useGameStore.getState().quickStart("classic", "classic");
     render(<TryMateBoard />);
     const tile = (square: string) =>
       document.querySelector(`[data-square="${square}"]`) as HTMLElement;
@@ -108,7 +108,7 @@ describe("TryMateBoard", () => {
   });
 
   it("keeps coordinates on the same visual edges when the board is flipped", () => {
-    useGameStore.getState().quickStart();
+    useGameStore.getState().quickStart("classic", "classic");
     useGameStore.getState().setOnlineContext("room-1", Player.NEGRAS);
     render(<TryMateBoard />);
     const tile = (square: string) =>
@@ -144,7 +144,7 @@ describe("TryMateBoard", () => {
   });
 
   it("locks the board while viewing history", () => {
-    useGameStore.getState().quickStart();
+    useGameStore.getState().quickStart("classic", "classic");
     useGameStore.setState({ isViewingHistory: true });
     render(<TryMateBoard />);
     expect(screen.getByRole("grid")).toHaveAttribute("aria-disabled", "true");

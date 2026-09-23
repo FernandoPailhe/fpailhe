@@ -73,7 +73,7 @@ export function GameStatusBar() {
         {gamePhase === GamePhase.SETUP && !online && (
           <button
             type="button"
-            onClick={quickStart}
+            onClick={() => quickStart()}
             className="text-xs text-ink-dim underline underline-offset-2 hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
           >
             Quick start

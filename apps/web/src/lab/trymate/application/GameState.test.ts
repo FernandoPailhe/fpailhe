@@ -194,7 +194,7 @@ describe("BENCH_SELECTION phase", () => {
 
 describe("quickStart", () => {
   it("enters PLAYING with a clean history and full armies", () => {
-    S().quickStart();
+    S().quickStart("classic", "classic");
     S().handleTileClick(pos(2, 2));
     S().handleTileClick(pos(2, 4));
     S().handleTileClick(pos(2, 8));
@@ -202,7 +202,7 @@ describe("quickStart", () => {
     S().goBackInHistory();
     expect(S().isViewingHistory).toBe(true);
 
-    S().quickStart();
+    S().quickStart("classic", "classic");
     expect(S().gamePhase).toBe(GamePhase.PLAYING);
     expect(S().board.getAllPieces()).toHaveLength(10);
     expect(S().player1State.getBenchPieces()).toHaveLength(3);
@@ -214,7 +214,7 @@ describe("quickStart", () => {
 
 describe("handleTileClick in PLAYING", () => {
   it("selects an own piece, moves it, and alternates the turn", () => {
-    S().quickStart();
+    S().quickStart("classic", "classic");
     S().handleTileClick(pos(2, 2)); // white pioneer
     expect(S().selectedPiece?.type).toBe(PieceType.PIONEER);
     expect(S().validMoves.length).toBeGreaterThan(0);
@@ -227,7 +227,7 @@ describe("handleTileClick in PLAYING", () => {
   });
 
   it("reselects another own piece and deselects on an empty click", () => {
-    S().quickStart();
+    S().quickStart("classic", "classic");
     S().handleTileClick(pos(2, 2));
     S().handleTileClick(pos(1, 1)); // own fort
     expect(S().selectedPiece?.type).toBe(PieceType.FORT);
@@ -316,7 +316,7 @@ describe("game over", () => {
 
 describe("move history", () => {
   const playTwoMoves = () => {
-    S().quickStart();
+    S().quickStart("classic", "classic");
     S().handleTileClick(pos(2, 2)); // select white pioneer
     S().handleTileClick(pos(2, 4)); // move
     S().handleTileClick(pos(2, 8)); // select black pioneer
@@ -348,7 +348,7 @@ describe("move history", () => {
 describe("prepareOnlineGame", () => {
   it("manual → SETUP con tablero vacío, Blancas al turno y contexto limpio", () => {
     // Estado previo contaminado: selección, historial y contexto online stale.
-    S().quickStart();
+    S().quickStart("classic", "classic");
     S().handleTileClick(pos(2, 2));
     S().handleTileClick(pos(2, 4));
     S().setOnlineContext("room-viejo", Player.NEGRAS);
@@ -378,9 +378,9 @@ describe("prepareOnlineGame", () => {
   });
 
   it("quick produce el mismo snapshot que quickStart local", () => {
-    S().quickStart();
+    S().quickStart("classic", "classic");
     const local = S().toSnapshot();
-    S().prepareOnlineGame("quick");
+    S().prepareOnlineGame("quick", undefined, { player1: "classic", player2: "classic" });
     expect(S().toSnapshot()).toEqual(local);
   });
 
@@ -422,7 +422,7 @@ describe("online mode", () => {
   });
 
   it("blocks the board in PLAYING when it is not the local turn", () => {
-    S().quickStart();
+    S().quickStart("classic", "classic");
     S().setOnlineContext("room-1", Player.NEGRAS); // BLANCAS to move
     expect(S().isLocalPlayerTurn()).toBe(false);
     expect(S().canPlaceBenchPiece()).toBe(false);
@@ -435,7 +435,7 @@ describe("online mode", () => {
   });
 
   it("applyRemoteSnapshot restores state and re-enables the turn", () => {
-    S().quickStart();
+    S().quickStart("classic", "classic");
     S().handleTileClick(pos(2, 2));
     S().handleTileClick(pos(2, 4)); // BLANCAS moves → NEGRAS to move
     const snap = S().toSnapshot();
@@ -459,7 +459,7 @@ describe("online mode", () => {
   });
 
   it("toSnapshot + applyRemoteSnapshot is a store-level round trip", () => {
-    S().quickStart();
+    S().quickStart("classic", "classic");
     S().handleTileClick(pos(2, 2));
     S().handleTileClick(pos(2, 4));
     const snap = S().toSnapshot();
@@ -485,7 +485,7 @@ describe("online mode", () => {
 
 describe("reset", () => {
   it("clears the game including history state", () => {
-    S().quickStart();
+    S().quickStart("classic", "classic");
     S().handleTileClick(pos(2, 2));
     S().handleTileClick(pos(2, 4));
     S().handleTileClick(pos(2, 8));

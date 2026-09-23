@@ -174,6 +174,28 @@ describe("FORT side-blocking", () => {
     const moves = engine.getValidMoves(striker, board);
     expect(at(moves, 1, 5)).toBe(true);
   });
+
+  it("also blocks the tile beyond when a striker's path crosses a blocked tile", () => {
+    add(PieceType.FORT, 2, 5, Player.NEGRAS);
+    const striker = add(PieceType.STRIKER, 1, 4, Player.BLANCAS);
+    const moves = engine.getValidMoves(striker, board);
+    expect(at(moves, 1, 5)).toBe(false);
+    expect(at(moves, 1, 6)).toBe(false);
+  });
+
+  it("blocks the striker's double step symmetrically for negras", () => {
+    add(PieceType.FORT, 2, 5, Player.BLANCAS);
+    const striker = add(PieceType.STRIKER, 1, 6, Player.NEGRAS);
+    const moves = engine.getValidMoves(striker, board);
+    expect(at(moves, 1, 5)).toBe(false);
+    expect(at(moves, 1, 4)).toBe(false);
+  });
+
+  it("still allows the double step when the intermediate tile is not blocked", () => {
+    const striker = add(PieceType.STRIKER, 1, 4, Player.BLANCAS);
+    const moves = engine.getValidMoves(striker, board);
+    expect(at(moves, 1, 6)).toBe(true);
+  });
 });
 
 describe("getBlockedMoves", () => {
@@ -183,6 +205,14 @@ describe("getBlockedMoves", () => {
     const blocked = engine.getBlockedMoves(striker, board);
     expect(at(blocked, 1, 5)).toBe(true);
     expect(at(blocked, 0, 5)).toBe(false);
+  });
+
+  it("reports the striker's jump destination as blocked when the path crosses a blocked tile", () => {
+    add(PieceType.FORT, 2, 5, Player.NEGRAS);
+    const striker = add(PieceType.STRIKER, 1, 4, Player.BLANCAS);
+    const blocked = engine.getBlockedMoves(striker, board);
+    expect(at(blocked, 1, 5)).toBe(true);
+    expect(at(blocked, 1, 6)).toBe(true);
   });
 
   it("does not throw for a blocked pioneer on the left edge near the try line", () => {
