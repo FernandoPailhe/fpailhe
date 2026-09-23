@@ -1,15 +1,26 @@
 import { useGameStore } from "../application/GameState";
-import { GamePhase } from "../domain/constants/GameRules";
+import { GameMode, GamePhase } from "../domain/constants/GameRules";
 
 /** Resultado de la partida + reinicio. Solo se monta en GAME_OVER. */
 export function GameOverPanel() {
-  const { gamePhase, setupMode, player1State, player2State, reset } = useGameStore();
+  const { gamePhase, gameMode, player1State, player2State, playAgain } = useGameStore();
 
   if (gamePhase !== GamePhase.GAME_OVER) return null;
 
   const p1 = player1State.getScore();
   const p2 = player2State.getScore();
-  const result = p1 > p2 ? "White wins" : p2 > p1 ? "Black wins" : "Draw";
+  const result =
+    gameMode === GameMode.VS_COMPUTER
+      ? p1 > p2
+        ? "You win"
+        : p2 > p1
+          ? "Computer wins"
+          : "Draw"
+      : p1 > p2
+        ? "White wins"
+        : p2 > p1
+          ? "Black wins"
+          : "Draw";
 
   return (
     <section
@@ -23,7 +34,7 @@ export function GameOverPanel() {
       </p>
       <button
         type="button"
-        onClick={() => reset(setupMode)}
+        onClick={() => playAgain()}
         className="mt-4 border border-line bg-surface-raised px-4 py-2 font-ui text-sm font-semibold text-ink hover:border-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
       >
         Play again

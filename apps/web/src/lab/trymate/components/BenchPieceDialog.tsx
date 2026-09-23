@@ -24,7 +24,7 @@ export function BenchPieceDialog() {
   const selectBenchPiece = useGameStore((s) => s.selectBenchPiece);
 
   const isLocalTurn =
-    gameMode !== GameMode.ONLINE || localPlayer === null || localPlayer === currentPlayer;
+    gameMode === GameMode.PVP || localPlayer === null || localPlayer === currentPlayer;
   const open =
     isLocalTurn &&
     !isViewingHistory &&

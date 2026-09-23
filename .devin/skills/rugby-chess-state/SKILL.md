@@ -64,7 +64,7 @@ UI components **never** call `selectTile`/`movePiece`/`placeBenchPiece` directly
 
 1. `isViewingHistory` guard — history viewing is read-only.
 2. Phase guard — only `SETUP` and `PLAYING` accept tile clicks.
-3. Bench placement priority — free action when `canPlaceBenchPiece()` and the tile is empty.
+3. Bench placement priority — free action when `canPlaceBenchPiece()` and the tile is empty, **but only** if a bench piece is selected, or no board piece is selected and the tile is a valid deployment square (`getBenchPlacementSquares`). Otherwise the click falls through to the move/selection steps so a selected piece can still move to empty squares.
 4. Confirmed move — `selectedPiece` + `validMoves` hit → `movePiece`.
 5. Otherwise → `selectTile` (select / reselect / deselect / setup placement).
 
@@ -189,4 +189,13 @@ movePiece(to) → {
 - Actions that return values (e.g., `getCurrentPlayerState()`) use `get()` and return directly — they don't call `set()`.
 - `canSelectPieceType()` and similar predicates are pure computed — keep them side-effect free.
 - The `pieceIdCounter` is a monotonic integer used to generate unique piece IDs: `piece_${++get().pieceIdCounter}`.
-- `GameMode` only has `PVP` — no AI mode exists in this port (Phase 2).
+- `GameMode` has `PVP` (local hot-seat), `ONLINE` (rooms via roomSync) and
+  `VS_COMPUTER` (human plays BLANCAS against the EasyBot).
+- `resolveStalledTurn()` runs after every `movePiece`, `placeBenchPiece` and on
+  entering `PLAYING`: if the current player has no legal action the turn passes
+  (`lastPassedPlayer` set for the UI badge); if neither has, `GAME_OVER`.
+- `runBotTurn(rng?)` executes ONE atomic bot action via the public actions —
+  `botActing` (closure flag, not reactive state) makes `isLocalPlayerTurn()` /
+  `isSetupTurnForLocalPlayer()` return true while it runs. It never calls
+  `handleTileClick`. `useComputerTurn()` schedules it with `setTimeout`.
+- `EasyBot.ts` (application/ai) is pure: no React/Zustand, injectable `rng`.

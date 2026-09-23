@@ -18,7 +18,7 @@ export function PiecePickerDialog() {
   const selectedType = useGameStore((s) => s.selectedPieceTypeForPlacement);
 
   const isLocalTurn =
-    gameMode !== GameMode.ONLINE || localPlayer === null || localPlayer === currentPlayer;
+    gameMode === GameMode.PVP || localPlayer === null || localPlayer === currentPlayer;
   const open =
     isLocalTurn &&
     ((gamePhase === GamePhase.SETUP && selectedType === null) ||

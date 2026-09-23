@@ -15,6 +15,19 @@ import {
 } from "../domain/constants/GameRules";
 import { MovementRuleEngine } from "./rules/MovementRuleEngine";
 import {
+  canPlaceFromBench,
+  getBenchPlacementSquares,
+  hasAnyLegalAction,
+  hasAnyLegalMove,
+} from "./rules/turnRules";
+import {
+  choosePlayAction,
+  nextBenchType,
+  nextSetupPlacement,
+  pickBotLayoutId,
+  type Rng,
+} from "./ai/EasyBot";
+import {
   resolveQuickStartLayout,
   type QuickStartLayoutSelection,
 } from "../domain/config/QuickStartLayout";
@@ -52,6 +65,10 @@ interface GameStateStore {
   setupCompleted: { player1: boolean; player2: boolean };
   /** Jugador que está configurando en modo HIDDEN (BLANCAS primero). */
   setupPlayer: Player;
+  /** Último jugador que pasó el turno por no tener acciones legales (aviso UI). */
+  lastPassedPlayer: Player | null;
+  /** Layout de quick start que usa el bot para su setup (VS_COMPUTER). */
+  botLayoutId: string | null;
 
   selectPieceTypeForSetup: (type: PieceType) => void;
   selectPieceTypeForBench: (type: PieceType) => void;
@@ -77,12 +94,29 @@ interface GameStateStore {
   ) => void;
   /** Cambia el modo de turnos del setup; solo válido antes de colocar piezas. */
   setSetupMode: (mode: SetupTurnMode) => void;
+  /** Inicia partida contra la computadora: humano BLANCAS, bot NEGRAS. */
+  startVsComputer: (setupMode: SetupTurnMode) => void;
+  /** Reinicia la partida conservando el modo actual (PVP / VS_COMPUTER). */
+  playAgain: () => void;
+  /** Bando que controla el bot en VS_COMPUTER; null en otros modos. */
+  getBotPlayer: () => Player | null;
+  /**
+   * Ejecuta UNA acción atómica del bot (setup, banca o jugada) reutilizando
+   * las acciones públicas. Devuelve true si el estado cambió.
+   */
+  runBotTurn: (rng?: Rng) => boolean;
   /** True si el jugador local debe ver/actuar en el setup (siempre true en local). */
   isSetupTurnForLocalPlayer: () => boolean;
   getCurrentPlayerState: () => PlayerState;
   getOpponentPlayerState: () => PlayerState;
   checkScoring: (piece: GamePiece) => void;
   checkGameOver: () => void;
+  /**
+   * Resuelve un turno sin salida en PLAYING: si el jugador de turno no puede
+   * mover ni bajar banca, pasa al rival (y lo marca en `lastPassedPlayer`);
+   * si ninguno puede, termina la partida.
+   */
+  resolveStalledTurn: () => void;
   canSelectPieceType: (type: PieceType) => boolean;
   canSelectBenchPieceType: (type: PieceType) => boolean;
   canPlaceBenchPiece: () => boolean;
@@ -163,508 +197,534 @@ function buildQuickStartState(selection: QuickStartLayoutSelection = {}): Initia
   return { board, player1State, player2State, pieceIdCounter: pieceCounter };
 }
 
-const gameStoreInitializer: StateCreator<GameStateStore> = (set, get) => ({
-  board: createInitialBoard(),
-  gamePhase: GamePhase.SETUP,
-  gameMode: GameMode.PVP,
-  currentPlayer: Player.BLANCAS,
-  player1State: new PlayerState("player1"),
-  player2State: new PlayerState("player2"),
-  selectedPiece: null,
-  selectedPieceTypeForPlacement: null,
-  selectedBenchPiece: null,
-  validMoves: [],
-  blockedMoves: [],
-  movementEngine: new MovementRuleEngine(),
-  pieceIdCounter: 0,
-  moveHistory: new MoveHistory(),
-  isViewingHistory: false,
-  localPlayer: null,
-  roomId: null,
-  setupMode: SetupTurnMode.ALTERNATING,
-  setupCompleted: { player1: false, player2: false },
-  setupPlayer: Player.BLANCAS,
+const gameStoreInitializer: StateCreator<GameStateStore> = (set, get) => {
+  // Flag interno (no reactivo): mientras el bot ejecuta su acción, las
+  // validaciones de "turno local" lo dejan pasar. Siempre vuelve a false.
+  let botActing = false;
+  return {
+    board: createInitialBoard(),
+    gamePhase: GamePhase.SETUP,
+    gameMode: GameMode.PVP,
+    currentPlayer: Player.BLANCAS,
+    player1State: new PlayerState("player1"),
+    player2State: new PlayerState("player2"),
+    selectedPiece: null,
+    selectedPieceTypeForPlacement: null,
+    selectedBenchPiece: null,
+    validMoves: [],
+    blockedMoves: [],
+    movementEngine: new MovementRuleEngine(),
+    pieceIdCounter: 0,
+    moveHistory: new MoveHistory(),
+    isViewingHistory: false,
+    localPlayer: null,
+    roomId: null,
+    setupMode: SetupTurnMode.ALTERNATING,
+    setupCompleted: { player1: false, player2: false },
+    setupPlayer: Player.BLANCAS,
+    lastPassedPlayer: null,
+    botLayoutId: null,
 
-  isLocalPlayerTurn: () => {
-    const state = get();
-    return (
-      state.gameMode !== GameMode.ONLINE ||
-      state.localPlayer === null ||
-      state.localPlayer === state.currentPlayer
-    );
-  },
+    isLocalPlayerTurn: () => {
+      if (botActing) return true;
+      const state = get();
+      return (
+        state.gameMode === GameMode.PVP ||
+        state.localPlayer === null ||
+        state.localPlayer === state.currentPlayer
+      );
+    },
 
-  isSetupTurnForLocalPlayer: () => {
-    const state = get();
-    if (state.gameMode !== GameMode.ONLINE || state.localPlayer === null) return true;
-    return state.currentPlayer === state.localPlayer;
-  },
+    isSetupTurnForLocalPlayer: () => {
+      if (botActing) return true;
+      const state = get();
+      if (state.gameMode === GameMode.PVP || state.localPlayer === null) return true;
+      return state.currentPlayer === state.localPlayer;
+    },
 
-  setSetupMode: (mode: SetupTurnMode) => {
-    set((state) => {
-      if (state.gamePhase !== GamePhase.SETUP) return state;
-      if (
-        state.player1State.getPlacedPiecesCount() > 0 ||
-        state.player2State.getPlacedPiecesCount() > 0
-      ) {
-        return state;
-      }
-      return {
-        setupMode: mode,
-        setupCompleted: { player1: false, player2: false },
-        setupPlayer: Player.BLANCAS,
-      };
-    });
-  },
+    startVsComputer: (setupMode: SetupTurnMode) => {
+      get().reset(setupMode);
+      set({
+        gameMode: GameMode.VS_COMPUTER,
+        localPlayer: Player.BLANCAS,
+        roomId: null,
+      });
+    },
 
-  setOnlineContext: (roomId: string | null, localPlayer: Player | null) => {
-    set({
-      roomId,
-      localPlayer,
-      gameMode: roomId ? GameMode.ONLINE : GameMode.PVP,
-    });
-  },
-
-  applyRemoteSnapshot: (snapshot: GameSnapshot) => {
-    const restored = deserializeGameSnapshot(snapshot);
-    set({
-      board: restored.board,
-      player1State: restored.player1State,
-      player2State: restored.player2State,
-      currentPlayer: restored.currentPlayer,
-      gamePhase: restored.gamePhase,
-      pieceIdCounter: restored.pieceIdCounter,
-      moveHistory: restored.moveHistory,
-      setupMode: restored.setupMode,
-      setupCompleted: restored.setupCompleted,
-      setupPlayer: restored.currentPlayer,
-      selectedPiece: null,
-      selectedPieceTypeForPlacement: null,
-      selectedBenchPiece: null,
-      validMoves: [],
-      blockedMoves: [],
-      isViewingHistory: false,
-    });
-  },
-
-  toSnapshot: () => {
-    const state = get();
-    return serializeGameSnapshot({
-      board: state.board,
-      player1State: state.player1State,
-      player2State: state.player2State,
-      currentPlayer: state.currentPlayer,
-      gamePhase: state.gamePhase,
-      pieceIdCounter: state.pieceIdCounter,
-      moveHistory: state.moveHistory,
-      setupMode: state.setupMode,
-      setupCompleted: state.setupCompleted,
-    });
-  },
-
-  getCurrentPlayerState: () => {
-    const state = get();
-    return state.currentPlayer === Player.BLANCAS ? state.player1State : state.player2State;
-  },
-
-  getOpponentPlayerState: () => {
-    const state = get();
-    return state.currentPlayer === Player.BLANCAS ? state.player2State : state.player1State;
-  },
-
-  canSelectPieceType: (type: PieceType) => {
-    const state = get();
-    if (!state.isLocalPlayerTurn()) return false;
-    if (state.gamePhase !== GamePhase.SETUP) return false;
-    if (state.selectedPieceTypeForPlacement !== null) return false;
-
-    const playerState = state.getCurrentPlayerState();
-    const currentCount = playerState.getSelectedPieceCount(type);
-
-    if (currentCount >= GAME_RULES.MAX_PIECES_PER_TYPE) return false;
-    if (playerState.getTotalSelectedCount() >= GAME_RULES.TOTAL_PIECES_PER_PLAYER) return false;
-
-    // HIDDEN: al completar las 5 piezas se pasa a banca; no se puede elegir
-    // más tipos para colocar.
-    if (
-      state.setupMode === SetupTurnMode.HIDDEN &&
-      playerState.getPlacedPiecesCount() >= GAME_RULES.PIECES_TO_PLACE
-    ) {
-      return false;
-    }
-
-    return true;
-  },
-
-  canSelectBenchPieceType: (type: PieceType) => {
-    const state = get();
-    if (!state.isLocalPlayerTurn()) return false;
-
-    const validPhase =
-      state.gamePhase === GamePhase.BENCH_SELECTION ||
-      (state.gamePhase === GamePhase.SETUP && state.setupMode === SetupTurnMode.HIDDEN);
-    if (!validPhase) return false;
-
-    const playerState = state.getCurrentPlayerState();
-
-    // HIDDEN: la banca se elige dentro de SETUP, solo tras colocar las 5 piezas.
-    if (state.setupMode === SetupTurnMode.HIDDEN && state.gamePhase === GamePhase.SETUP) {
-      if (playerState.getPlacedPiecesCount() < GAME_RULES.PIECES_TO_PLACE) return false;
-    }
-    const benchCount = playerState.getBenchPieces().length;
-    const currentBenchTypeCount = playerState
-      .getBenchPieces()
-      .filter((p) => p.type === type).length;
-
-    if (benchCount >= GAME_RULES.PIECES_IN_BENCH) {
-      return false;
-    }
-
-    const totalOfType = playerState.getSelectedPieceCount(type) + currentBenchTypeCount;
-    if (totalOfType >= GAME_RULES.MAX_PIECES_PER_TYPE) {
-      return false;
-    }
-
-    // Check if selecting this piece would prevent meeting MIN_PIECES_PER_TYPE for other types
-    const remainingBenchSlots = GAME_RULES.PIECES_IN_BENCH - benchCount;
-
-    // For each piece type, check if we can still meet the minimum requirement
-    const allPieceTypes = Object.values(PieceType);
-    for (const otherType of allPieceTypes) {
-      if (otherType === type) continue;
-
-      const otherTypeTotal =
-        playerState.getSelectedPieceCount(otherType) +
-        playerState.getBenchPieces().filter((p) => p.type === otherType).length;
-
-      // If this other type is below minimum and we don't have enough slots to reach it
-      if (otherTypeTotal < GAME_RULES.MIN_PIECES_PER_TYPE) {
-        const neededToReachMin = GAME_RULES.MIN_PIECES_PER_TYPE - otherTypeTotal;
-        const slotsAvailableForOthers = remainingBenchSlots - 1; // -1 for current selection
-
-        if (slotsAvailableForOthers < neededToReachMin) {
-          return false;
-        }
-      }
-    }
-
-    return true;
-  },
-
-  canPlaceBenchPiece: () => {
-    const state = get();
-    if (!state.isLocalPlayerTurn()) return false;
-    if (state.gamePhase !== GamePhase.PLAYING) return false;
-
-    const playerState = state.getCurrentPlayerState();
-    const piecesOnBoard = state.board
-      .getAllPieces()
-      .filter((p) => p.owner === state.currentPlayer).length;
-    const hasBenchPieces = playerState.getBenchPieces().length > 0;
-
-    return piecesOnBoard < GAME_RULES.PIECES_TO_PLACE && hasBenchPieces;
-  },
-
-  selectPieceTypeForSetup: (type: PieceType) => {
-    set((state) => {
-      if (!state.canSelectPieceType(type)) return state;
-
-      // Calculate valid placement positions for setup phase
-      const validRows = (
-        state.currentPlayer === Player.BLANCAS
-          ? GAME_RULES.PLACEMENT_ROWS_PLAYER1
-          : GAME_RULES.PLACEMENT_ROWS_PLAYER2
-      ) as readonly number[];
-
-      const validPositions: Position[] = [];
-
-      for (const row of validRows) {
-        for (let col = 0; col < GAME_CONFIG.BOARD_WIDTH; col++) {
-          const pos = new Position(col, row);
-          const existingPiece = state.board.getPieceAt(pos);
-
-          if (!existingPiece) {
-            const piecesInRow = state.board
-              .getAllPieces()
-              .filter(
-                (p) => p.position && p.position.y === row && p.owner === state.currentPlayer,
-              ).length;
-
-            if (piecesInRow < GAME_RULES.MAX_PIECES_PER_ROW) {
-              validPositions.push(pos);
-            }
-          }
-        }
-      }
-
-      // Clear previous highlights and show new valid positions
-      state.board.clearSelection();
-      state.board.clearHighlights();
-      state.board.highlightPositions(validPositions);
-
-      return {
-        selectedPieceTypeForPlacement: type,
-        validMoves: validPositions,
-        blockedMoves: [],
-      };
-    });
-  },
-
-  selectPieceTypeForBench: (type: PieceType) => {
-    set((state) => {
-      if (!state.canSelectBenchPieceType(type)) {
-        return state;
-      }
-
-      const playerState = state.getCurrentPlayerState();
-      const pieceId = `bench-${state.currentPlayer}-${state.pieceIdCounter}`;
-      const benchPiece = new GamePiece(pieceId, type, null, state.currentPlayer);
-
-      playerState.addBenchPiece(benchPiece);
-
-      const benchCount = playerState.getBenchPieces().length;
-
-      const newState: Partial<GameStateStore> = {
-        pieceIdCounter: state.pieceIdCounter + 1,
-      };
-
-      if (benchCount >= GAME_RULES.PIECES_IN_BENCH) {
-        if (state.setupMode === SetupTurnMode.HIDDEN) {
-          // Fin del setup oculto del jugador actual.
-          const playerKey = state.currentPlayer === Player.BLANCAS ? "player1" : "player2";
-          const updatedCompleted = { ...state.setupCompleted, [playerKey]: true };
-
-          if (updatedCompleted.player1 && updatedCompleted.player2) {
-            newState.setupCompleted = updatedCompleted;
-            newState.gamePhase = GamePhase.PLAYING;
-            newState.currentPlayer = Player.BLANCAS;
-          } else {
-            const nextPlayer =
-              state.currentPlayer === Player.BLANCAS ? Player.NEGRAS : Player.BLANCAS;
-            newState.setupCompleted = updatedCompleted;
-            newState.currentPlayer = nextPlayer;
-            newState.setupPlayer = nextPlayer;
-          }
-        } else if (state.currentPlayer === Player.BLANCAS) {
-          newState.currentPlayer = Player.NEGRAS;
-        } else {
-          newState.gamePhase = GamePhase.PLAYING;
-          newState.currentPlayer = Player.BLANCAS;
-        }
-      }
-
-      return newState;
-    });
-  },
-
-  placePieceInSetup: (position: Position) => {
-    set((state) => {
-      if (!state.isLocalPlayerTurn()) return state;
-      if (state.gamePhase !== GamePhase.SETUP) return state;
-      if (!state.selectedPieceTypeForPlacement) return state;
-
-      const playerState = state.getCurrentPlayerState();
-      const placedCount = playerState.getPlacedPiecesCount();
-
-      if (placedCount >= GAME_RULES.PIECES_TO_PLACE) return state;
-
-      const validRows = (
-        state.currentPlayer === Player.BLANCAS
-          ? GAME_RULES.PLACEMENT_ROWS_PLAYER1
-          : GAME_RULES.PLACEMENT_ROWS_PLAYER2
-      ) as readonly number[];
-
-      if (!validRows.includes(position.y)) return state;
-
-      if (state.board.getPieceAt(position)) return state;
-
-      const piecesInRow = state.board
-        .getAllPieces()
-        .filter(
-          (p) => p.position && p.position.y === position.y && p.owner === state.currentPlayer,
-        ).length;
-
-      if (piecesInRow >= GAME_RULES.MAX_PIECES_PER_ROW) return state;
-
-      const pieceType = state.selectedPieceTypeForPlacement;
-      const pieceId = `piece-${state.pieceIdCounter}`;
-      const piece = new GamePiece(pieceId, pieceType, position, state.currentPlayer);
-
-      state.board.addPiece(piece);
-      playerState.addSelectedPiece(pieceType);
-      playerState.addPlacedPiece(piece);
-
-      // Clear highlights after placing piece
-      state.board.clearSelection();
-      state.board.clearHighlights();
-
-      const p1Placed = state.player1State.getPlacedPiecesCount();
-      const p2Placed = state.player2State.getPlacedPiecesCount();
-      const totalPlaced = p1Placed + p2Placed;
-
-      const newState: Partial<GameStateStore> = {
-        pieceIdCounter: state.pieceIdCounter + 1,
-        selectedPieceTypeForPlacement: null,
-        validMoves: [],
-        blockedMoves: [],
-      };
-
-      if (state.setupMode === SetupTurnMode.HIDDEN) {
-        // HIDDEN: el mismo jugador sigue hasta completar su setup (5 piezas +
-        // 3 banca); el cambio de jugador ocurre al terminar la banca.
-        state.board.clearSelection();
-        state.board.clearHighlights();
-      } else if (totalPlaced >= GAME_RULES.PIECES_TO_PLACE * 2) {
-        newState.gamePhase = GamePhase.BENCH_SELECTION;
-        newState.currentPlayer = Player.BLANCAS;
-        // Clear highlights when moving to bench selection
-        state.board.clearSelection();
-        state.board.clearHighlights();
+    playAgain: () => {
+      const state = get();
+      if (state.gameMode === GameMode.VS_COMPUTER) {
+        state.startVsComputer(state.setupMode);
       } else {
-        newState.currentPlayer =
-          state.currentPlayer === Player.BLANCAS ? Player.NEGRAS : Player.BLANCAS;
-        // Clear highlights when switching turns
-        state.board.clearSelection();
-        state.board.clearHighlights();
+        state.reset(state.setupMode);
+      }
+    },
+
+    getBotPlayer: () => {
+      const state = get();
+      if (state.gameMode !== GameMode.VS_COMPUTER || state.localPlayer === null) return null;
+      return state.localPlayer === Player.BLANCAS ? Player.NEGRAS : Player.BLANCAS;
+    },
+
+    runBotTurn: (rng: Rng = Math.random): boolean => {
+      const s = get();
+      const bot = s.getBotPlayer();
+      if (!bot || s.currentPlayer !== bot || s.isViewingHistory) return false;
+      if (
+        s.gamePhase !== GamePhase.SETUP &&
+        s.gamePhase !== GamePhase.BENCH_SELECTION &&
+        s.gamePhase !== GamePhase.PLAYING
+      ) {
+        return false;
       }
 
-      return newState;
-    });
-  },
+      const layoutId = s.botLayoutId ?? pickBotLayoutId(rng);
+      if (!s.botLayoutId) set({ botLayoutId: layoutId });
+      const layout = resolveQuickStartLayout(bot, layoutId);
+      const before = JSON.stringify(get().toSnapshot());
 
-  placeBenchPiece: (position: Position) => {
-    set((state) => {
-      if (!state.isLocalPlayerTurn()) return state;
-      if (state.gamePhase !== GamePhase.PLAYING) return state;
+      botActing = true;
+      try {
+        const st = get();
+        const ps = st.getCurrentPlayerState();
+        if (
+          st.gamePhase === GamePhase.SETUP &&
+          ps.getPlacedPiecesCount() < GAME_RULES.PIECES_TO_PLACE
+        ) {
+          const next = nextSetupPlacement(st.board, bot, layout);
+          if (next) {
+            st.selectPieceTypeForSetup(next.type);
+            get().placePieceInSetup(next.position);
+          }
+        } else if (st.gamePhase === GamePhase.SETUP || st.gamePhase === GamePhase.BENCH_SELECTION) {
+          const type = nextBenchType(ps, layout);
+          if (type) st.selectPieceTypeForBench(type);
+        } else {
+          const action = choosePlayAction(st.board, bot, ps, st.movementEngine, rng);
+          if (action.kind === "bench") {
+            const piece = ps.getBenchPieces().find((p) => p.id === action.benchPieceId);
+            if (piece) {
+              st.selectBenchPiece(piece);
+              get().placeBenchPiece(action.to);
+            }
+          } else if (action.kind === "move") {
+            const piece = st.board.getPieceById(action.pieceId);
+            if (piece?.position) {
+              st.selectTile(piece.position);
+              get().movePiece(action.to);
+            }
+          } else {
+            get().resolveStalledTurn();
+          }
+        }
+      } finally {
+        botActing = false;
+      }
+      return JSON.stringify(get().toSnapshot()) !== before;
+    },
 
-      const playerState = state.getCurrentPlayerState();
-      const benchPieces = playerState.getBenchPieces();
+    setSetupMode: (mode: SetupTurnMode) => {
+      set((state) => {
+        if (state.gamePhase !== GamePhase.SETUP) return state;
+        if (
+          state.player1State.getPlacedPiecesCount() > 0 ||
+          state.player2State.getPlacedPiecesCount() > 0
+        ) {
+          return state;
+        }
+        return {
+          setupMode: mode,
+          setupCompleted: { player1: false, player2: false },
+          setupPlayer: Player.BLANCAS,
+        };
+      });
+    },
 
-      if (benchPieces.length === 0) return state;
+    setOnlineContext: (roomId: string | null, localPlayer: Player | null) => {
+      set({
+        roomId,
+        localPlayer,
+        gameMode: roomId ? GameMode.ONLINE : GameMode.PVP,
+      });
+    },
 
-      const piecesOnBoard = state.board
-        .getAllPieces()
-        .filter((p) => p.owner === state.currentPlayer).length;
-      if (piecesOnBoard >= GAME_RULES.PIECES_TO_PLACE) return state;
-
-      const validRows = (
-        state.currentPlayer === Player.BLANCAS
-          ? GAME_RULES.PLACEMENT_ROWS_PLAYER1
-          : GAME_RULES.PLACEMENT_ROWS_PLAYER2
-      ) as readonly number[];
-
-      if (!validRows.includes(position.y)) return state;
-
-      if (state.board.getPieceAt(position)) return state;
-
-      const piecesInRow = state.board
-        .getAllPieces()
-        .filter(
-          (p) => p.position && p.position.y === position.y && p.owner === state.currentPlayer,
-        ).length;
-
-      if (piecesInRow >= GAME_RULES.MAX_PIECES_PER_ROW) return state;
-
-      const benchPiece = state.selectedBenchPiece || benchPieces[0];
-      if (!benchPiece) return state;
-      benchPiece.moveTo(position);
-
-      state.board.addPiece(benchPiece);
-      playerState.removeBenchPiece(benchPiece.id);
-
-      // Clear highlights and selection
-      state.board.clearSelection();
-      state.board.clearHighlights();
-
-      return {
+    applyRemoteSnapshot: (snapshot: GameSnapshot) => {
+      const restored = deserializeGameSnapshot(snapshot);
+      set({
+        board: restored.board,
+        player1State: restored.player1State,
+        player2State: restored.player2State,
+        currentPlayer: restored.currentPlayer,
+        gamePhase: restored.gamePhase,
+        pieceIdCounter: restored.pieceIdCounter,
+        moveHistory: restored.moveHistory,
+        setupMode: restored.setupMode,
+        setupCompleted: restored.setupCompleted,
+        setupPlayer: restored.currentPlayer,
+        selectedPiece: null,
+        selectedPieceTypeForPlacement: null,
         selectedBenchPiece: null,
         validMoves: [],
         blockedMoves: [],
-      };
-    });
-  },
+        isViewingHistory: false,
+        lastPassedPlayer: restored.lastPassedPlayer,
+      });
+    },
 
-  selectBenchPiece: (benchPiece: GamePiece) => {
-    set((state) => {
-      if (!state.isLocalPlayerTurn()) return state;
-      if (state.gamePhase !== GamePhase.PLAYING) return state;
+    toSnapshot: () => {
+      const state = get();
+      return serializeGameSnapshot({
+        board: state.board,
+        player1State: state.player1State,
+        player2State: state.player2State,
+        currentPlayer: state.currentPlayer,
+        gamePhase: state.gamePhase,
+        pieceIdCounter: state.pieceIdCounter,
+        moveHistory: state.moveHistory,
+        setupMode: state.setupMode,
+        setupCompleted: state.setupCompleted,
+        lastPassedPlayer: state.lastPassedPlayer,
+      });
+    },
+
+    getCurrentPlayerState: () => {
+      const state = get();
+      return state.currentPlayer === Player.BLANCAS ? state.player1State : state.player2State;
+    },
+
+    getOpponentPlayerState: () => {
+      const state = get();
+      return state.currentPlayer === Player.BLANCAS ? state.player2State : state.player1State;
+    },
+
+    canSelectPieceType: (type: PieceType) => {
+      const state = get();
+      if (!state.isLocalPlayerTurn()) return false;
+      if (state.gamePhase !== GamePhase.SETUP) return false;
+      if (state.selectedPieceTypeForPlacement !== null) return false;
 
       const playerState = state.getCurrentPlayerState();
-      const benchPieces = playerState.getBenchPieces();
+      const currentCount = playerState.getSelectedPieceCount(type);
 
-      if (!benchPieces.includes(benchPiece)) return state;
+      if (currentCount >= GAME_RULES.MAX_PIECES_PER_TYPE) return false;
+      if (playerState.getTotalSelectedCount() >= GAME_RULES.TOTAL_PIECES_PER_PLAYER) return false;
 
-      // Calculate valid placement positions
-      const validRows = (
-        state.currentPlayer === Player.BLANCAS
-          ? GAME_RULES.PLACEMENT_ROWS_PLAYER1
-          : GAME_RULES.PLACEMENT_ROWS_PLAYER2
-      ) as readonly number[];
+      // HIDDEN: al completar las 5 piezas se pasa a banca; no se puede elegir
+      // más tipos para colocar.
+      if (
+        state.setupMode === SetupTurnMode.HIDDEN &&
+        playerState.getPlacedPiecesCount() >= GAME_RULES.PIECES_TO_PLACE
+      ) {
+        return false;
+      }
 
-      const validPositions: Position[] = [];
+      return true;
+    },
 
-      for (const row of validRows) {
-        for (let col = 0; col < GAME_CONFIG.BOARD_WIDTH; col++) {
-          const pos = new Position(col, row);
-          const existingPiece = state.board.getPieceAt(pos);
+    canSelectBenchPieceType: (type: PieceType) => {
+      const state = get();
+      if (!state.isLocalPlayerTurn()) return false;
 
-          if (!existingPiece) {
-            const piecesInRow = state.board
-              .getAllPieces()
-              .filter(
-                (p) => p.position && p.position.y === row && p.owner === state.currentPlayer,
-              ).length;
+      const validPhase =
+        state.gamePhase === GamePhase.BENCH_SELECTION ||
+        (state.gamePhase === GamePhase.SETUP && state.setupMode === SetupTurnMode.HIDDEN);
+      if (!validPhase) return false;
 
-            if (piecesInRow < GAME_RULES.MAX_PIECES_PER_ROW) {
-              validPositions.push(pos);
-            }
+      const playerState = state.getCurrentPlayerState();
+
+      // HIDDEN: la banca se elige dentro de SETUP, solo tras colocar las 5 piezas.
+      if (state.setupMode === SetupTurnMode.HIDDEN && state.gamePhase === GamePhase.SETUP) {
+        if (playerState.getPlacedPiecesCount() < GAME_RULES.PIECES_TO_PLACE) return false;
+      }
+      const benchCount = playerState.getBenchPieces().length;
+      const currentBenchTypeCount = playerState
+        .getBenchPieces()
+        .filter((p) => p.type === type).length;
+
+      if (benchCount >= GAME_RULES.PIECES_IN_BENCH) {
+        return false;
+      }
+
+      const totalOfType = playerState.getSelectedPieceCount(type) + currentBenchTypeCount;
+      if (totalOfType >= GAME_RULES.MAX_PIECES_PER_TYPE) {
+        return false;
+      }
+
+      // Check if selecting this piece would prevent meeting MIN_PIECES_PER_TYPE for other types
+      const remainingBenchSlots = GAME_RULES.PIECES_IN_BENCH - benchCount;
+
+      // For each piece type, check if we can still meet the minimum requirement
+      const allPieceTypes = Object.values(PieceType);
+      for (const otherType of allPieceTypes) {
+        if (otherType === type) continue;
+
+        const otherTypeTotal =
+          playerState.getSelectedPieceCount(otherType) +
+          playerState.getBenchPieces().filter((p) => p.type === otherType).length;
+
+        // If this other type is below minimum and we don't have enough slots to reach it
+        if (otherTypeTotal < GAME_RULES.MIN_PIECES_PER_TYPE) {
+          const neededToReachMin = GAME_RULES.MIN_PIECES_PER_TYPE - otherTypeTotal;
+          const slotsAvailableForOthers = remainingBenchSlots - 1; // -1 for current selection
+
+          if (slotsAvailableForOthers < neededToReachMin) {
+            return false;
           }
         }
       }
 
-      state.board.clearSelection();
-      state.board.clearHighlights();
-      state.board.highlightPositions(validPositions);
+      return true;
+    },
 
-      return {
-        selectedBenchPiece: benchPiece,
-        selectedPiece: null,
-        validMoves: validPositions,
-        blockedMoves: [],
-      };
-    });
-  },
+    canPlaceBenchPiece: () => {
+      const state = get();
+      if (!state.isLocalPlayerTurn()) return false;
+      if (state.gamePhase !== GamePhase.PLAYING) return false;
 
-  selectTile: (position: Position) => {
-    set((state) => {
-      if (!state.isLocalPlayerTurn()) return state;
-      if (state.gamePhase === GamePhase.SETUP) {
-        state.placePieceInSetup(position);
-        return {};
-      }
+      return canPlaceFromBench(state.board, state.currentPlayer, state.getCurrentPlayerState());
+    },
 
-      if (state.gamePhase === GamePhase.BENCH_SELECTION) {
-        return state;
-      }
+    selectPieceTypeForSetup: (type: PieceType) => {
+      set((state) => {
+        if (!state.canSelectPieceType(type)) return state;
 
-      if (state.gamePhase !== GamePhase.PLAYING) return state;
+        const validPositions = getBenchPlacementSquares(state.board, state.currentPlayer);
 
-      const clickedPiece = state.board.getPieceAt(position);
+        // Clear previous highlights and show new valid positions
+        state.board.clearSelection();
+        state.board.clearHighlights();
+        state.board.highlightPositions(validPositions);
 
-      // Handle bench piece placement
-      if (state.selectedBenchPiece) {
-        state.placeBenchPiece(position);
-        return {};
-      }
+        return {
+          selectedPieceTypeForPlacement: type,
+          validMoves: validPositions,
+          blockedMoves: [],
+        };
+      });
+    },
 
-      if (state.selectedPiece) {
-        const isValidMove = state.validMoves.some((pos) => pos.equals(position));
-        if (isValidMove) {
+    selectPieceTypeForBench: (type: PieceType) => {
+      set((state) => {
+        if (!state.canSelectBenchPieceType(type)) {
           return state;
         }
 
-        if (clickedPiece && clickedPiece.owner === state.currentPlayer) {
+        const playerState = state.getCurrentPlayerState();
+        const pieceId = `bench-${state.currentPlayer}-${state.pieceIdCounter}`;
+        const benchPiece = new GamePiece(pieceId, type, null, state.currentPlayer);
+
+        playerState.addBenchPiece(benchPiece);
+
+        const benchCount = playerState.getBenchPieces().length;
+
+        const newState: Partial<GameStateStore> = {
+          pieceIdCounter: state.pieceIdCounter + 1,
+        };
+
+        if (benchCount >= GAME_RULES.PIECES_IN_BENCH) {
+          if (state.setupMode === SetupTurnMode.HIDDEN) {
+            // Fin del setup oculto del jugador actual.
+            const playerKey = state.currentPlayer === Player.BLANCAS ? "player1" : "player2";
+            const updatedCompleted = { ...state.setupCompleted, [playerKey]: true };
+
+            if (updatedCompleted.player1 && updatedCompleted.player2) {
+              newState.setupCompleted = updatedCompleted;
+              newState.gamePhase = GamePhase.PLAYING;
+              newState.currentPlayer = Player.BLANCAS;
+            } else {
+              const nextPlayer =
+                state.currentPlayer === Player.BLANCAS ? Player.NEGRAS : Player.BLANCAS;
+              newState.setupCompleted = updatedCompleted;
+              newState.currentPlayer = nextPlayer;
+              newState.setupPlayer = nextPlayer;
+            }
+          } else if (state.currentPlayer === Player.BLANCAS) {
+            newState.currentPlayer = Player.NEGRAS;
+          } else {
+            newState.gamePhase = GamePhase.PLAYING;
+            newState.currentPlayer = Player.BLANCAS;
+          }
+        }
+
+        return newState;
+      });
+      // Si este pick cerró el setup y arrancó PLAYING, puede tocar un turno sin salida.
+      get().resolveStalledTurn();
+    },
+
+    placePieceInSetup: (position: Position) => {
+      set((state) => {
+        if (!state.isLocalPlayerTurn()) return state;
+        if (state.gamePhase !== GamePhase.SETUP) return state;
+        if (!state.selectedPieceTypeForPlacement) return state;
+
+        const playerState = state.getCurrentPlayerState();
+        const placedCount = playerState.getPlacedPiecesCount();
+
+        if (placedCount >= GAME_RULES.PIECES_TO_PLACE) return state;
+
+        const isPlacementSquare = getBenchPlacementSquares(state.board, state.currentPlayer).some(
+          (p) => p.equals(position),
+        );
+        if (!isPlacementSquare) return state;
+
+        const pieceType = state.selectedPieceTypeForPlacement;
+        const pieceId = `piece-${state.pieceIdCounter}`;
+        const piece = new GamePiece(pieceId, pieceType, position, state.currentPlayer);
+
+        state.board.addPiece(piece);
+        playerState.addSelectedPiece(pieceType);
+        playerState.addPlacedPiece(piece);
+
+        // Clear highlights after placing piece
+        state.board.clearSelection();
+        state.board.clearHighlights();
+
+        const p1Placed = state.player1State.getPlacedPiecesCount();
+        const p2Placed = state.player2State.getPlacedPiecesCount();
+        const totalPlaced = p1Placed + p2Placed;
+
+        const newState: Partial<GameStateStore> = {
+          pieceIdCounter: state.pieceIdCounter + 1,
+          selectedPieceTypeForPlacement: null,
+          validMoves: [],
+          blockedMoves: [],
+        };
+
+        if (state.setupMode === SetupTurnMode.HIDDEN) {
+          // HIDDEN: el mismo jugador sigue hasta completar su setup (5 piezas +
+          // 3 banca); el cambio de jugador ocurre al terminar la banca.
           state.board.clearSelection();
+          state.board.clearHighlights();
+        } else if (totalPlaced >= GAME_RULES.PIECES_TO_PLACE * 2) {
+          newState.gamePhase = GamePhase.BENCH_SELECTION;
+          newState.currentPlayer = Player.BLANCAS;
+          // Clear highlights when moving to bench selection
+          state.board.clearSelection();
+          state.board.clearHighlights();
+        } else {
+          newState.currentPlayer =
+            state.currentPlayer === Player.BLANCAS ? Player.NEGRAS : Player.BLANCAS;
+          // Clear highlights when switching turns
+          state.board.clearSelection();
+          state.board.clearHighlights();
+        }
+
+        return newState;
+      });
+    },
+
+    placeBenchPiece: (position: Position) => {
+      set((state) => {
+        if (!state.isLocalPlayerTurn()) return state;
+        if (state.gamePhase !== GamePhase.PLAYING) return state;
+
+        const playerState = state.getCurrentPlayerState();
+
+        if (!canPlaceFromBench(state.board, state.currentPlayer, playerState)) return state;
+
+        const isPlacementSquare = getBenchPlacementSquares(state.board, state.currentPlayer).some(
+          (p) => p.equals(position),
+        );
+        if (!isPlacementSquare) return state;
+
+        const benchPiece = state.selectedBenchPiece || playerState.getBenchPieces()[0];
+        if (!benchPiece) return state;
+        benchPiece.moveTo(position);
+
+        state.board.addPiece(benchPiece);
+        playerState.removeBenchPiece(benchPiece.id);
+
+        // Clear highlights and selection
+        state.board.clearSelection();
+        state.board.clearHighlights();
+
+        return {
+          selectedBenchPiece: null,
+          validMoves: [],
+          blockedMoves: [],
+        };
+      });
+      // La banca es acción libre: si tras bajar no queda nada legal, pasa el turno.
+      get().resolveStalledTurn();
+    },
+
+    selectBenchPiece: (benchPiece: GamePiece) => {
+      set((state) => {
+        if (!state.isLocalPlayerTurn()) return state;
+        if (state.gamePhase !== GamePhase.PLAYING) return state;
+
+        const playerState = state.getCurrentPlayerState();
+        const benchPieces = playerState.getBenchPieces();
+
+        if (!benchPieces.includes(benchPiece)) return state;
+
+        const validPositions = getBenchPlacementSquares(state.board, state.currentPlayer);
+
+        state.board.clearSelection();
+        state.board.clearHighlights();
+        state.board.highlightPositions(validPositions);
+
+        return {
+          selectedBenchPiece: benchPiece,
+          selectedPiece: null,
+          validMoves: validPositions,
+          blockedMoves: [],
+        };
+      });
+    },
+
+    selectTile: (position: Position) => {
+      set((state) => {
+        if (!state.isLocalPlayerTurn()) return state;
+        if (state.gamePhase === GamePhase.SETUP) {
+          state.placePieceInSetup(position);
+          return {};
+        }
+
+        if (state.gamePhase === GamePhase.BENCH_SELECTION) {
+          return state;
+        }
+
+        if (state.gamePhase !== GamePhase.PLAYING) return state;
+
+        const clickedPiece = state.board.getPieceAt(position);
+
+        // Handle bench piece placement
+        if (state.selectedBenchPiece) {
+          state.placeBenchPiece(position);
+          return {};
+        }
+
+        if (state.selectedPiece) {
+          const isValidMove = state.validMoves.some((pos) => pos.equals(position));
+          if (isValidMove) {
+            return state;
+          }
+
+          if (clickedPiece && clickedPiece.owner === state.currentPlayer) {
+            state.board.clearSelection();
+            state.board.selectTile(position);
+            const validMoves = state.movementEngine.getValidMoves(clickedPiece, state.board);
+            const blockedMoves = state.movementEngine.getBlockedMoves(clickedPiece, state.board);
+            state.board.highlightPositions(validMoves);
+            return {
+              selectedPiece: clickedPiece,
+              validMoves,
+              blockedMoves,
+            };
+          }
+
+          state.board.clearSelection();
+          state.board.clearHighlights();
+          return {
+            selectedPiece: null,
+            validMoves: [],
+            blockedMoves: [],
+          };
+        }
+
+        if (clickedPiece && clickedPiece.owner === state.currentPlayer) {
           state.board.selectTile(position);
           const validMoves = state.movementEngine.getValidMoves(clickedPiece, state.board);
           const blockedMoves = state.movementEngine.getBlockedMoves(clickedPiece, state.board);
@@ -676,334 +736,338 @@ const gameStoreInitializer: StateCreator<GameStateStore> = (set, get) => ({
           };
         }
 
+        return state;
+      });
+    },
+
+    handleTileClick: (position: Position) => {
+      const state = get();
+      if (state.isViewingHistory) return;
+      if (!state.isLocalPlayerTurn()) return;
+      if (state.gamePhase !== GamePhase.SETUP && state.gamePhase !== GamePhase.PLAYING) {
+        return;
+      }
+
+      const clickedPiece = state.board.getPieceAt(position);
+
+      // 1. Banca (acción libre): solo con pieza de banca seleccionada, o sin pieza de
+      //    tablero seleccionada y sobre una casilla de despliegue válida.
+      if (state.gamePhase === GamePhase.PLAYING && state.canPlaceBenchPiece() && !clickedPiece) {
+        const isPlacementSquare = getBenchPlacementSquares(state.board, state.currentPlayer).some(
+          (p) => p.equals(position),
+        );
+        if (state.selectedBenchPiece || (!state.selectedPiece && isPlacementSquare)) {
+          state.placeBenchPiece(position);
+          return;
+        }
+      }
+
+      // 2. Confirmed move
+      if (state.selectedPiece && state.validMoves.some((p) => p.equals(position))) {
+        state.movePiece(position);
+        return;
+      }
+
+      // 3. Selection / reselection / deselection / SETUP placement
+      state.selectTile(position);
+    },
+
+    checkScoring: (piece: GamePiece) => {
+      const state = get();
+      const scoringRow =
+        state.currentPlayer === Player.BLANCAS
+          ? GAME_RULES.SCORING_ZONE_PLAYER1
+          : GAME_RULES.SCORING_ZONE_PLAYER2;
+
+      if (piece.position && piece.position.y === scoringRow) {
+        const playerState =
+          piece.owner === Player.BLANCAS ? state.player1State : state.player2State;
+        playerState.incrementScore();
+        state.board.removePiece(piece.id);
+
+        set({});
+        get().checkGameOver();
+      }
+    },
+
+    checkGameOver: () => {
+      const state = get();
+      const p1Score = state.player1State.getScore();
+      const p2Score = state.player2State.getScore();
+
+      if (p1Score >= GAME_RULES.POINTS_TO_WIN || p2Score >= GAME_RULES.POINTS_TO_WIN) {
+        set({ gamePhase: GamePhase.GAME_OVER });
+        return;
+      }
+
+      const p1HasMoves = hasAnyLegalMove(state.board, Player.BLANCAS, state.movementEngine);
+      const p2HasMoves = hasAnyLegalMove(state.board, Player.NEGRAS, state.movementEngine);
+
+      if (!p1HasMoves && !p2HasMoves) {
+        set({ gamePhase: GamePhase.GAME_OVER });
+      }
+    },
+
+    movePiece: (to: Position) => {
+      set((state) => {
+        if (!state.isLocalPlayerTurn()) return state;
+        if (state.gamePhase !== GamePhase.PLAYING) return state;
+        if (!state.selectedPiece) return state;
+
+        const isValidMove = state.validMoves.some((pos) => pos.equals(to));
+        if (!isValidMove) return state;
+
+        const fromPosition = new Position(
+          state.selectedPiece.position!.x,
+          state.selectedPiece.position!.y,
+        );
+        const capturedPiece = state.board.getPieceAt(to);
+
+        // Execute the move first
+        state.board.movePiece(state.selectedPiece.id, to);
+        state.selectedPiece.moveTo(to);
+
+        // Then save the snapshot AFTER the move
+        const moveRecord: MoveRecord = {
+          moveNumber: state.moveHistory.getTotalMoves() + 1,
+          player: state.currentPlayer,
+          pieceId: state.selectedPiece.id,
+          pieceType: state.selectedPiece.type,
+          from: fromPosition,
+          to: new Position(to.x, to.y),
+          captured: capturedPiece
+            ? {
+                pieceId: capturedPiece.id,
+                pieceType: capturedPiece.type,
+                position: new Position(to.x, to.y),
+              }
+            : undefined,
+          boardSnapshot: JSON.stringify(
+            state.board.getAllPieces().map((p) => ({
+              id: p.id,
+              type: p.type,
+              owner: p.owner,
+              position: p.position ? { x: p.position.x, y: p.position.y } : null,
+            })),
+          ),
+          timestamp: new Date(),
+        };
+
+        state.moveHistory.addMove(moveRecord);
+
+        state.checkScoring(state.selectedPiece);
+
         state.board.clearSelection();
         state.board.clearHighlights();
+
+        const nextPlayer = state.currentPlayer === Player.BLANCAS ? Player.NEGRAS : Player.BLANCAS;
+
         return {
           selectedPiece: null,
           validMoves: [],
-          blockedMoves: [],
+          currentPlayer: nextPlayer,
+          isViewingHistory: false,
+          lastPassedPlayer: null,
         };
+      });
+      // El jugador que recibe el turno puede no tener acciones: pasa o termina.
+      get().resolveStalledTurn();
+    },
+
+    resolveStalledTurn: () => {
+      const state = get();
+      if (state.gamePhase !== GamePhase.PLAYING) return;
+      const stateOf = (p: Player) =>
+        p === Player.BLANCAS ? state.player1State : state.player2State;
+      const current = state.currentPlayer;
+      const other = current === Player.BLANCAS ? Player.NEGRAS : Player.BLANCAS;
+      if (hasAnyLegalAction(state.board, current, stateOf(current), state.movementEngine)) return;
+      if (hasAnyLegalAction(state.board, other, stateOf(other), state.movementEngine)) {
+        set({ currentPlayer: other, lastPassedPlayer: current });
+        return;
       }
-
-      if (clickedPiece && clickedPiece.owner === state.currentPlayer) {
-        state.board.selectTile(position);
-        const validMoves = state.movementEngine.getValidMoves(clickedPiece, state.board);
-        const blockedMoves = state.movementEngine.getBlockedMoves(clickedPiece, state.board);
-        state.board.highlightPositions(validMoves);
-        return {
-          selectedPiece: clickedPiece,
-          validMoves,
-          blockedMoves,
-        };
-      }
-
-      return state;
-    });
-  },
-
-  handleTileClick: (position: Position) => {
-    const state = get();
-    if (state.isViewingHistory) return;
-    if (!state.isLocalPlayerTurn()) return;
-    if (state.gamePhase !== GamePhase.SETUP && state.gamePhase !== GamePhase.PLAYING) {
-      return;
-    }
-
-    const clickedPiece = state.board.getPieceAt(position);
-
-    // 1. PRIORITY: bench placement (free action)
-    if (state.gamePhase === GamePhase.PLAYING && state.canPlaceBenchPiece() && !clickedPiece) {
-      state.placeBenchPiece(position);
-      return;
-    }
-
-    // 2. Confirmed move
-    if (state.selectedPiece && state.validMoves.some((p) => p.equals(position))) {
-      state.movePiece(position);
-      return;
-    }
-
-    // 3. Selection / reselection / deselection / SETUP placement
-    state.selectTile(position);
-  },
-
-  checkScoring: (piece: GamePiece) => {
-    const state = get();
-    const scoringRow =
-      state.currentPlayer === Player.BLANCAS
-        ? GAME_RULES.SCORING_ZONE_PLAYER1
-        : GAME_RULES.SCORING_ZONE_PLAYER2;
-
-    if (piece.position && piece.position.y === scoringRow) {
-      const playerState = piece.owner === Player.BLANCAS ? state.player1State : state.player2State;
-      playerState.incrementScore();
-      state.board.removePiece(piece.id);
-
-      set({});
-      get().checkGameOver();
-    }
-  },
-
-  checkGameOver: () => {
-    const state = get();
-    const p1Score = state.player1State.getScore();
-    const p2Score = state.player2State.getScore();
-
-    if (p1Score >= GAME_RULES.POINTS_TO_WIN || p2Score >= GAME_RULES.POINTS_TO_WIN) {
       set({ gamePhase: GamePhase.GAME_OVER });
-      return;
-    }
+    },
 
-    const p1Pieces = state.board.getAllPieces().filter((p) => p.owner === Player.BLANCAS);
-    const p2Pieces = state.board.getAllPieces().filter((p) => p.owner === Player.NEGRAS);
+    startGame: () => {
+      set({ gamePhase: GamePhase.SETUP, currentPlayer: Player.BLANCAS });
+    },
 
-    const p1HasMoves = p1Pieces.some(
-      (piece) => state.movementEngine.getValidMoves(piece, state.board).length > 0,
-    );
-    const p2HasMoves = p2Pieces.some(
-      (piece) => state.movementEngine.getValidMoves(piece, state.board).length > 0,
-    );
+    hoverTile: (position: Position | null) => {
+      set((state) => {
+        if (!position) return state;
+        return state;
+      });
+    },
 
-    if (!p1HasMoves && !p2HasMoves) {
-      set({ gamePhase: GamePhase.GAME_OVER });
-    }
-  },
+    reset: (setupMode: SetupTurnMode = SetupTurnMode.ALTERNATING) => {
+      const board = createInitialBoard();
+      const player1State = new PlayerState("player1");
+      const player2State = new PlayerState("player2");
 
-  movePiece: (to: Position) => {
-    set((state) => {
-      if (!state.isLocalPlayerTurn()) return state;
-      if (state.gamePhase !== GamePhase.PLAYING) return state;
-      if (!state.selectedPiece) return state;
+      set({
+        board,
+        gamePhase: GamePhase.SETUP,
+        gameMode: GameMode.PVP,
+        currentPlayer: Player.BLANCAS,
+        player1State,
+        player2State,
+        selectedPiece: null,
+        selectedPieceTypeForPlacement: null,
+        selectedBenchPiece: null,
+        validMoves: [],
+        blockedMoves: [],
+        pieceIdCounter: 0,
+        moveHistory: new MoveHistory(),
+        isViewingHistory: false,
+        localPlayer: null,
+        roomId: null,
+        setupMode,
+        setupCompleted: { player1: false, player2: false },
+        setupPlayer: Player.BLANCAS,
+        lastPassedPlayer: null,
+        botLayoutId: null,
+      });
+    },
 
-      const isValidMove = state.validMoves.some((pos) => pos.equals(to));
-      if (!isValidMove) return state;
+    quickStart: (player1LayoutId, player2LayoutId) => {
+      if (get().gameMode === GameMode.ONLINE) return;
+      const quick = buildQuickStartState({
+        player1: player1LayoutId,
+        player2: player2LayoutId,
+      });
 
-      const fromPosition = new Position(
-        state.selectedPiece.position!.x,
-        state.selectedPiece.position!.y,
-      );
-      const capturedPiece = state.board.getPieceAt(to);
+      set({
+        board: quick.board,
+        gamePhase: GamePhase.PLAYING,
+        currentPlayer: Player.BLANCAS,
+        player1State: quick.player1State,
+        player2State: quick.player2State,
+        selectedPiece: null,
+        selectedPieceTypeForPlacement: null,
+        selectedBenchPiece: null,
+        validMoves: [],
+        blockedMoves: [],
+        pieceIdCounter: quick.pieceIdCounter,
+        moveHistory: new MoveHistory(),
+        isViewingHistory: false,
+        setupMode: SetupTurnMode.ALTERNATING,
+        setupCompleted: { player1: false, player2: false },
+        setupPlayer: Player.BLANCAS,
+        lastPassedPlayer: null,
+      });
+      get().resolveStalledTurn();
+    },
 
-      // Execute the move first
-      state.board.movePiece(state.selectedPiece.id, to);
-      state.selectedPiece.moveTo(to);
+    prepareOnlineGame: (
+      setupMode: RoomSetupMode,
+      setupTurnMode: SetupTurnMode = SetupTurnMode.ALTERNATING,
+      quickStartLayouts?: QuickStartLayoutSelection,
+    ) => {
+      const initial =
+        setupMode === "quick" ? buildQuickStartState(quickStartLayouts) : buildManualStartState();
 
-      // Then save the snapshot AFTER the move
-      const moveRecord: MoveRecord = {
-        moveNumber: state.moveHistory.getTotalMoves() + 1,
-        player: state.currentPlayer,
-        pieceId: state.selectedPiece.id,
-        pieceType: state.selectedPiece.type,
-        from: fromPosition,
-        to: new Position(to.x, to.y),
-        captured: capturedPiece
-          ? {
-              pieceId: capturedPiece.id,
-              pieceType: capturedPiece.type,
-              position: new Position(to.x, to.y),
-            }
-          : undefined,
-        boardSnapshot: JSON.stringify(
-          state.board.getAllPieces().map((p) => ({
-            id: p.id,
-            type: p.type,
-            owner: p.owner,
-            position: p.position ? { x: p.position.x, y: p.position.y } : null,
-          })),
-        ),
-        timestamp: new Date(),
-      };
+      set({
+        board: initial.board,
+        gamePhase: setupMode === "quick" ? GamePhase.PLAYING : GamePhase.SETUP,
+        gameMode: GameMode.PVP,
+        currentPlayer: Player.BLANCAS,
+        player1State: initial.player1State,
+        player2State: initial.player2State,
+        selectedPiece: null,
+        selectedPieceTypeForPlacement: null,
+        selectedBenchPiece: null,
+        validMoves: [],
+        blockedMoves: [],
+        pieceIdCounter: initial.pieceIdCounter,
+        moveHistory: new MoveHistory(),
+        isViewingHistory: false,
+        localPlayer: null,
+        roomId: null,
+        setupMode: setupTurnMode,
+        setupCompleted: { player1: false, player2: false },
+        setupPlayer: Player.BLANCAS,
+        lastPassedPlayer: null,
+      });
+      get().resolveStalledTurn();
+    },
 
-      state.moveHistory.addMove(moveRecord);
+    setGameMode: (mode: GameMode) => {
+      set({ gameMode: mode });
+    },
 
-      state.checkScoring(state.selectedPiece);
+    goBackInHistory: () => {
+      const state = get();
+      if (!state.moveHistory.canGoBack()) return;
 
-      state.board.clearSelection();
-      state.board.clearHighlights();
+      const previousMove = state.moveHistory.goBack();
+      if (!previousMove) return;
 
-      const nextPlayer = state.currentPlayer === Player.BLANCAS ? Player.NEGRAS : Player.BLANCAS;
+      const newBoard = restoreBoardFromSnapshot(previousMove.boardSnapshot);
 
-      return {
+      set({
+        board: newBoard,
+        isViewingHistory: true,
         selectedPiece: null,
         validMoves: [],
-        currentPlayer: nextPlayer,
+        blockedMoves: [],
+      });
+    },
+
+    goForwardInHistory: () => {
+      const state = get();
+      if (!state.moveHistory.canGoForward()) return;
+
+      const nextMove = state.moveHistory.goForward();
+      if (!nextMove) return;
+
+      const newBoard = restoreBoardFromSnapshot(nextMove.boardSnapshot);
+
+      const isAtPresent = !state.moveHistory.isViewingHistory();
+
+      set({
+        board: newBoard,
+        isViewingHistory: !isAtPresent,
+        selectedPiece: null,
+        validMoves: [],
+        blockedMoves: [],
+      });
+    },
+
+    returnToPresent: () => {
+      const state = get();
+
+      while (state.moveHistory.canGoForward()) {
+        state.moveHistory.goForward();
+      }
+
+      const currentMove = state.moveHistory.getCurrentMove();
+      if (!currentMove) return;
+
+      const newBoard = restoreBoardFromSnapshot(currentMove.boardSnapshot);
+
+      set({
+        board: newBoard,
         isViewingHistory: false,
-      };
-    });
-  },
+        selectedPiece: null,
+        validMoves: [],
+        blockedMoves: [],
+      });
+    },
 
-  startGame: () => {
-    set({ gamePhase: GamePhase.SETUP, currentPlayer: Player.BLANCAS });
-  },
+    getMoveHistory: () => {
+      return get().moveHistory.getAllMoves();
+    },
 
-  hoverTile: (position: Position | null) => {
-    set((state) => {
-      if (!position) return state;
-      return state;
-    });
-  },
+    canGoBack: () => {
+      return get().moveHistory.canGoBack();
+    },
 
-  reset: (setupMode: SetupTurnMode = SetupTurnMode.ALTERNATING) => {
-    const board = createInitialBoard();
-    const player1State = new PlayerState("player1");
-    const player2State = new PlayerState("player2");
-
-    set({
-      board,
-      gamePhase: GamePhase.SETUP,
-      gameMode: GameMode.PVP,
-      currentPlayer: Player.BLANCAS,
-      player1State,
-      player2State,
-      selectedPiece: null,
-      selectedPieceTypeForPlacement: null,
-      selectedBenchPiece: null,
-      validMoves: [],
-      blockedMoves: [],
-      pieceIdCounter: 0,
-      moveHistory: new MoveHistory(),
-      isViewingHistory: false,
-      localPlayer: null,
-      roomId: null,
-      setupMode,
-      setupCompleted: { player1: false, player2: false },
-      setupPlayer: Player.BLANCAS,
-    });
-  },
-
-  quickStart: (player1LayoutId, player2LayoutId) => {
-    if (get().gameMode === GameMode.ONLINE) return;
-    const quick = buildQuickStartState({
-      player1: player1LayoutId,
-      player2: player2LayoutId,
-    });
-
-    set({
-      board: quick.board,
-      gamePhase: GamePhase.PLAYING,
-      currentPlayer: Player.BLANCAS,
-      player1State: quick.player1State,
-      player2State: quick.player2State,
-      selectedPiece: null,
-      selectedPieceTypeForPlacement: null,
-      selectedBenchPiece: null,
-      validMoves: [],
-      blockedMoves: [],
-      pieceIdCounter: quick.pieceIdCounter,
-      moveHistory: new MoveHistory(),
-      isViewingHistory: false,
-      setupMode: SetupTurnMode.ALTERNATING,
-      setupCompleted: { player1: false, player2: false },
-      setupPlayer: Player.BLANCAS,
-    });
-  },
-
-  prepareOnlineGame: (
-    setupMode: RoomSetupMode,
-    setupTurnMode: SetupTurnMode = SetupTurnMode.ALTERNATING,
-    quickStartLayouts?: QuickStartLayoutSelection,
-  ) => {
-    const initial =
-      setupMode === "quick" ? buildQuickStartState(quickStartLayouts) : buildManualStartState();
-
-    set({
-      board: initial.board,
-      gamePhase: setupMode === "quick" ? GamePhase.PLAYING : GamePhase.SETUP,
-      gameMode: GameMode.PVP,
-      currentPlayer: Player.BLANCAS,
-      player1State: initial.player1State,
-      player2State: initial.player2State,
-      selectedPiece: null,
-      selectedPieceTypeForPlacement: null,
-      selectedBenchPiece: null,
-      validMoves: [],
-      blockedMoves: [],
-      pieceIdCounter: initial.pieceIdCounter,
-      moveHistory: new MoveHistory(),
-      isViewingHistory: false,
-      localPlayer: null,
-      roomId: null,
-      setupMode: setupTurnMode,
-      setupCompleted: { player1: false, player2: false },
-      setupPlayer: Player.BLANCAS,
-    });
-  },
-
-  setGameMode: (mode: GameMode) => {
-    set({ gameMode: mode });
-  },
-
-  goBackInHistory: () => {
-    const state = get();
-    if (!state.moveHistory.canGoBack()) return;
-
-    const previousMove = state.moveHistory.goBack();
-    if (!previousMove) return;
-
-    const newBoard = restoreBoardFromSnapshot(previousMove.boardSnapshot);
-
-    set({
-      board: newBoard,
-      isViewingHistory: true,
-      selectedPiece: null,
-      validMoves: [],
-      blockedMoves: [],
-    });
-  },
-
-  goForwardInHistory: () => {
-    const state = get();
-    if (!state.moveHistory.canGoForward()) return;
-
-    const nextMove = state.moveHistory.goForward();
-    if (!nextMove) return;
-
-    const newBoard = restoreBoardFromSnapshot(nextMove.boardSnapshot);
-
-    const isAtPresent = !state.moveHistory.isViewingHistory();
-
-    set({
-      board: newBoard,
-      isViewingHistory: !isAtPresent,
-      selectedPiece: null,
-      validMoves: [],
-      blockedMoves: [],
-    });
-  },
-
-  returnToPresent: () => {
-    const state = get();
-
-    while (state.moveHistory.canGoForward()) {
-      state.moveHistory.goForward();
-    }
-
-    const currentMove = state.moveHistory.getCurrentMove();
-    if (!currentMove) return;
-
-    const newBoard = restoreBoardFromSnapshot(currentMove.boardSnapshot);
-
-    set({
-      board: newBoard,
-      isViewingHistory: false,
-      selectedPiece: null,
-      validMoves: [],
-      blockedMoves: [],
-    });
-  },
-
-  getMoveHistory: () => {
-    return get().moveHistory.getAllMoves();
-  },
-
-  canGoBack: () => {
-    return get().moveHistory.canGoBack();
-  },
-
-  canGoForward: () => {
-    return get().moveHistory.canGoForward();
-  },
-});
+    canGoForward: () => {
+      return get().moveHistory.canGoForward();
+    },
+  };
+};
 
 /**
  * Fábrica de stores de juego independientes. `useGameStore` es el singleton

@@ -45,6 +45,8 @@ export interface GameSnapshot {
   moveHistory?: MoveRecordSnapshot[];
   setupMode?: SetupTurnMode;
   setupCompleted?: { player1: boolean; player2: boolean };
+  /** Opcional: RTDB borra las claves null. */
+  lastPassedPlayer?: Player | null;
 }
 
 function pieceToSnapshot(piece: GamePiece): PieceSnapshot {
@@ -129,6 +131,7 @@ export interface GameSnapshotSource {
   moveHistory: MoveHistory;
   setupMode?: SetupTurnMode;
   setupCompleted?: { player1: boolean; player2: boolean };
+  lastPassedPlayer?: Player | null;
 }
 
 export function serializeGameSnapshot(source: GameSnapshotSource): GameSnapshot {
@@ -142,6 +145,7 @@ export function serializeGameSnapshot(source: GameSnapshotSource): GameSnapshot 
     moveHistory: source.moveHistory.getAllMoves().map(moveRecordToSnapshot),
     setupMode: source.setupMode ?? SetupTurnMode.ALTERNATING,
     setupCompleted: source.setupCompleted ?? { player1: false, player2: false },
+    lastPassedPlayer: source.lastPassedPlayer ?? null,
   };
 }
 
@@ -155,6 +159,7 @@ export interface DeserializedGameState {
   moveHistory: MoveHistory;
   setupMode: SetupTurnMode;
   setupCompleted: { player1: boolean; player2: boolean };
+  lastPassedPlayer: Player | null;
 }
 
 export function deserializeGameSnapshot(snap: GameSnapshot): DeserializedGameState {
@@ -177,5 +182,6 @@ export function deserializeGameSnapshot(snap: GameSnapshot): DeserializedGameSta
     moveHistory,
     setupMode: snap.setupMode ?? SetupTurnMode.ALTERNATING,
     setupCompleted: snap.setupCompleted ?? { player1: false, player2: false },
+    lastPassedPlayer: snap.lastPassedPlayer ?? null,
   };
 }

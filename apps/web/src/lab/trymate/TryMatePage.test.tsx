@@ -6,6 +6,7 @@ import { TryMatePage } from "./TryMatePage";
 import { useGameStore } from "./application/GameState";
 import { useRoomStore } from "./application/RoomState";
 import { PieceType, Player } from "./domain/constants/PieceConstants";
+import { GameMode } from "./domain/constants/GameRules";
 
 // ThemeProvider llama window.matchMedia; jsdom no lo implementa — stub
 // mínimo antes de montar (mismo patrón que App.test.tsx).
@@ -51,6 +52,14 @@ describe("TryMatePage", () => {
     renderPage();
     fireEvent.click(screen.getByRole("button", { name: /play online/i }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("offers play vs computer and starts a VS_COMPUTER game with the board", () => {
+    renderPage();
+    fireEvent.click(screen.getByRole("button", { name: /play vs computer/i }));
+    expect(useGameStore.getState().gameMode).toBe(GameMode.VS_COMPUTER);
+    expect(useGameStore.getState().localPlayer).toBe(Player.BLANCAS);
+    expect(screen.getByRole("grid", { name: "TryMate board" })).toBeInTheDocument();
   });
 
   it("still opens the setup picker for local play", () => {

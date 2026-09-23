@@ -266,6 +266,142 @@ describe("bench placement", () => {
   });
 });
 
+describe("stalled turn (auto pass)", () => {
+  const playingState = (board: Board, player1: PlayerState, player2: PlayerState) => {
+    useGameStore.setState({
+      board,
+      gamePhase: GamePhase.PLAYING,
+      currentPlayer: Player.BLANCAS,
+      player1State: player1,
+      player2State: player2,
+      selectedPiece: null,
+      selectedBenchPiece: null,
+      validMoves: [],
+      blockedMoves: [],
+      lastPassedPlayer: null,
+    });
+  };
+
+  it("passes back to the mover when the incoming player has no legal actions", () => {
+    const board = new Board(GAME_CONFIG.BOARD_WIDTH, GAME_CONFIG.BOARD_HEIGHT);
+    board.addPiece(new GamePiece("w-s", PieceType.STRIKER, pos(2, 5), Player.BLANCAS));
+    // FORT negro en y=0 mira fuera del tablero: sin movimientos ni banca.
+    board.addPiece(new GamePiece("b-f", PieceType.FORT, pos(0, 0), Player.NEGRAS));
+    playingState(board, new PlayerState("player1"), new PlayerState("player2"));
+
+    S().handleTileClick(pos(2, 5));
+    S().handleTileClick(pos(2, 6));
+
+    expect(S().currentPlayer).toBe(Player.BLANCAS);
+    expect(S().lastPassedPlayer).toBe(Player.NEGRAS);
+    expect(S().gamePhase).toBe(GamePhase.PLAYING);
+  });
+
+  it("clears lastPassedPlayer on the next move once the rival can act", () => {
+    const board = new Board(GAME_CONFIG.BOARD_WIDTH, GAME_CONFIG.BOARD_HEIGHT);
+    board.addPiece(new GamePiece("w-s", PieceType.STRIKER, pos(2, 5), Player.BLANCAS));
+    board.addPiece(new GamePiece("b-f", PieceType.FORT, pos(0, 0), Player.NEGRAS));
+    playingState(board, new PlayerState("player1"), new PlayerState("player2"));
+
+    S().handleTileClick(pos(2, 5));
+    S().handleTileClick(pos(2, 6));
+    expect(S().lastPassedPlayer).toBe(Player.NEGRAS);
+
+    // NEGRAS recupera una acción legal (banca disponible): ya no hay pase.
+    const player2 = new PlayerState("player2");
+    player2.addBenchPiece(new GamePiece("b-bench-0", PieceType.FORT, null, Player.NEGRAS));
+    useGameStore.setState({ player2State: player2 });
+
+    S().handleTileClick(pos(2, 6));
+    S().handleTileClick(pos(2, 7));
+    expect(S().currentPlayer).toBe(Player.NEGRAS);
+    expect(S().lastPassedPlayer).toBeNull();
+  });
+
+  it("ends the game when neither side has legal actions", () => {
+    const board = new Board(GAME_CONFIG.BOARD_WIDTH, GAME_CONFIG.BOARD_HEIGHT);
+    // FORT blanco en la última fila y FORT negro en la primera: ambos sin salida.
+    board.addPiece(new GamePiece("w-f", PieceType.FORT, pos(4, 10), Player.BLANCAS));
+    board.addPiece(new GamePiece("b-f", PieceType.FORT, pos(0, 0), Player.NEGRAS));
+    playingState(board, new PlayerState("player1"), new PlayerState("player2"));
+
+    S().resolveStalledTurn();
+    expect(S().gamePhase).toBe(GamePhase.GAME_OVER);
+  });
+
+  it("does not pass when the player can still place from the bench", () => {
+    const board = new Board(GAME_CONFIG.BOARD_WIDTH, GAME_CONFIG.BOARD_HEIGHT);
+    board.addPiece(new GamePiece("w-f", PieceType.FORT, pos(4, 10), Player.BLANCAS));
+    board.addPiece(new GamePiece("b-f", PieceType.FORT, pos(0, 0), Player.NEGRAS));
+    const player1 = new PlayerState("player1");
+    player1.addBenchPiece(new GamePiece("w-bench-0", PieceType.STRIKER, null, Player.BLANCAS));
+    playingState(board, player1, new PlayerState("player2"));
+
+    S().resolveStalledTurn();
+    expect(S().currentPlayer).toBe(Player.BLANCAS);
+    expect(S().lastPassedPlayer).toBeNull();
+    expect(S().gamePhase).toBe(GamePhase.PLAYING);
+  });
+});
+
+describe("bench priority in handleTileClick", () => {
+  const boardWithBench = () => {
+    const board = new Board(GAME_CONFIG.BOARD_WIDTH, GAME_CONFIG.BOARD_HEIGHT);
+    board.addPiece(new GamePiece("w-s", PieceType.STRIKER, pos(2, 2), Player.BLANCAS));
+    board.addPiece(new GamePiece("w-f0", PieceType.FORT, pos(0, 1), Player.BLANCAS));
+    board.addPiece(new GamePiece("w-f1", PieceType.FORT, pos(1, 1), Player.BLANCAS));
+    board.addPiece(new GamePiece("w-p", PieceType.PIONEER, pos(0, 4), Player.BLANCAS));
+    board.addPiece(new GamePiece("b-f", PieceType.FORT, pos(0, 9), Player.NEGRAS));
+    const player1 = new PlayerState("player1");
+    player1.addBenchPiece(new GamePiece("w-bench-0", PieceType.FORT, null, Player.BLANCAS));
+    useGameStore.setState({
+      board,
+      gamePhase: GamePhase.PLAYING,
+      currentPlayer: Player.BLANCAS,
+      player1State: player1,
+      player2State: new PlayerState("player2"),
+      selectedPiece: null,
+      selectedBenchPiece: null,
+      validMoves: [],
+      blockedMoves: [],
+    });
+  };
+
+  it("moves a selected piece to an empty square outside the deployment rows", () => {
+    boardWithBench();
+    expect(S().canPlaceBenchPiece()).toBe(true);
+
+    S().handleTileClick(pos(2, 2)); // select white striker
+    S().handleTileClick(pos(2, 4)); // 2-step charge, empty, not a deployment row
+
+    expect(S().board.getPieceAt(pos(2, 4))?.type).toBe(PieceType.STRIKER);
+    expect(S().player1State.getBenchPieces()).toHaveLength(1);
+    expect(S().currentPlayer).toBe(Player.NEGRAS);
+  });
+
+  it("moves instead of placing bench when the destination is a deployment square", () => {
+    boardWithBench();
+
+    S().handleTileClick(pos(2, 2));
+    S().handleTileClick(pos(3, 3)); // empty, inside rows 1–3, valid striker move
+
+    expect(S().board.getPieceAt(pos(3, 3))?.type).toBe(PieceType.STRIKER);
+    expect(S().board.getPieceAt(pos(3, 3))?.id).toBe("w-s");
+    expect(S().player1State.getBenchPieces()).toHaveLength(1);
+    expect(S().currentPlayer).toBe(Player.NEGRAS);
+  });
+
+  it("still places the bench piece when no board piece is selected", () => {
+    boardWithBench();
+
+    S().handleTileClick(pos(3, 3)); // empty deployment square, nothing selected
+
+    expect(S().board.getPieceAt(pos(3, 3))?.id).toBe("w-bench-0");
+    expect(S().player1State.getBenchPieces()).toHaveLength(0);
+    expect(S().currentPlayer).toBe(Player.BLANCAS); // free action keeps the turn
+  });
+});
+
 describe("scoring", () => {
   it("scores and removes the piece when it reaches the last row", () => {
     const board = new Board(GAME_CONFIG.BOARD_WIDTH, GAME_CONFIG.BOARD_HEIGHT);
@@ -480,6 +616,47 @@ describe("online mode", () => {
     expect(S().roomId).toBeNull();
     expect(S().localPlayer).toBeNull();
     expect(S().isLocalPlayerTurn()).toBe(true);
+  });
+});
+
+describe("vs computer mode", () => {
+  it("startVsComputer sets VS_COMPUTER with human BLANCAS and bot NEGRAS", () => {
+    S().startVsComputer(SetupTurnMode.ALTERNATING);
+    expect(S().gameMode).toBe(GameMode.VS_COMPUTER);
+    expect(S().localPlayer).toBe(Player.BLANCAS);
+    expect(S().roomId).toBeNull();
+    expect(S().getBotPlayer()).toBe(Player.NEGRAS);
+    expect(S().gamePhase).toBe(GamePhase.SETUP);
+    expect(S().isLocalPlayerTurn()).toBe(true);
+  });
+
+  it("blocks the human while it is the bot's turn", () => {
+    S().startVsComputer(SetupTurnMode.ALTERNATING);
+    S().selectPieceTypeForSetup(PieceType.FORT);
+    S().handleTileClick(pos(0, 1)); // BLANCAS coloca → turno del bot
+
+    expect(S().currentPlayer).toBe(Player.NEGRAS);
+    expect(S().isLocalPlayerTurn()).toBe(false);
+
+    S().handleTileClick(pos(0, 7));
+    expect(S().board.getPieceAt(pos(0, 7))).toBeUndefined();
+    S().selectPieceTypeForSetup(PieceType.FORT);
+    expect(S().selectedPieceTypeForPlacement).toBeNull();
+  });
+
+  it("playAgain keeps VS_COMPUTER and localPlayer; in PVP it resets as PVP", () => {
+    S().startVsComputer(SetupTurnMode.HIDDEN);
+    S().playAgain();
+    expect(S().gameMode).toBe(GameMode.VS_COMPUTER);
+    expect(S().localPlayer).toBe(Player.BLANCAS);
+    expect(S().setupMode).toBe(SetupTurnMode.HIDDEN);
+    expect(S().gamePhase).toBe(GamePhase.SETUP);
+
+    S().reset();
+    S().playAgain();
+    expect(S().gameMode).toBe(GameMode.PVP);
+    expect(S().localPlayer).toBeNull();
+    expect(S().getBotPlayer()).toBeNull();
   });
 });
 

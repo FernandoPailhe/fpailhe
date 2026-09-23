@@ -28,6 +28,7 @@ export interface RulesContent {
   flow: RulesSection[];
   pieces: PieceRule[];
   online: string;
+  computer: string;
   labels: { move: string; capture: string; special: string };
   diagramLegend: { move: string; capture: string; block: string };
 }
@@ -38,7 +39,7 @@ export const RULES_CONTENT: Record<RulesLanguage, RulesContent> = {
     objective:
       "TryMate is a tactical race on a 5×11 field. Push your pieces to the far end of the board to score — first player to 3 points wins. The game also ends if neither side has a legal move.",
     board:
-      "The field is 5 columns × 11 rows. You deploy on the first 3 rows on your side (rows 1–3 for White, 9–11 for Black) and score by reaching the opponent's last row.",
+      "The field is 5 columns × 11 rows. You deploy on rows 2–4 (White) or 8–10 (Black) and score by reaching the opponent's last row (row 11 for White, row 1 for Black). Rows 1 and 11 are never deployment rows.",
     flow: [
       {
         title: "Setup",
@@ -71,7 +72,7 @@ export const RULES_CONTENT: Record<RulesLanguage, RulesContent> = {
         short: "1 forward or diagonal · 2-step charge",
         move: "Moves 1 square forward or diagonally forward, and can charge 2 squares straight ahead if the path is clear.",
         capture: "Captures only straight ahead.",
-        special: "Can defense and attack with effectivity",
+        special: "Its 2-step charge makes it the fastest piece off the line.",
       },
       {
         type: PieceType.PIONEER,
@@ -84,6 +85,8 @@ export const RULES_CONTENT: Record<RulesLanguage, RulesContent> = {
     ],
     online:
       "Online: create a room and share the link, or join an open room. The host always plays White. Check 'Quick start' when creating a room to skip setup and start with armies already placed.",
+    computer:
+      "Vs computer: you play White against an easy AI that makes quick, imperfect decisions.",
     labels: { move: "Move", capture: "Capture", special: "Special" },
     diagramLegend: { move: "Move", capture: "Capture", block: "Blocked" },
   },
@@ -92,7 +95,7 @@ export const RULES_CONTENT: Record<RulesLanguage, RulesContent> = {
     objective:
       "TryMate es una carrera táctica en un campo de 5×11. Llevá tus piezas hasta la última fila rival para sumar puntos — gana el primero en llegar a 3. La partida también termina si ningún jugador tiene movimientos legales.",
     board:
-      "El campo tiene 5 columnas × 11 filas. Desplegás en las primeras 3 filas de tu lado (filas 1–3 para Blancas, 9–11 para Negras) y anotás al llegar a la última fila del rival.",
+      "El campo tiene 5 columnas × 11 filas. Desplegás en las filas 2–4 (Blancas) u 8–10 (Negras) y anotás al llegar a la última fila rival (fila 11 para Blancas, fila 1 para Negras). Las filas 1 y 11 nunca son de despliegue.",
     flow: [
       {
         title: "Despliegue",
@@ -138,6 +141,8 @@ export const RULES_CONTENT: Record<RulesLanguage, RulesContent> = {
     ],
     online:
       "Online: creá una sala y compartí el link, o sumate a una sala abierta. El host siempre juega Blancas. Marcá 'Quick start' al crear la sala para saltar el despliegue y arrancar con los ejércitos listos.",
+    computer:
+      "Vs computadora: jugás con Blancas contra una IA fácil que decide rápido y con errores.",
     labels: { move: "Movimiento", capture: "Captura", special: "Especial" },
     diagramLegend: { move: "Movimiento", capture: "Captura", block: "Bloqueada" },
   },

@@ -43,7 +43,7 @@ export function TryMateBoard() {
   // jugador que está configurando; las del rival quedan enmascaradas.
   const hiddenSetup = gamePhase === GamePhase.SETUP && setupMode === SetupTurnMode.HIDDEN;
 
-  const notMyTurn = gameMode === GameMode.ONLINE && !isLocalPlayerTurn();
+  const notMyTurn = gameMode !== GameMode.PVP && !isLocalPlayerTurn();
   // Issue #20: en online cada jugador ve su equipo abajo — el guest (NEGRAS)
   // recibe el tablero rotado 180° (filas y columnas invertidas).
   const flipped = gameMode === GameMode.ONLINE && localPlayer === Player.NEGRAS;

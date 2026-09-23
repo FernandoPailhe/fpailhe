@@ -187,6 +187,17 @@ describe("GameSnapshot", () => {
     expect(restored.setupCompleted).toEqual({ player1: false, player2: false });
   });
 
+  it("round-trips lastPassedPlayer and defaults to null when absent", () => {
+    const source = midGameSource();
+    source.lastPassedPlayer = Player.NEGRAS;
+    const wire = JSON.parse(JSON.stringify(serializeGameSnapshot(source)));
+    expect(deserializeGameSnapshot(wire).lastPassedPlayer).toBe(Player.NEGRAS);
+
+    const snap = serializeGameSnapshot(emptySource());
+    delete snap.lastPassedPlayer;
+    expect(deserializeGameSnapshot(snap).lastPassedPlayer).toBeNull();
+  });
+
   it("omits the captured key on moves without a capture (RTDB rejects undefined)", () => {
     const source = midGameSource();
     const snap = serializeGameSnapshot(source);

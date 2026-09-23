@@ -14,9 +14,7 @@ export function GameStatusBar() {
     player1State,
     player2State,
     isViewingHistory,
-    board,
-    movementEngine,
-    canPlaceBenchPiece,
+    lastPassedPlayer,
     gameMode,
     localPlayer,
     isLocalPlayerTurn,
@@ -25,20 +23,16 @@ export function GameStatusBar() {
   } = useGameStore();
 
   const online = gameMode === GameMode.ONLINE;
+  const vsComputer = gameMode === GameMode.VS_COMPUTER;
   const hiddenSetup = gamePhase === GamePhase.SETUP && setupMode === SetupTurnMode.HIDDEN;
-  const turnLabel = online
-    ? isLocalPlayerTurn()
-      ? "Your turn"
-      : "Opponent's turn"
-    : `${PLAYER_LABEL[currentPlayer]} to move`;
-
-  const noLegalMoves =
-    gamePhase === GamePhase.PLAYING &&
-    !board
-      .getAllPieces()
-      .filter((p) => p.owner === currentPlayer)
-      .some((p) => movementEngine.getValidMoves(p, board).length > 0) &&
-    !canPlaceBenchPiece();
+  const turnLabel =
+    online || vsComputer
+      ? isLocalPlayerTurn()
+        ? "Your turn"
+        : online
+          ? "Opponent's turn"
+          : "Computer is thinking…"
+      : `${PLAYER_LABEL[currentPlayer]} to move`;
 
   return (
     <div className="flex w-full flex-wrap items-center justify-between gap-2 font-ui text-sm">
@@ -50,7 +44,7 @@ export function GameStatusBar() {
             Hidden setup — {PLAYER_LABEL[currentPlayer]} placing army
           </span>
         )}
-        {online && localPlayer && (
+        {(online || vsComputer) && localPlayer && (
           <span className="bg-gold-soft px-2 py-0.5 text-xs font-semibold text-gold-bright">
             You are {PLAYER_LABEL[localPlayer]}
           </span>
@@ -63,9 +57,9 @@ export function GameStatusBar() {
             Viewing history — controls locked
           </span>
         )}
-        {noLegalMoves && (
+        {lastPassedPlayer && (
           <span className="bg-gold-soft px-2 py-0.5 text-xs font-semibold text-gold-bright">
-            No legal moves — bench or move required
+            {PLAYER_LABEL[lastPassedPlayer]} had no legal moves — turn passed
           </span>
         )}
       </div>

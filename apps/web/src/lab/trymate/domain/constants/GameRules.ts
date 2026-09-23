@@ -30,6 +30,7 @@ export enum GamePhase {
 export enum GameMode {
   PVP = "PVP",
   ONLINE = "ONLINE",
+  VS_COMPUTER = "VS_COMPUTER",
 }
 
 /** Modo de turnos durante el setup. No confundir con `RoomSetupMode`

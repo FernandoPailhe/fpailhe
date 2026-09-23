@@ -14,6 +14,7 @@ import { RulesPanel } from "./components/RulesPanel";
 import { SetupModeSelector } from "./components/SetupModeSelector";
 import { SetupPassScreen } from "./components/SetupPassScreen";
 import { useGameStore } from "./application/GameState";
+import { useComputerTurn } from "./application/useComputerTurn";
 import { useRoomStore } from "./application/RoomState";
 import { createFirebaseRoomsGateway } from "./infrastructure/firebase/FirebaseRoomsGateway";
 import { GameMode, GamePhase, SetupTurnMode } from "./domain/constants/GameRules";
@@ -38,6 +39,8 @@ const FOCUS =
 export function TryMatePage() {
   // TryMate es siempre dark (issue #16): el override se revierte al salir.
   useThemeOverride("dark");
+  // No-op fuera de VS_COMPUTER; agenda los turnos del bot cuando corresponde.
+  useComputerTurn();
   const gamePhase = useGameStore((s) => s.gamePhase);
   const setupMode = useGameStore((s) => s.setupMode);
   const currentPlayer = useGameStore((s) => s.currentPlayer);
@@ -61,6 +64,12 @@ export function TryMatePage() {
     setScreen("local");
   };
 
+  const goVsComputer = () => {
+    useGameStore.getState().startVsComputer(menuSetupMode);
+    setSetupPassAcknowledged(true);
+    setScreen("local");
+  };
+
   const backToMenu = () => {
     void useRoomStore.getState().leaveRoom();
     useGameStore.getState().reset();
@@ -73,7 +82,7 @@ export function TryMatePage() {
   // local PVP además hay que confirmar el pase de dispositivo; el flag se
   // reinicia cada vez que cambia el jugador que configura.
   const isHiddenSetup = gamePhase === GamePhase.SETUP && setupMode === SetupTurnMode.HIDDEN;
-  const isLocalPVP = gameMode !== GameMode.ONLINE;
+  const isLocalPVP = gameMode === GameMode.PVP;
   const [setupPassAcknowledged, setSetupPassAcknowledged] = useState(true);
   const prevPlayerRef = useRef(currentPlayer);
   useEffect(() => {
@@ -83,8 +92,7 @@ export function TryMatePage() {
     prevPlayerRef.current = currentPlayer;
   }, [currentPlayer, isHiddenSetup, isLocalPVP]);
 
-  const showHiddenBoard =
-    isSetupTurnForLocalPlayer() && (!isLocalPVP || setupPassAcknowledged);
+  const showHiddenBoard = isSetupTurnForLocalPlayer() && (!isLocalPVP || setupPassAcknowledged);
   const showBoard = !isHiddenSetup || showHiddenBoard;
 
   // Columna del tablero: su ancho determina el segundo límite del tamaño del
@@ -131,6 +139,9 @@ export function TryMatePage() {
             <Button type="button" onClick={goLocal}>
               Play local 1v1
             </Button>
+            <Button type="button" onClick={goVsComputer}>
+              Play vs computer (Easy)
+            </Button>
           </section>
         )}
 
@@ -155,9 +166,7 @@ export function TryMatePage() {
               className="flex min-w-0 flex-col items-end gap-4 mobile:items-center"
             >
               <TryMateBoard />
-              {gamePhase === GamePhase.PLAYING && (
-                <BenchPanel width={boardSize.boardWidth} />
-              )}
+              {gamePhase === GamePhase.PLAYING && <BenchPanel width={boardSize.boardWidth} />}
               {gamePhase === GamePhase.GAME_OVER && <GameOverPanel />}
             </div>
             <GameSidebar maxHeight={boardSize.boardHeight} />

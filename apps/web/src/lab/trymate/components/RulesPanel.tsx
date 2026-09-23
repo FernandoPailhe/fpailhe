@@ -72,6 +72,7 @@ export function RulesPanel() {
       </div>
 
       <p className="font-ui text-xs text-ink-dim">{rules.online}</p>
+      <p className="mt-1 font-ui text-xs text-ink-dim">{rules.computer}</p>
     </section>
   );
 }
