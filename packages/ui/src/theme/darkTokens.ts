@@ -14,6 +14,9 @@ export const darkTokens: ThemeTokens = {
     line: "oklch(35% 0.010 75)",
     lineSoft: "oklch(30% 0.010 75)",
 
+    // Sidebar del CV — apenas más claro que surface en dark
+    paper: "oklch(24% 0.010 75)",
+
     // Texto
     ink: "oklch(94% 0.010 75)",
     inkDim: "oklch(75% 0.010 75)",

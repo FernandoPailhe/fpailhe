@@ -38,6 +38,10 @@
   }
 }
 
+@page {
+  margin: 12mm;
+}
+
 @media print {
   :root {
     --color-canvas: #ffffff !important;
@@ -48,6 +52,9 @@
     --color-ink-faint: #555555 !important;
     --color-line: #cccccc !important;
     --color-line-soft: #cccccc !important;
+    /* Sidebar del CV: blanco en impresión (a pedido — no complicar la
+       impresión con fondos de color). */
+    --color-paper: #ffffff !important;
     --color-gold: #555555 !important;
     --color-gold-bright: #555555 !important;
     --color-parchment: #ffffff !important;
@@ -62,15 +69,62 @@
   body {
     background: white !important;
     color: black !important;
-    font-size: 16px !important;
+    font-size: 13px !important;
   }
 
   a {
     color: black !important;
-    text-decoration: none !important;
+    /* Los hipervínculos se distinguen con subrayado gris sutil. */
+    text-decoration: underline;
+    text-decoration-color: #888888;
+    text-underline-offset: 2px;
   }
 
-  section {
-    page-break-inside: avoid;
+  /* Los marcadores `outside` se anclan al borde del <ul>, que queda detrás
+     de la zona del float del sidebar — los bullets aparecían corridos a la
+     canaleta entre columnas. En print van `inside`, en el borde de la línea
+     de texto, alineados con el párrafo. */
+  .cv-layout ul {
+    list-style-position: inside;
+    padding-left: 0;
   }
+
+  /* Cortes de página: los headings nunca quedan solos al pie de página.
+     Las entradas cortas (education, courses, bloques del sidebar) llevan
+     break-inside-avoid en su markup; los jobs de Employment pueden cortarse
+     entre bullets como en la referencia. */
+  h2,
+  h3 {
+    break-after: avoid;
+  }
+
+  .break-inside-avoid {
+    break-inside: avoid;
+  }
+
+  /* Sidebar solo en la primera hoja: el layout pasa de grid a flujo normal
+     con el <aside> flotando a la izquierda (25% del ancho). Cuando el aside
+     termina, el texto de la columna principal ocupa el ancho completo —
+     así las hojas 2+ no reservan la columna lateral. */
+  .cv-layout {
+    display: block !important;
+  }
+
+  .cv-layout > aside {
+    float: left;
+    width: 25%;
+    /* La columna lateral reserva todo el alto de la primera hoja:
+       100vh = alto útil de la página, menos el header impreso (~190px). */
+    min-height: calc(100vh - 190px);
+    text-align: center;
+    padding-left: 0;
+    padding-right: 1rem;
+  }
+
+  /* Centrar horizontalmente las filas flex del sidebar (headings con ícono,
+     fila nombre/label de idiomas). */
+  .cv-layout > aside .flex {
+    justify-content: center;
+  }
+
 }

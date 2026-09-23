@@ -15,7 +15,13 @@
     "tech": ["React Native", "Expo", "TypeScript"],
     "description": "Personal React Native app that turns workout tracking into actionable weekly summaries: users see progress across sessions without manually comparing spreadsheets.",
     "status": "in-progress",
-    "featured": true
+    "featured": true,
+    "links": [
+      {
+        "type": "playStore",
+        "url": "https://play.google.com/store/apps/details?id=com.ferpa.tuneup"
+      }
+    ]
   },
   {
     "id": "hang-app",

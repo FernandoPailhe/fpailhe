@@ -1,6 +1,7 @@
 import type { Job, Project } from "@ferpa/data-model";
 import { TimelineItem } from "@ferpa/ui";
 import { useFormattedDateRange, useJobProjects } from "../domain/useSiteDomain";
+import { AutoLink } from "./AutoLink";
 
 export interface ExperienceItemProps {
   job: Job;
@@ -23,7 +24,17 @@ export function ExperienceItem({ job, projects }: ExperienceItemProps) {
     >
       {jobProjects.length > 0 ? (
         <p className="mt-3 font-mono text-xs text-ink-faint">
-          Projects: {jobProjects.map((p) => p.name).join(" · ")}
+          Projects:{" "}
+          {jobProjects.map((p, i) => (
+            <span key={p.id}>
+              {i > 0 ? " · " : ""}
+              <AutoLink
+                value={p.links?.[0]?.url ?? p.name}
+                label={p.name}
+                className="hover:text-ink"
+              />
+            </span>
+          ))}
         </p>
       ) : null}
     </TimelineItem>

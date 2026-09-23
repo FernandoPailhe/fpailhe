@@ -7,5 +7,7 @@
   "email": "ferpai@gmail.com",
   "linkedin": "https://www.linkedin.com/in/fernando-matias-pailhe/",
   "github": "https://github.com/FernandoPailhe",
-  "photo": "fernando-photo.jpg"
+  "photo": "fernando-photo.jpg",
+  "phone": "01161716045",
+  "summary": "At my core, I'm a creator, driven by the joy of building and solving challenges. As a Mobile App Developer with over five years of experience, I specialize in React Native, Kotlin, and TypeScript. I currently serve as a Developer and Functional Analyst for Techint's internal mobile app, focused on team management. I previously led development for Be Soul, re-architecting the app with Redux and SOLID principles for scalability. My quick learning and adaptability have been key to tackling both front & back-end tasks, while my background in Audio Visual Design optimizes solutions for a better UX"
 }

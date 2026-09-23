@@ -21,6 +21,9 @@ export const themeTokens = {
     line: "oklch(86% 0.010 75)",
     lineSoft: "oklch(88% 0.010 75)",
 
+    // Sidebar del CV — gris cálido claro, visible también en impresión
+    paper: "oklch(94.5% 0.008 75)",
+
     // Texto
     ink: "oklch(17% 0.010 75)",
     inkDim: "oklch(45% 0.010 75)",

@@ -7,9 +7,11 @@ import type {
   Hero,
   HowIWork,
   Job,
+  Language,
   Profile,
   Project,
   ProjectDetail,
+  Skill,
   Stat,
 } from "@ferpa/data-model";
 import {
@@ -20,9 +22,11 @@ import {
   fetchExperience,
   fetchHero,
   fetchHowIWork,
+  fetchLanguages,
   fetchProfile,
   fetchProjectDetails,
   fetchProjects,
+  fetchSkills,
   fetchStats,
 } from "../services/dataService";
 import { queryKeys } from "./keys";
@@ -87,4 +91,12 @@ export function useContactQuery() {
     queryFn: fetchContact,
     staleTime,
   });
+}
+
+export function useSkillsQuery() {
+  return useQuery<Skill[]>({ queryKey: queryKeys.skills, queryFn: fetchSkills, staleTime });
+}
+
+export function useLanguagesQuery() {
+  return useQuery<Language[]>({ queryKey: queryKeys.languages, queryFn: fetchLanguages, staleTime });
 }

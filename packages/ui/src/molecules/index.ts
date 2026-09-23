@@ -5,3 +5,4 @@ export * from "./ComunicadoBox";
 export * from "./Stat";
 export * from "./ProjectCard";
 export * from "./TimelineItem";
+export * from "./CVSectionHeading";

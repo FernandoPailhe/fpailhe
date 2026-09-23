@@ -14,4 +14,6 @@ export const queryKeys = {
   education: ["education"] as const,
   courses: ["courses"] as const,
   contact: ["contact"] as const,
+  skills: ["skills"] as const,
+  languages: ["languages"] as const,
 };

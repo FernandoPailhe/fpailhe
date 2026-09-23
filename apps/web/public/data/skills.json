@@ -1,0 +1,22 @@
+[
+  { "name": "React Native" },
+  { "name": "TypeScript" },
+  { "name": "S.O.L.I.D. Principles" },
+  { "name": "Kotlin" },
+  { "name": "Jetpack Compose" },
+  { "name": "JavaScript" },
+  { "name": "CSS" },
+  { "name": "Agile Methodologies / Scrum" },
+  { "name": "Android Studio" },
+  { "name": "Java" },
+  { "name": "Clean Architecture" },
+  { "name": "Google Cloud Platform" },
+  { "name": "Firebase" },
+  { "name": "NestJs" },
+  { "name": "SQL / SQLITE" },
+  { "name": "MongoDb" },
+  { "name": "Git" },
+  { "name": "Bitbucket / Github" },
+  { "name": "Notion" },
+  { "name": "Jira" }
+]

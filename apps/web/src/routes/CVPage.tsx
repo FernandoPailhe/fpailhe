@@ -1,17 +1,28 @@
-import { FilledButton } from "@ferpa/ui";
+import { CVSectionHeading, FilledButton } from "@ferpa/ui";
 import {
   useCoursesQuery,
   useEducationQuery,
   useExperienceQuery,
+  useLanguagesQuery,
   useProfileQuery,
   useProjectsQuery,
+  useSkillsQuery,
 } from "../queries/useSiteData";
 import { useSortedExperience } from "../domain/useSiteDomain";
 import {
   CoursesSection,
+  CVCoursesSection,
+  CVDetailsBlock,
+  CVEducationSection,
+  CVExperienceSection,
+  CVHeader,
+  CVLanguagesBlock,
+  CVSkillsBlock,
+
   EducationSection,
   ErrorState,
   ExperienceSection,
+  IconUser,
   LoadingState,
   Nav,
 } from "../components";
@@ -28,10 +39,12 @@ export function CVPage() {
   const education = useEducationQuery();
   const courses = useCoursesQuery();
   const projects = useProjectsQuery();
+  const skills = useSkillsQuery();
+  const languages = useLanguagesQuery();
 
   const sortedJobs = useSortedExperience(experience.data);
 
-  const queries = [profile, experience, education, courses, projects];
+  const queries = [profile, experience, education, courses, projects, skills, languages];
   if (queries.some((q) => q.isLoading)) return <LoadingState />;
   if (
     queries.some((q) => q.isError) ||
@@ -39,7 +52,9 @@ export function CVPage() {
     !experience.data ||
     !education.data ||
     !courses.data ||
-    !projects.data
+    !projects.data ||
+    !skills.data ||
+    !languages.data
   ) {
     return <ErrorState label="Could not load CV." />;
   }
@@ -47,45 +62,67 @@ export function CVPage() {
   return (
     <>
       <Nav links={NAV_LINKS} />
-      <main
-        id="main-content"
-        tabIndex={-1}
-        className="mx-auto max-w-[760px] px-[clamp(20px,5vw,32px)] pb-16"
-      >
-        <header className="border-b border-line py-12">
-          <h1 className="font-display text-3xl font-medium text-ink">{profile.data.name}</h1>
-          <p className="mt-2 font-ui text-base text-ink-dim">
-            {profile.data.role} — {profile.data.location} · {profile.data.remoteNote}
-          </p>
-          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1 font-mono text-xs text-ink-faint">
-            <a href={`mailto:${profile.data.email}`} className="hover:text-ink">
-              {profile.data.email}
-            </a>
-            <a
-              href={profile.data.linkedin}
-              target="_blank"
-              rel="noreferrer"
-              className="hover:text-ink"
-            >
-              LinkedIn
-            </a>
-            <a
-              href={profile.data.github}
-              target="_blank"
-              rel="noreferrer"
-              className="hover:text-ink"
-            >
-              GitHub
-            </a>
-            <span>{profile.data.domain}</span>
+      <main id="main-content" tabIndex={-1} className="mx-auto max-w-[760px] px-[clamp(20px,5vw,32px)] pb-16">
+        {/* Pantalla: diseño original de una columna */}
+        <div className="print:hidden">
+          <header className="border-b border-line py-12">
+            <h1 className="font-display text-3xl font-medium text-ink">{profile.data.name}</h1>
+            <p className="mt-2 font-ui text-base text-ink-dim">
+              {profile.data.role} — {profile.data.location} · {profile.data.remoteNote}
+            </p>
+            <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1 font-mono text-xs text-ink-faint">
+              <a href={`mailto:${profile.data.email}`} className="hover:text-ink">
+                {profile.data.email}
+              </a>
+              <a
+                href={profile.data.linkedin}
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-ink"
+              >
+                LinkedIn
+              </a>
+              <a
+                href={profile.data.github}
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-ink"
+              >
+                GitHub
+              </a>
+              <span>{profile.data.domain}</span>
+            </div>
+            <FilledButton className="mt-6" onClick={() => window.print()}>
+              Download PDF
+            </FilledButton>
+          </header>
+          <ExperienceSection jobs={sortedJobs} projects={projects.data} />
+          <EducationSection education={education.data} />
+          <CoursesSection courses={courses.data} />
+        </div>
+
+        {/* Documento de impresión: layout de 2 columnas del PDF de referencia */}
+        <div className="hidden print:block">
+          <CVHeader profile={profile.data} />
+          <div className="cv-layout">
+            <aside className="bg-paper space-y-8 px-6 py-8 print:space-y-4 print:py-5">
+              <CVDetailsBlock profile={profile.data} />
+              <CVSkillsBlock skills={skills.data} />
+              <CVLanguagesBlock languages={languages.data} />
+            </aside>
+            <div className="space-y-10 px-8 py-8 print:space-y-7 print:py-5">
+              <section aria-label="Profile">
+                <CVSectionHeading icon={<IconUser />} title="Profile" />
+                <p className="mt-3 font-ui text-sm leading-relaxed text-ink-dim">
+                  {profile.data.summary}
+                </p>
+              </section>
+              <CVExperienceSection jobs={sortedJobs} projects={projects.data} />
+              <CVEducationSection education={education.data} />
+              <CVCoursesSection courses={courses.data} />
+            </div>
           </div>
-          <FilledButton className="no-print mt-6" onClick={() => window.print()}>
-            Download PDF
-          </FilledButton>
-        </header>
-        <ExperienceSection jobs={sortedJobs} projects={projects.data} />
-        <EducationSection education={education.data} />
-        <CoursesSection courses={courses.data} />
+        </div>
       </main>
     </>
   );

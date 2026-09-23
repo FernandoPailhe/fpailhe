@@ -6,9 +6,11 @@ import type {
   Hero,
   HowIWork,
   Job,
+  Language,
   Profile,
   Project,
   ProjectDetail,
+  Skill,
   Stat,
 } from "@ferpa/data-model";
 import { http } from "./httpClient";
@@ -72,5 +74,15 @@ export async function fetchCourses(): Promise<CourseEntry[]> {
 
 export async function fetchContact(): Promise<ContactSection> {
   const { data } = await http.get<ContactSection>("/contact.json");
+  return data;
+}
+
+export async function fetchSkills(): Promise<Skill[]> {
+  const { data } = await http.get<Skill[]>("/skills.json");
+  return data;
+}
+
+export async function fetchLanguages(): Promise<Language[]> {
+  const { data } = await http.get<Language[]>("/languages.json");
   return data;
 }

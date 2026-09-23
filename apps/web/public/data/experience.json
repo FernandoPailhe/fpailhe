@@ -5,6 +5,7 @@
     "company": "Techint",
     "startDate": "2025-08",
     "endDate": null,
+    "summary": "Serving as a Developer and Functional Analyst for Techint's internal mobile application, I quickly stabilized a deprecated codebase and restored continuity to releases. I successfully led the publication of 3 new versions in three months (since August 2025), resolving technical uncertainty and meeting stringent store requirements. My role involves direct client communication, end-to-end release management, and spearheading a strategic roadmap focused on gradual architecture improvements (e.g., migration to TypeScript) and proposing high-impact UX evolutions.",
     "bullets": [
       "Stabilized EQM, a deprecated offline-first mobile app with no test coverage, publishing 3 releases in 3 months after a year with no updates.",
       "Built a 1,100+ test suite from zero (>80% coverage) and used it to migrate 166 files from JavaScript to TypeScript with zero regressions.",
@@ -21,6 +22,7 @@
     "location": "Remote",
     "startDate": "2023-04",
     "endDate": "2025-08",
+    "summary": "Played a pivotal role in the strategic development and re-architecture of the Be Soul app, where I progressively gained a comprehensive understanding of the project's architecture and business model, positioning myself as a key decision-making reference.",
     "bullets": [
       "Spearheaded El Puma Contigo from scratch: CI workflow on Expo, with AI functionality integrated to improve user interaction.",
       "Led the re-architecture of Be Soul around Redux and SOLID principles for long-term scalability."
@@ -33,7 +35,8 @@
     "title": "Full Stack Developer",
     "company": "Freelance",
     "startDate": "2020-06",
-    "endDate": "2025-07",
+    "endDate": null,
+    "summary": "I went beyond technical execution, deeply understanding the products and actively contributing to UX/UI design and product development. My holistic approach ensured that every technical decision aligned with end-user needs, improving the user experience and overall functionality. This involvement helped drive product success, resulting in intuitive designs and better alignment with user goals.",
     "bullets": [
       "HangApp: took a beta MVP to a production-ready public release, with a full UI/UX redesign and architecture overhaul.",
       "PassApp: maintained and extended an Android app for 10,000+ active users (Kotlin, MVP architecture).",
@@ -42,7 +45,7 @@
       "Integrated Sentry for error monitoring and Jest for automated testing across projects."
     ],
     "tech": ["React Native", "Kotlin", "TypeScript", "NestJS", "MongoDB", "Firebase", "GCP"],
-    "projectIds": ["hang-app", "pass-app"]
+    "projectIds": ["hang-app", "pass-app", "tune-up"]
   },
   {
     "id": "my-stadium-golf",
@@ -51,6 +54,7 @@
     "location": "Remote",
     "startDate": "2021-11",
     "endDate": "2023-03",
+    "summary": "My Stadium Golf is an innovative platform for golf training and learning, combining games with holistic approaches.",
     "bullets": [
       "Maintained and optimized an Android tablet app (Java, MVP architecture) for performance and stability.",
       "Built student-app features on a hybrid React Native Expo + legacy Laravel + AWS serverless stack.",
@@ -63,8 +67,14 @@
     "title": "Filmmaker",
     "company": "Municipalidad de Tres de Febrero",
     "startDate": "2017-07",
-    "endDate": null,
-    "_note": "endDate stays null: the source material lists this role as ongoing. Pending confirmation from the owner before setting an end date.",
+    "endDate": "2025-08",
+    "summary": "Led video recording for municipal audiovisual communication. Key responsibilities included capturing necessary footage, conceptually structuring, and technically scripting each video during the activity or recording session.",
+    "skillsDeveloped": [
+      "Teamwork",
+      "Adaptability",
+      "Decision Making Under Pressure",
+      "Effective Communication"
+    ],
     "bullets": [
       "Led video recording for municipal audiovisual communication — filming, structuring and scripting each piece.",
       "Helped build and grow the communication team from its inception; the team became recognized as one of the best by peer institutions."
@@ -77,6 +87,7 @@
     "company": "Freelance",
     "startDate": "2011-01",
     "endDate": "2020-01",
+    "summary": "This role was crucial for learning how to plan according to available resources, adapt to last-minute changes imposed by the context and circumstances of each shoot, understand client needs and deliver the best possible product, manage time and schedules productively and efficiently, and lead teams effectively.",
     "bullets": [
       "Planned shoots around available resources and adapted to last-minute changes in the field.",
       "Managed client needs, schedules and small teams end to end."

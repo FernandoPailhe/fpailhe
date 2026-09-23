@@ -17,6 +17,21 @@ export interface Profile {
   linkedin: string;
   github: string;
   photo: string;
+  phone: string;
+  /** Párrafo "PROFILE" del CV (columna principal). */
+  summary: string;
+}
+
+export interface Skill {
+  name: string;
+}
+
+export interface Language {
+  name: string;
+  /** 0–5, se renderiza como barra/dots de nivel en el CV. */
+  level: number;
+  /** Texto del nivel, ej. "Native", "Professional working". */
+  label: string;
 }
 
 export interface CTA {
@@ -124,6 +139,10 @@ export interface Job {
   bullets: string[];
   tech: string[];
   projectIds?: string[];
+  /** Párrafo introductorio del rol, antes de los bullets. */
+  summary?: string;
+  /** Lista "Skills developed" para roles no-tech (filmmaker, etc.). */
+  skillsDeveloped?: string[];
 }
 
 export interface EducationEntry {

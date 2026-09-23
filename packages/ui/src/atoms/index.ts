@@ -9,4 +9,5 @@ export * from "./Button";
 export * from "./Kicker";
 export * from "./TextLink";
 export * from "./FilledButton";
+export * from "./LevelDots";
 export * from "./InitialsAvatar";
