@@ -5,10 +5,15 @@ import {
   useHowIWorkQuery,
   useProfileQuery,
   useProjectDetailsQuery,
+  useProjectsSectionQuery,
   useProjectsQuery,
   useStatsQuery,
 } from "../queries/useSiteData";
-import { useFeaturedProjects, useProjectDetailIds } from "../domain/useSiteDomain";
+import {
+  useArchiveProjects,
+  useFeaturedProjects,
+  useProjectDetailIds,
+} from "../domain/useSiteDomain";
 import {
   AboutSection,
   ContactSection,
@@ -38,12 +43,24 @@ export function HomePage() {
   const aboutAside = useAboutAsideQuery();
   const projects = useProjectsQuery();
   const projectDetails = useProjectDetailsQuery();
+  const projectsSection = useProjectsSectionQuery();
   const contact = useContactQuery();
 
   const featuredProjects = useFeaturedProjects(projects.data);
+  const archiveProjects = useArchiveProjects(projects.data);
   const detailIds = useProjectDetailIds(projectDetails.data);
 
-  const queries = [profile, hero, stats, howIWork, aboutAside, projects, projectDetails, contact];
+  const queries = [
+    profile,
+    hero,
+    stats,
+    howIWork,
+    aboutAside,
+    projects,
+    projectDetails,
+    projectsSection,
+    contact,
+  ];
   if (queries.some((q) => q.isLoading)) return <LoadingState />;
   if (
     queries.some((q) => q.isError) ||
@@ -54,6 +71,7 @@ export function HomePage() {
     !aboutAside.data ||
     !projects.data ||
     !projectDetails.data ||
+    !projectsSection.data ||
     !contact.data
   ) {
     return <ErrorState label="Could not load site data." />;
@@ -79,7 +97,14 @@ export function HomePage() {
       <main className="mx-auto max-w-[880px] px-[clamp(20px,5vw,32px)]">
         <HowIWorkSection panels={howIWork.data.panels} closingNote={howIWork.data.closingNote} />
         <AboutSection text={aboutAside.data.text} photo={aboutAside.data.photo} />
-        <ProjectsSection projects={featuredProjects} detailIds={detailIds} />
+        <ProjectsSection
+          projects={featuredProjects}
+          detailIds={detailIds}
+          heading={projectsSection.data.heading}
+          archive={archiveProjects}
+          archiveHeading={projectsSection.data.archiveHeading}
+          archiveNote={projectsSection.data.archiveNote}
+        />
       </main>
       <ContactSection
         heading={contact.data.heading}

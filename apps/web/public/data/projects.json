@@ -21,7 +21,59 @@
         "type": "playStore",
         "url": "https://play.google.com/store/apps/details?id=com.ferpa.tuneup"
       }
-    ]
+    ],
+    "showInCV": true
+  },
+  {
+    "id": "trymate",
+    "name": "TryMate",
+    "context": "Personal",
+    "tech": ["React", "TypeScript", "Zustand", "Firebase Realtime Database", "Vitest"],
+    "description": "Chess-meets-rugby strategy board game for the browser, with pass-and-play and real-time online rooms. Pure domain layer ported from a rules spec, swappable rooms gateway and 140+ tests, built through an issue-driven agent workflow.",
+    "status": "live",
+    "featured": false,
+    "links": [
+      {
+        "type": "website",
+        "url": "https://fpailhe.com/lab/trymate",
+        "label": "fpailhe.com/lab/trymate"
+      }
+    ],
+    "showInCV": true,
+    "tagline": "Chess-meets-rugby strategy game for the browser, with pass-and-play and real-time online rooms."
+  },
+  {
+    "id": "argentina-campeon",
+    "name": "Argentina Campeón del Mundo",
+    "context": "Personal",
+    "tech": [
+      "Kotlin",
+      "Jetpack Compose",
+      "MVVM",
+      "Clean Architecture",
+      "Room",
+      "Retrofit",
+      "Coroutines",
+      "Ktor",
+      "MongoDB"
+    ],
+    "description": "Android app to browse and vote on the best photos of Argentina's 2022 World Cup win, ranked by pairwise community votes. Compose app on Clean Architecture + MVVM, with its own Ktor + MongoDB backend.",
+    "status": "discontinued",
+    "featured": false,
+    "links": [
+      {
+        "type": "github",
+        "url": "https://github.com/FernandoPailhe/ArgentinaCampeon",
+        "label": "GitHub (app)"
+      },
+      {
+        "type": "github",
+        "url": "https://github.com/FernandoPailhe/ArgentinaCampeonServer",
+        "label": "GitHub (server)"
+      }
+    ],
+    "showInCV": true,
+    "tagline": "Android app + Ktor API to vote on the best photos of Argentina's 2022 World Cup win. The backend is no longer online."
   },
   {
     "id": "hang-app",
@@ -36,10 +88,20 @@
     "id": "be-soul",
     "name": "Be Soul",
     "context": "Sitio Uno",
-    "tech": ["React Native", "TypeScript", "Redux"],
-    "description": "Led the re-architecture of a digital-legacy and in-memorial app around Redux and SOLID principles for long-term scalability.",
+    "tech": ["React Native", "TypeScript", "Redux", "NestJS", "MongoDB"],
+    "description": "Led the re-architecture of a digital-legacy and in-memorial app around Redux and SOLID principles for long-term scalability, and built its NestJS + MongoDB REST API with an OpenAI assistant.",
     "status": "live",
-    "featured": true
+    "featured": true,
+    "links": [
+      {
+        "type": "playStore",
+        "url": "https://play.google.com/store/apps/details?id=com.sitiouno.mytestament.prod"
+      },
+      {
+        "type": "appStore",
+        "url": "https://apps.apple.com/pa/app/be-soul-legados-digitales/id6444774949"
+      }
+    ]
   },
   {
     "id": "pass-app",
@@ -48,7 +110,19 @@
     "tech": ["Kotlin", "MVP architecture"],
     "description": "Android app maintained and extended for 10,000+ active users, delivering consistent feature updates over several years.",
     "status": "live",
-    "featured": true
+    "featured": true,
+    "links": [
+      {
+        "type": "playStore",
+        "url": "https://play.google.com/store/apps/details?id=com.predictionlabs.passappuser",
+        "label": "Play Store (User)"
+      },
+      {
+        "type": "playStore",
+        "url": "https://play.google.com/store/apps/details?id=com.predictionlabs.passappsecurity",
+        "label": "Play Store (Security)"
+      }
+    ]
   },
   {
     "id": "el-puma-contigo",
@@ -57,6 +131,81 @@
     "tech": ["React Native", "Expo"],
     "description": "Built from scratch with a continuous-integration workflow on Expo, integrating AI functionality to enhance user interaction.",
     "status": "live",
-    "featured": true
+    "featured": true,
+    "links": [
+      {
+        "type": "playStore",
+        "url": "https://play.google.com/store/apps/details?id=com.sitiouno.pumacontigo"
+      },
+      {
+        "type": "appStore",
+        "url": "https://apps.apple.com/pa/app/el-puma-contigo/id6748364767"
+      }
+    ]
+  },
+  {
+    "id": "machine-stock",
+    "name": "Machine Stock",
+    "context": "Freelance",
+    "tech": ["Kotlin", "MVVM", "Hilt", "Room", "Firebase"],
+    "description": "In-house stock-management Android app for a machinery trading company. I pitched the concept to the client and owned the full lifecycle, from UX/UI design and functional requirements to a Kotlin app on Clean Architecture (MVVM, use cases) with Firebase.",
+    "tagline": "In-house stock-management Android app for a machinery trading company. I pitched the concept and owned it from UX/UI and requirements to delivery.",
+    "status": "discontinued",
+    "featured": false,
+    "links": [
+      {
+        "type": "github",
+        "url": "https://github.com/FernandoPailhe/MachineStock"
+      }
+    ]
+  },
+  {
+    "id": "stadium-platform",
+    "name": "Stadium platform",
+    "context": "My Stadium Golf",
+    "tech": ["Java", "React Native", "Expo", "JavaScript", "PHP/Laravel", "AWS"],
+    "description": "Golf-training platform for service members: a native Android app (Java), the Stadium World app (React Native + Expo) and a Laravel REST API extended with AWS serverless services.",
+    "tagline": "Golf-training platform for service members: native Android app (Java), Stadium World app (React Native + Expo) and a Laravel REST API.",
+    "status": "discontinued",
+    "featured": false
+  },
+  {
+    "id": "wao",
+    "name": "Wao",
+    "context": "Freelance",
+    "tech": ["Kotlin", "React Native", "JavaScript"],
+    "description": "Virtual prepaid-card app, first built as a native Android app and then migrated to React Native. Shelved before launch when the sponsor bank went under.",
+    "tagline": "Virtual prepaid-card app: native Android (Kotlin), then migrated to React Native. Shelved when the sponsor bank went under.",
+    "status": "unreleased",
+    "featured": false
+  },
+  {
+    "id": "dalto-ambassadors",
+    "name": "Dalto Ambassadors",
+    "context": "Freelance",
+    "tech": ["Flutter", "Dart"],
+    "description": "Flutter app to manage leads for a car-repair shop.",
+    "tagline": "Flutter app to manage leads for a car-repair shop.",
+    "status": "unreleased",
+    "featured": false
+  },
+  {
+    "id": "100-bubbles",
+    "name": "100 Bubbles",
+    "context": "Personal",
+    "tech": ["Java", "Android"],
+    "description": "Strategy game and my first Android app: self-taught from scratch and published on Google Play in 2020.",
+    "tagline": "Strategy game and my first Android app: self-taught from scratch and published on Google Play in 2020.",
+    "status": "discontinued",
+    "featured": false,
+    "links": [{
+      "type": "youtube",
+      "url": "https://www.youtube.com/watch?v=C7bkXXYcHVg"
+    },
+      {
+        "type": "github",
+        "url": "https://github.com/FernandoPailhe/100Bubbles"
+      }
+    ]
   }
 ]

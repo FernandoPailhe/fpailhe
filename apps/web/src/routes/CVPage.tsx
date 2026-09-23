@@ -8,17 +8,17 @@ import {
   useProjectsQuery,
   useSkillsQuery,
 } from "../queries/useSiteData";
-import { useSortedExperience } from "../domain/useSiteDomain";
+import { useCVJobs, useCVProjects, useSortedExperience } from "../domain/useSiteDomain";
 import {
   CoursesSection,
-  CVCoursesSection,
   CVDetailsBlock,
   CVEducationSection,
   CVExperienceSection,
   CVHeader,
   CVLanguagesBlock,
+  CVOtherExperienceSection,
+  CVProjectsSection,
   CVSkillsBlock,
-
   EducationSection,
   ErrorState,
   ExperienceSection,
@@ -43,6 +43,8 @@ export function CVPage() {
   const languages = useLanguagesQuery();
 
   const sortedJobs = useSortedExperience(experience.data);
+  const cvJobs = useCVJobs(sortedJobs);
+  const cvProjects = useCVProjects(projects.data);
 
   const queries = [profile, experience, education, courses, projects, skills, languages];
   if (queries.some((q) => q.isLoading)) return <LoadingState />;
@@ -62,7 +64,11 @@ export function CVPage() {
   return (
     <>
       <Nav links={NAV_LINKS} />
-      <main id="main-content" tabIndex={-1} className="mx-auto max-w-[760px] px-[clamp(20px,5vw,32px)] pb-16">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="mx-auto max-w-[760px] px-[clamp(20px,5vw,32px)] pb-16 print:pb-0"
+      >
         {/* Pantalla: diseño original de una columna */}
         <div className="print:hidden">
           <header className="border-b border-line py-12">
@@ -110,16 +116,17 @@ export function CVPage() {
               <CVSkillsBlock skills={skills.data} />
               <CVLanguagesBlock languages={languages.data} />
             </aside>
-            <div className="space-y-10 px-8 py-8 print:space-y-7 print:py-5">
+            <div className="space-y-10 px-8 py-8 print:space-y-3 print:py-4">
               <section aria-label="Profile">
                 <CVSectionHeading icon={<IconUser />} title="Profile" />
                 <p className="mt-3 font-ui text-sm leading-relaxed text-ink-dim">
                   {profile.data.summary}
                 </p>
               </section>
-              <CVExperienceSection jobs={sortedJobs} projects={projects.data} />
-              <CVEducationSection education={education.data} />
-              <CVCoursesSection courses={courses.data} />
+              <CVExperienceSection jobs={cvJobs.main} />
+              <CVProjectsSection projects={cvProjects} />
+              <CVOtherExperienceSection jobs={cvJobs.other} />
+              <CVEducationSection education={education.data} courses={courses.data} />
             </div>
           </div>
         </div>

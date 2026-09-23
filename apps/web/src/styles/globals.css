@@ -39,7 +39,7 @@
 }
 
 @page {
-  margin: 12mm;
+  margin: 10mm;
 }
 
 @media print {
@@ -110,12 +110,18 @@
     display: block !important;
   }
 
+  /* Texto del documento más denso en print para que el CV entre en 2 páginas. */
+  .cv-layout .text-sm {
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
   .cv-layout > aside {
     float: left;
     width: 25%;
     /* La columna lateral reserva todo el alto de la primera hoja:
-       100vh = alto útil de la página, menos el header impreso (~190px). */
-    min-height: calc(100vh - 190px);
+       100vh = alto útil de la página, menos el header impreso (~165px). */
+    min-height: calc(100vh - 165px);
     text-align: center;
     padding-left: 0;
     padding-right: 1rem;

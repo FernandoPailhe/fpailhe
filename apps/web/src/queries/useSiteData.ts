@@ -11,6 +11,7 @@ import type {
   Profile,
   Project,
   ProjectDetail,
+  ProjectsSectionCopy,
   Skill,
   Stat,
 } from "@ferpa/data-model";
@@ -26,6 +27,7 @@ import {
   fetchProfile,
   fetchProjectDetails,
   fetchProjects,
+  fetchProjectsSection,
   fetchSkills,
   fetchStats,
 } from "../services/dataService";
@@ -65,6 +67,14 @@ export function useProjectDetailsQuery() {
   return useQuery<ProjectDetail[]>({
     queryKey: queryKeys.projectDetails,
     queryFn: fetchProjectDetails,
+    staleTime,
+  });
+}
+
+export function useProjectsSectionQuery() {
+  return useQuery<ProjectsSectionCopy>({
+    queryKey: queryKeys.projectsSection,
+    queryFn: fetchProjectsSection,
     staleTime,
   });
 }

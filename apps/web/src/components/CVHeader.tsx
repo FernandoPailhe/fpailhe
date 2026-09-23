@@ -11,7 +11,7 @@ export interface CVHeaderProps {
  */
 export function CVHeader({ profile }: CVHeaderProps) {
   return (
-    <header className="flex flex-col items-center py-10 text-center print:py-5">
+    <header className="flex flex-col items-center py-10 text-center print:py-3">
       <img
         src={`/${profile.photo}`}
         alt={profile.name}

@@ -46,5 +46,6 @@ describe("formatProjectLinkLabel", () => {
     expect(formatProjectLinkLabel("playStore")).toBe("Play Store");
     expect(formatProjectLinkLabel("github")).toBe("GitHub");
     expect(formatProjectLinkLabel("website")).toBe("Website");
+    expect(formatProjectLinkLabel("youtube")).toBe("YouTube");
   });
 });

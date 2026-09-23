@@ -1,13 +1,13 @@
 {
   "name": "Fernando Pailhe",
-  "role": "Mobile Engineer",
-  "location": "Buenos Aires, Argentina",
+  "role": "Senior Mobile Engineer",
+  "location": "Buenos Aires, Argentina (UTC-3)",
   "remoteNote": "Remote worldwide",
   "domain": "fpailhe.com",
   "email": "ferpai@gmail.com",
   "linkedin": "https://www.linkedin.com/in/fernando-matias-pailhe/",
   "github": "https://github.com/FernandoPailhe",
   "photo": "fernando-photo.jpg",
-  "phone": "01161716045",
-  "summary": "Mobile Engineer with 5+ years building and rescuing production apps in React Native, TypeScript and Kotlin. As Developer and Functional Analyst on Techint's internal offline-first app (EQM), I restored release continuity, built a 2,000+ test suite and migrated the full core from JavaScript to TypeScript with AI agents in about a month, with zero regressions. I work agent-first: I design the context (rules, skills, knowledge bases) and the roles (planner, builder, reviewer) that make AI-assisted development reliable, using GitHub Copilot, Cursor, Windsurf, Devin and Claude Code — most recently to launch Tune-Up solo. A decade in audiovisual production gave me a strong product and UX eye and the habit of seeing work through end to end."
+  "phone": "+54 9 11 6171-6045",
+  "summary": "Senior Mobile Engineer with 5+ years building and rescuing production apps in React Native, TypeScript and Kotlin. On Techint's internal offline-first app (EQM) I restored release continuity, built a 2,000+ test suite and migrated the full core from JavaScript to TypeScript with AI agents in about a month, with zero regressions. I work agent-first: I design the context (rules, skills, knowledge bases) and the roles (planner, builder, reviewer) that make AI-assisted development reliable with GitHub Copilot, Cursor, Windsurf, Devin and Claude Code, most recently to launch Tune-Up solo. A decade in audiovisual production shaped my product and UX eye."
 }

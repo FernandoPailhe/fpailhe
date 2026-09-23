@@ -38,6 +38,10 @@ function getFeaturedProjects(projects) {
   return projects.filter((p) => p.featured);
 }
 
+function getArchiveProjects(projects) {
+  return projects.filter((p) => !p.featured);
+}
+
 function getJobProjects(job, projects) {
   const ids = new Set(job.projectIds ?? []);
   return projects.filter((p) => ids.has(p.id));
@@ -158,8 +162,40 @@ function projectCardHtml(project, detailHref) {
   return `<article class="flex h-full flex-col bg-surface-raised p-5">${img}<header>${header}${context}</header><p class="mt-3 flex-1 font-ui text-sm leading-relaxed text-ink-dim">${escapeHtml(project.description)}</p>${linkList}${detailLink}<footer class="mt-4 flex flex-wrap items-center gap-2"><span class="font-mono text-[11px] uppercase tracking-[0.1em] text-gold">${escapeHtml(project.status)}</span>${tech}</footer></article>`;
 }
 
+function archiveRowHtml(project) {
+  const context = project.context
+    ? `<p class="mt-0.5 font-mono text-xs text-ink-faint">${escapeHtml(project.context)}</p>`
+    : "";
+  const status =
+    project.status !== "live"
+      ? `<span class="uppercase tracking-[0.1em] text-gold">${escapeHtml(project.status)}</span>`
+      : "";
+  const links = projectLinks(project)
+    .map((l) => textLink(l.url, l.label).replace('class="', 'class="text-xs '))
+    .join("");
+  return `<li class="grid gap-1 border-t border-line py-4 sm:grid-cols-[200px_1fr] sm:gap-6"><div><h4 class="font-display text-base font-medium text-ink">${escapeHtml(project.name)}</h4>${context}</div><div class="min-w-0"><p class="font-ui text-sm leading-relaxed text-ink-dim">${escapeHtml(project.tagline ?? project.description)}</p><div class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-ink-faint">${status}<span>${escapeHtml((project.tech ?? []).join(" · "))}</span>${links}</div></div></li>`;
+}
+
+function archiveHtml(projects, copy) {
+  if (projects.length === 0) return "";
+  const note = copy.archiveNote
+    ? `<p class="mt-4 font-ui text-sm text-ink-dim">${escapeHtml(copy.archiveNote)}</p>`
+    : "";
+  return `<div class="mt-12"><h3 class="font-display text-xl font-medium text-ink">${escapeHtml(copy.archiveHeading)}</h3><ul class="mt-4 border-b border-line">${projects.map(archiveRowHtml).join("")}</ul>${note}</div>`;
+}
+
 function renderHome(data) {
-  const { profile, hero, stats, howIWork, aboutAside, projects, projectDetails, contact } = data;
+  const {
+    profile,
+    hero,
+    stats,
+    howIWork,
+    aboutAside,
+    projects,
+    projectDetails,
+    projectsSection,
+    contact,
+  } = data;
   const photoRel = aboutAside.photo ?? "";
   const photoPath = path.join(distDir, photoRel.replace(/^\//, ""));
   const photoHtml = fs.existsSync(photoPath)
@@ -196,7 +232,7 @@ function renderHome(data) {
     { label: "Contact", href: "#contact" },
   ]);
 
-  return `${nav}<main id="main-content" tabindex="-1" class="mx-auto max-w-[880px] px-[clamp(20px,5vw,32px)]"><section class="pb-16 pt-20"><p class="font-mono text-xs uppercase tracking-[0.12em] text-ink-faint">${escapeHtml(hero.kicker)}</p><h1 class="mt-6 font-display text-[clamp(2.3rem,5.5vw,4.3rem)] font-medium leading-[1.14] text-ink">${escapeHtml(hero.headlineLead)} <em class="text-gold">${escapeHtml(hero.headlineEmphasis)}</em></h1><p class="mt-6 max-w-[62ch] font-ui text-base leading-relaxed text-ink-dim">${escapeHtml(hero.subhead)}</p><div class="mt-8 flex flex-wrap gap-6">${ctas}</div></section></main><section class="border-y border-line bg-surface-raised"><div class="mx-auto max-w-[880px] px-[clamp(20px,5vw,32px)]"><div class="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-px bg-line">${statsHtml}</div></div></section><main class="mx-auto max-w-[880px] px-[clamp(20px,5vw,32px)]"><section id="work" class="py-16"><h2 class="font-display text-[clamp(1.6rem,3vw,2.1rem)] font-medium text-ink">How I work</h2><ol class="mt-6">${panels}</ol><p class="mt-4 max-w-[62ch] font-ui text-sm leading-relaxed text-ink-dim">${escapeHtml(howIWork.closingNote)}</p></section><section class="border-t border-line py-16"><div class="grid grid-cols-[1fr_220px] items-start gap-8"><p class="font-ui text-base leading-relaxed text-ink-dim">${escapeHtml(aboutAside.text)}</p>${photoHtml}</div></section><section id="projects" class="py-16"><h2 class="font-display text-[clamp(1.6rem,3vw,2.1rem)] font-medium text-ink">Projects</h2><div class="mt-6 grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-px border border-line bg-line">${cards}</div></section></main><section id="contact" class="bg-parchment py-20 text-parchment-ink"><div class="mx-auto max-w-[880px] px-[clamp(20px,5vw,32px)]"><h2 class="font-display text-[clamp(1.6rem,3vw,2.1rem)] font-medium">${escapeHtml(contact.heading)}</h2><p class="mt-4 max-w-[60ch] font-ui text-base leading-relaxed text-parchment-ink-dim">${escapeHtml(contact.body)}</p><a href="mailto:${escapeHtml(profile.email)}" class="mt-8 inline-block border-b border-parchment-ink font-ui text-base text-parchment-ink">${escapeHtml(profile.email)}</a></div></section>`;
+  return `${nav}<main id="main-content" tabindex="-1" class="mx-auto max-w-[880px] px-[clamp(20px,5vw,32px)]"><section class="pb-16 pt-20"><p class="font-mono text-xs uppercase tracking-[0.12em] text-ink-faint">${escapeHtml(hero.kicker)}</p><h1 class="mt-6 font-display text-[clamp(2.3rem,5.5vw,4.3rem)] font-medium leading-[1.14] text-ink">${escapeHtml(hero.headlineLead)} <em class="text-gold">${escapeHtml(hero.headlineEmphasis)}</em></h1><p class="mt-6 max-w-[62ch] font-ui text-base leading-relaxed text-ink-dim">${escapeHtml(hero.subhead)}</p><div class="mt-8 flex flex-wrap gap-6">${ctas}</div></section></main><section class="border-y border-line bg-surface-raised"><div class="mx-auto max-w-[880px] px-[clamp(20px,5vw,32px)]"><div class="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-px bg-line">${statsHtml}</div></div></section><main class="mx-auto max-w-[880px] px-[clamp(20px,5vw,32px)]"><section id="work" class="py-16"><h2 class="font-display text-[clamp(1.6rem,3vw,2.1rem)] font-medium text-ink">How I work</h2><ol class="mt-6">${panels}</ol><p class="mt-4 max-w-[62ch] font-ui text-sm leading-relaxed text-ink-dim">${escapeHtml(howIWork.closingNote)}</p></section><section class="border-t border-line py-16"><div class="grid grid-cols-[1fr_220px] items-start gap-8"><p class="font-ui text-base leading-relaxed text-ink-dim">${escapeHtml(aboutAside.text)}</p>${photoHtml}</div></section><section id="projects" class="py-16"><h2 class="font-display text-[clamp(1.6rem,3vw,2.1rem)] font-medium text-ink">${escapeHtml(projectsSection.heading)}</h2><div class="mt-6 grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-px border border-line bg-line">${cards}</div>${archiveHtml(getArchiveProjects(projects ?? []), projectsSection)}</section></main><section id="contact" class="bg-parchment py-20 text-parchment-ink"><div class="mx-auto max-w-[880px] px-[clamp(20px,5vw,32px)]"><h2 class="font-display text-[clamp(1.6rem,3vw,2.1rem)] font-medium">${escapeHtml(contact.heading)}</h2><p class="mt-4 max-w-[60ch] font-ui text-base leading-relaxed text-parchment-ink-dim">${escapeHtml(contact.body)}</p><a href="mailto:${escapeHtml(profile.email)}" class="mt-8 inline-block border-b border-parchment-ink font-ui text-base text-parchment-ink">${escapeHtml(profile.email)}</a></div></section>`;
 }
 
 function jobHtml(job, projects) {
@@ -328,6 +364,7 @@ function main() {
     aboutAside: readJson("about-aside"),
     projects: readJson("projects"),
     projectDetails: readJson("project-details"),
+    projectsSection: readJson("projects-section"),
     experience: readJson("experience"),
     education: readJson("education"),
     courses: readJson("courses"),
@@ -357,7 +394,7 @@ function main() {
     fs.mkdirSync(outDir, { recursive: true });
     const output = template
       .replace(
-        "<title>Fernando Pailhe — Mobile Engineer</title>",
+        "<title>Fernando Pailhe — Senior Mobile Engineer</title>",
         `<title>${escapeHtml(project.name)} — Fernando Pailhe</title>`,
       )
       .replace(
@@ -373,7 +410,7 @@ function main() {
     fs.mkdirSync(outDir, { recursive: true });
     const output = template
       .replace(
-        "<title>Fernando Pailhe — Mobile Engineer</title>",
+        "<title>Fernando Pailhe — Senior Mobile Engineer</title>",
         `<title>${escapeHtml(shell.title)}</title>`,
       )
       .replace('<div id="root"></div>', `<div id="root">${shell.html}</div>`);

@@ -11,7 +11,7 @@ export interface ProjectCardProps {
   context?: string;
   tech: string[];
   description: string;
-  status: "live" | "in-progress";
+  status: "live" | "in-progress" | "unreleased" | "discontinued";
   /** @deprecated pass `links` instead */
   link?: string;
   links?: ProjectCardLink[];

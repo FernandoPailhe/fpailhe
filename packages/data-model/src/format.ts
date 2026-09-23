@@ -67,6 +67,7 @@ export function formatProjectLinkLabel(type: ProjectLink["type"]): string {
     playStore: "Play Store",
     github: "GitHub",
     website: "Website",
+    youtube: "YouTube",
   };
   return labels[type];
 }

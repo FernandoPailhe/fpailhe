@@ -2,19 +2,19 @@
   {
     "id": "techint",
     "title": "React Native Developer",
-    "company": "Techint",
+    "company": "Softtek (client: Techint)",
     "startDate": "2025-08",
     "endDate": null,
-    "summary": "As Developer and Functional Analyst for Techint's internal mobile application (EQM), I stabilized a deprecated, offline-first codebase with no test coverage and restored release continuity: 3 versions in the first three months after a year without updates. I then led a migration plan that made AI-assisted development safe on business-critical software: a 2,000+ test suite built as the safety net, followed by the migration of the app's full core from JavaScript to TypeScript with AI agents in about a month, with zero regressions. I also own release management and the client relationship, and led the first AI agent shipped inside the product.",
+    "summary": "As Developer and Functional Analyst for Techint's internal mobile application (EQM), I stabilized a deprecated, offline-first codebase with no test coverage and restored release continuity: 3 versions in the first three months after a year without updates. I then led a migration plan that made AI-assisted development safe on business-critical software: a 2,000+ test suite built as the safety net, followed by the migration of the app's full core from JavaScript to TypeScript with AI agents in about a month, with zero regressions. From day one I earned the client's trust by proposing functional improvements weighed by cost and benefit, delivering value even while the app was still being stabilized — such as a dynamic stepper that lets users move through the whole document-creation process without unnecessary screens. I also own release management and led the first AI agent shipped inside the product.",
     "bullets": [
       "Stabilized EQM, a deprecated offline-first React Native app with no test coverage, publishing 3 releases in its first 3 months after a year with no updates.",
-      "Designed a JavaScript→TypeScript migration plan around a 2,000+ test suite built from zero (>80% coverage across DAOs, controllers, actions, reducers and services).",
+      "Designed a JavaScript→TypeScript migration plan around a 2,000+ test suite built from zero, with >80% coverage.",
       "Migrated the app's full core (166 files) from JavaScript to TypeScript with AI agents in ~1 month, with zero functional regressions.",
-      "Wrote project-wide coding rules and a reusable knowledge base as agent context, turning ad-hoc AI use into a consistent, reviewable workflow; added 4 automated quality gates (lint, format, test, type-check).",
+      "Wrote coding rules and a knowledge base as shared agent context, turning ad-hoc AI use into a consistent, reviewable workflow; added 4 quality gates (lint, format, test, type-check).",
       "Led the first AI agent shipped inside the product itself: a user-facing assistant for daily activity reporting.",
-      "Owned end-to-end release management on App Store Connect and Google Play Console; primary client liaison shaping the roadmap."
+      "Earned the client's trust early as primary liaison with cost/benefit-weighted improvements from day one, like a dynamic stepper that cut unnecessary screens from document creation; owned store releases."
     ],
-    "tech": ["React Native", "TypeScript", "JavaScript", "Jest", "AI-assisted development"],
+    "tech": ["React Native", "TypeScript", "JavaScript", "Jest", "AI agents"],
     "projectIds": ["eqm"]
   },
   {
@@ -37,28 +37,17 @@
     "title": "Full Stack Developer",
     "company": "Freelance",
     "startDate": "2020-06",
-    "endDate": null,
+    "endDate": "2025-07",
     "summary": "I went beyond technical execution, deeply understanding the products and actively contributing to UX/UI design and product development. My holistic approach ensured that every technical decision aligned with end-user needs, improving the user experience and overall functionality. This involvement helped drive product success, resulting in intuitive designs and better alignment with user goals.",
     "bullets": [
-      "Launched Tune-Up (React Native, TypeScript) solo on an agent-driven pipeline: planner, builder and reviewer agents on Devin and Windsurf, cost-aware LLM selection, and scheduled issue triage into release branches.",
       "HangApp: took a beta MVP to a production-ready public release, with a full UI/UX redesign and architecture overhaul.",
       "PassApp: maintained and extended an Android app for 10,000+ active users (Kotlin, MVP architecture).",
       "Developed Be Soul's mobile app and backend (React Native, TypeScript, NestJS, MongoDB), including OpenAI assistant integration.",
       "Built a native Android prepaid-card app and migrated it to a multi-platform React Native codebase.",
       "Integrated Sentry for error monitoring and Jest for automated testing across projects."
     ],
-    "tech": [
-      "React Native",
-      "Kotlin",
-      "TypeScript",
-      "NestJS",
-      "MongoDB",
-      "Firebase",
-      "GCP",
-      "Devin",
-      "Windsurf"
-    ],
-    "projectIds": ["hang-app", "pass-app", "tune-up"]
+    "tech": ["React Native", "Kotlin", "TypeScript", "NestJS", "MongoDB", "Firebase", "GCP"],
+    "projectIds": ["hang-app", "pass-app", "machine-stock", "wao", "dalto-ambassadors"]
   },
   {
     "id": "my-stadium-golf",
@@ -73,7 +62,8 @@
       "Built student-app features on a hybrid React Native Expo + legacy Laravel + AWS serverless stack.",
       "Extended a PHP/Laravel REST API with API Gateway, Lambda and DynamoDB; optimized image delivery via CloudFront."
     ],
-    "tech": ["Java", "React Native", "Expo", "PHP/Laravel", "AWS"]
+    "tech": ["Java", "React Native", "Expo", "PHP/Laravel", "AWS"],
+    "projectIds": ["stadium-platform"]
   },
   {
     "id": "tres-de-febrero",
@@ -92,7 +82,9 @@
       "Led video recording for municipal audiovisual communication — filming, structuring and scripting each piece.",
       "Helped build and grow the communication team from its inception; the team became recognized as one of the best by peer institutions."
     ],
-    "tech": []
+    "tech": [],
+    "cvSection": "other",
+    "cvNote": "part-time from 2020"
   },
   {
     "id": "freelance-photo-film",
@@ -105,6 +97,7 @@
       "Planned shoots around available resources and adapted to last-minute changes in the field.",
       "Managed client needs, schedules and small teams end to end."
     ],
-    "tech": []
+    "tech": [],
+    "cvSection": "other"
   }
 ]

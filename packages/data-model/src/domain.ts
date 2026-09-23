@@ -13,6 +13,30 @@ export function getFeaturedProjects(projects: Project[]): Project[] {
   return projects.filter((p) => p.featured);
 }
 
+/** Proyectos no destacados: la lista compacta "More projects" del Home. */
+export function getArchiveProjects(projects: Project[]): Project[] {
+  return projects.filter((p) => !p.featured);
+}
+
+/** Proyectos marcados con `showInCV`, en el orden de la lista canónica. */
+export function getCVProjects(projects: Project[]): Project[] {
+  return projects.filter((p) => p.showInCV === true);
+}
+
+/**
+ * Separa los jobs para el CV impreso: `main` va a Employment History y
+ * `other` (roles con `cvSection: "other"`) a la línea compacta de
+ * Other Experience. Conserva el orden recibido.
+ */
+export function partitionJobsForCV(jobs: Job[]): { main: Job[]; other: Job[] } {
+  const main: Job[] = [];
+  const other: Job[] = [];
+  for (const job of jobs) {
+    (job.cvSection === "other" ? other : main).push(job);
+  }
+  return { main, other };
+}
+
 /** Resuelve `job.projectIds` contra la lista canónica de proyectos. */
 export function getJobProjects(job: Job, projects: Project[]): Project[] {
   const ids = new Set(job.projectIds ?? []);

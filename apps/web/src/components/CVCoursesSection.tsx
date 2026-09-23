@@ -1,24 +1,18 @@
 import type { CourseEntry } from "@ferpa/data-model";
-import { CVSectionHeading } from "@ferpa/ui";
-import { IconBook } from "./CVIcons";
 
-export interface CVCoursesSectionProps {
-  courses: CourseEntry[];
+export interface CVCourseLineProps {
+  course: CourseEntry;
 }
 
-export function CVCoursesSection({ courses }: CVCoursesSectionProps) {
+/**
+ * Un curso en una línea (nombre, institución, año). Se renderiza dentro de
+ * la sección "Education & Courses" de `CVEducationSection`.
+ */
+export function CVCourseLine({ course }: CVCourseLineProps) {
   return (
-    <section className="break-inside-avoid">
-      <CVSectionHeading icon={<IconBook />} title="Courses" />
-      <ul className="mt-6 space-y-5">
-        {courses.map((course) => (
-          <li key={course.name} className="break-inside-avoid">
-            <h3 className="font-ui text-sm font-semibold text-ink">{course.name}</h3>
-            <p className="mt-0.5 font-ui text-sm text-ink-dim">{course.institution}</p>
-            <p className="mt-0.5 font-mono text-[11px] text-ink-faint">{course.date}</p>
-          </li>
-        ))}
-      </ul>
-    </section>
+    <li className="font-ui text-sm leading-relaxed text-ink-dim">
+      <span className="font-semibold text-ink">{course.name}</span>, {course.institution}
+      <span className="font-mono text-[11px] text-ink-faint"> · {course.date}</span>
+    </li>
   );
 }

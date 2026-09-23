@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   getFeaturedProjects,
   getJobProjects,
+  getArchiveProjects,
+  getCVProjects,
+  partitionJobsForCV,
   getProjectById,
   getProjectDetail,
   getProjectDetailIds,
@@ -100,5 +103,42 @@ describe("sortJobsByDateDesc", () => {
     ];
     const sorted = sortJobsByDateDesc(jobs);
     expect(sorted.map((j) => j.id)).toEqual(["newer", "older"]);
+  });
+});
+
+describe("getArchiveProjects", () => {
+  it("returns the non-featured projects, in order", () => {
+    const projects: Project[] = [
+      { ...baseProject, id: "a", featured: false },
+      { ...baseProject, id: "b" },
+      { ...baseProject, id: "c", featured: false },
+    ];
+    expect(getArchiveProjects(projects).map((p) => p.id)).toEqual(["a", "c"]);
+  });
+});
+
+describe("getCVProjects", () => {
+  it("keeps only projects flagged with showInCV, in order", () => {
+    const projects: Project[] = [
+      { ...baseProject, id: "a", showInCV: true },
+      { ...baseProject, id: "b", showInCV: false },
+      { ...baseProject, id: "c" },
+      { ...baseProject, id: "d", featured: false, showInCV: true },
+    ];
+    expect(getCVProjects(projects).map((p) => p.id)).toEqual(["a", "d"]);
+  });
+});
+
+describe("partitionJobsForCV", () => {
+  it("splits jobs by cvSection, defaulting to main and keeping order", () => {
+    const jobs: Job[] = [
+      { ...baseJob, id: "1" },
+      { ...baseJob, id: "2", cvSection: "other" },
+      { ...baseJob, id: "3", cvSection: "main" },
+      { ...baseJob, id: "4", cvSection: "other" },
+    ];
+    const { main, other } = partitionJobsForCV(jobs);
+    expect(main.map((j) => j.id)).toEqual(["1", "3"]);
+    expect(other.map((j) => j.id)).toEqual(["2", "4"]);
   });
 });

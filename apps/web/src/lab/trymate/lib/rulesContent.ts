@@ -71,7 +71,7 @@ export const RULES_CONTENT: Record<RulesLanguage, RulesContent> = {
         short: "1 forward or diagonal · 2-step charge",
         move: "Moves 1 square forward or diagonally forward, and can charge 2 squares straight ahead if the path is clear.",
         capture: "Captures only straight ahead.",
-        special: "Its double step is what makes the Striker the fastest piece off the line.",
+        special: "Can defense and attack with effectivity",
       },
       {
         type: PieceType.PIONEER,

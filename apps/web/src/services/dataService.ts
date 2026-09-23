@@ -10,6 +10,7 @@ import type {
   Profile,
   Project,
   ProjectDetail,
+  ProjectsSectionCopy,
   Skill,
   Stat,
 } from "@ferpa/data-model";
@@ -49,6 +50,11 @@ export async function fetchAboutAside(): Promise<AboutAside> {
 
 export async function fetchProjects(): Promise<Project[]> {
   const { data } = await http.get<Project[]>("/projects.json");
+  return data;
+}
+
+export async function fetchProjectsSection(): Promise<ProjectsSectionCopy> {
+  const { data } = await http.get<ProjectsSectionCopy>("/projects-section.json");
   return data;
 }
 

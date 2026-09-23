@@ -5,6 +5,9 @@ import {
   formatMonthYear,
   getFeaturedProjects,
   getJobProjects,
+  getArchiveProjects,
+  getCVProjects,
+  partitionJobsForCV,
   getProjectById,
   getProjectDetail,
   getProjectDetailIds,
@@ -72,4 +75,25 @@ export function useFormattedDateRange(start: string, end: string | null) {
 
 export function useFormattedMonthYear(date: string) {
   return useMemo(() => formatMonthYear(date), [date]);
+}
+
+/** Proyectos de la sección Projects del CV impreso (`showInCV`). */
+export function useCVProjects(projects: Project[] | undefined) {
+  return useMemo(() => {
+    if (!projects) return [];
+    return getCVProjects(projects);
+  }, [projects]);
+}
+
+/** Proyectos no destacados para la lista "More projects" del Home. */
+export function useArchiveProjects(projects: Project[] | undefined) {
+  return useMemo(() => {
+    if (!projects) return [];
+    return getArchiveProjects(projects);
+  }, [projects]);
+}
+
+/** Jobs del CV impreso separados en Employment History / Other Experience. */
+export function useCVJobs(jobs: Job[]) {
+  return useMemo(() => partitionJobsForCV(jobs), [jobs]);
 }

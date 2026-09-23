@@ -69,10 +69,14 @@ export interface AboutAside {
   photo: string;
 }
 
-export type ProjectStatus = "live" | "in-progress";
+/**
+ * `unreleased`: se construyó pero nunca salió a producción.
+ * `discontinued`: salió, pero hoy ya no está activo (plataforma cerrada, backend apagado).
+ */
+export type ProjectStatus = "live" | "in-progress" | "unreleased" | "discontinued";
 
 export interface ProjectLink {
-  type: "appStore" | "playStore" | "github" | "website";
+  type: "appStore" | "playStore" | "github" | "website" | "youtube";
   url: string;
   label?: string;
 }
@@ -89,7 +93,20 @@ export interface Project {
   links?: ProjectLink[];
   /** Path to a screenshot under `/public/`, e.g. `/project-screenshots/tune-up.png`. */
   screenshot?: string;
+  /** `true` = tarjeta en la grilla del Home; `false` = línea en "More projects". */
   featured: boolean;
+  /** Resumen de una línea para la lista "More projects"; si falta se usa `description`. */
+  tagline?: string;
+  /** Aparece en la sección Projects del CV impreso. */
+  showInCV?: boolean;
+}
+
+/** Textos de la sección de proyectos del Home (`projects-section.json`). */
+export interface ProjectsSectionCopy {
+  heading: string;
+  archiveHeading: string;
+  /** Nota al pie de la lista "More projects". */
+  archiveNote?: string;
 }
 
 export interface ProjectDetailSection {
@@ -143,6 +160,14 @@ export interface Job {
   summary?: string;
   /** Lista "Skills developed" para roles no-tech (filmmaker, etc.). */
   skillsDeveloped?: string[];
+  /**
+   * Sección del CV impreso. `"other"` saca el rol de Employment History y lo
+   * muestra como una línea en "Other Experience". Solo afecta al PDF; la
+   * página /cv en pantalla sigue mostrando el rol completo.
+   */
+  cvSection?: "main" | "other";
+  /** Aclaración corta que acompaña la línea compacta (ej. "part-time from 2020"). */
+  cvNote?: string;
 }
 
 export interface EducationEntry {

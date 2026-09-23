@@ -14,5 +14,5 @@
     "label": "Full core JS→TS, AI-assisted",
     "sublabel": "166 files · zero regressions"
   },
-  { "value": "0→1", "label": "Tune-Up shipped solo", "sublabel": "agent-driven: Devin + Windsurf" }
+  { "value": "0 → 1", "label": "Tune-Up shipped solo", "sublabel": "agent-driven: Devin + Windsurf" }
 ]
