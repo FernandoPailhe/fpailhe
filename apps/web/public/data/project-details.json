@@ -14,19 +14,29 @@
     },
     "technical": {
       "heading": "The tech",
-      "paragraphs": ["Built with React Native and Expo in strict TypeScript."],
-      "stack": ["React Native", "Expo", "TypeScript"]
+      "paragraphs": [
+        "React Native and Expo in strict TypeScript, with a clean, layered architecture set as the priority from day one, so agents work inside clear boundaries instead of improvising structure.",
+        "Development runs on an automated agent pipeline built on Devin and Windsurf: shared project skills give every agent the same context, and each agent has one job."
+      ],
+      "bullets": [
+        "Planner, builder and reviewer agents with explicit responsibilities",
+        "Project-level skills and rules as shared agent context",
+        "Cost-aware model selection: the right LLM for each task",
+        "Scheduled Hermes cron jobs that check repo issues, group them by category and implement the fixes on a new release branch"
+      ],
+      "stack": ["React Native", "Expo", "TypeScript", "Devin", "Windsurf", "Hermes"]
     },
     "role": {
       "heading": "My role",
       "title": "Solo mobile engineer",
       "paragraphs": [
-        "I own the project end to end: product definition, data model, UI, and release tooling."
+        "I own the project end to end: product definition, architecture, the agent workflow that builds it, and the release."
       ],
       "bullets": [
         "Product and UX decisions",
-        "React Native / Expo implementation",
-        "Data model and weekly-summary logic"
+        "Architecture, data model and weekly-summary logic",
+        "Agent workflow design: skills, roles, model selection and scheduled jobs",
+        "Release on Google Play"
       ]
     },
     "links": [

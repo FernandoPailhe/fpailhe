@@ -1,6 +1,18 @@
 [
-  { "value": "03", "label": "Releases in 3 months", "sublabel": "after a year with no updates" },
-  { "value": "1,100+", "label": "Automated tests", "sublabel": "built from zero coverage" },
-  { "value": "166", "label": "Files migrated JS→TS", "sublabel": "zero functional regressions" },
-  { "value": "10,000+", "label": "Active users", "sublabel": "maintained on PassApp" }
+  {
+    "value": "03",
+    "label": "Releases in first 3 months",
+    "sublabel": "after a year with no updates"
+  },
+  {
+    "value": "2,000+",
+    "label": "Tests as a migration safety net",
+    "sublabel": "built from zero coverage"
+  },
+  {
+    "value": "~1 mo",
+    "label": "Full core JS→TS, AI-assisted",
+    "sublabel": "166 files · zero regressions"
+  },
+  { "value": "0→1", "label": "Tune-Up shipped solo", "sublabel": "agent-driven: Devin + Windsurf" }
 ]

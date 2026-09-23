@@ -2,9 +2,12 @@
   "kicker": "Mobile Engineer — Buenos Aires, remote worldwide",
   "headlineLead": "From the first commit",
   "headlineEmphasis": "to the one nobody thought would ship again.",
-  "subhead": "Five+ years building mobile products in React Native and Kotlin — some from a blank screen, some inherited mid-crisis. I built El Puma Contigo from scratch with an AI-assisted workflow baked in from day one. I took over Techint's internal app after a year with no releases and shipped three in three months. Same instincts either way: tests before changes, structure before features, and enough client communication that the roadmap stays honest.",
+  "subhead": "Five+ years building mobile products in React Native and Kotlin — some from a blank screen, some inherited mid-crisis. I launched Tune-Up solo on an agent-driven pipeline designed from the first commit. I took over Techint's internal app after a year with no releases, shipped three in three months, then migrated its full core to TypeScript with AI in about a month, with zero regressions. Same instincts either way: tests before changes, structure before features, and enough client communication that the roadmap stays honest.",
   "ctas": [
-    { "label": "Get in touch", "href": "#contact" },
+    {
+      "label": "Get in touch",
+      "href": "#contact"
+    },
     {
       "label": "LinkedIn ↗",
       "href": "https://www.linkedin.com/in/fernando-matias-pailhe/",

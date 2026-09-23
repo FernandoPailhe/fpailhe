@@ -5,14 +5,16 @@
     "company": "Techint",
     "startDate": "2025-08",
     "endDate": null,
-    "summary": "Serving as a Developer and Functional Analyst for Techint's internal mobile application, I quickly stabilized a deprecated codebase and restored continuity to releases. I successfully led the publication of 3 new versions in three months (since August 2025), resolving technical uncertainty and meeting stringent store requirements. My role involves direct client communication, end-to-end release management, and spearheading a strategic roadmap focused on gradual architecture improvements (e.g., migration to TypeScript) and proposing high-impact UX evolutions.",
+    "summary": "As Developer and Functional Analyst for Techint's internal mobile application (EQM), I stabilized a deprecated, offline-first codebase with no test coverage and restored release continuity: 3 versions in the first three months after a year without updates. I then led a migration plan that made AI-assisted development safe on business-critical software: a 2,000+ test suite built as the safety net, followed by the migration of the app's full core from JavaScript to TypeScript with AI agents in about a month, with zero regressions. I also own release management and the client relationship, and led the first AI agent shipped inside the product.",
     "bullets": [
-      "Stabilized EQM, a deprecated offline-first mobile app with no test coverage, publishing 3 releases in 3 months after a year with no updates.",
-      "Built a 1,100+ test suite from zero (>80% coverage) and used it to migrate 166 files from JavaScript to TypeScript with zero regressions.",
-      "Introduced 4 automated quality gates (lint, format, test, type-check) and led the first AI agent shipped inside the product itself.",
-      "Owned end-to-end release management on App Store Connect and Google Play; primary client liaison shaping the roadmap."
+      "Stabilized EQM, a deprecated offline-first React Native app with no test coverage, publishing 3 releases in its first 3 months after a year with no updates.",
+      "Designed a JavaScript→TypeScript migration plan around a 2,000+ test suite built from zero (>80% coverage across DAOs, controllers, actions, reducers and services).",
+      "Migrated the app's full core (166 files) from JavaScript to TypeScript with AI agents in ~1 month, with zero functional regressions.",
+      "Wrote project-wide coding rules and a reusable knowledge base as agent context, turning ad-hoc AI use into a consistent, reviewable workflow; added 4 automated quality gates (lint, format, test, type-check).",
+      "Led the first AI agent shipped inside the product itself: a user-facing assistant for daily activity reporting.",
+      "Owned end-to-end release management on App Store Connect and Google Play Console; primary client liaison shaping the roadmap."
     ],
-    "tech": ["React Native", "TypeScript", "Jest"],
+    "tech": ["React Native", "TypeScript", "JavaScript", "Jest", "AI-assisted development"],
     "projectIds": ["eqm"]
   },
   {
@@ -38,13 +40,24 @@
     "endDate": null,
     "summary": "I went beyond technical execution, deeply understanding the products and actively contributing to UX/UI design and product development. My holistic approach ensured that every technical decision aligned with end-user needs, improving the user experience and overall functionality. This involvement helped drive product success, resulting in intuitive designs and better alignment with user goals.",
     "bullets": [
+      "Launched Tune-Up (React Native, TypeScript) solo on an agent-driven pipeline: planner, builder and reviewer agents on Devin and Windsurf, cost-aware LLM selection, and scheduled issue triage into release branches.",
       "HangApp: took a beta MVP to a production-ready public release, with a full UI/UX redesign and architecture overhaul.",
       "PassApp: maintained and extended an Android app for 10,000+ active users (Kotlin, MVP architecture).",
       "Developed Be Soul's mobile app and backend (React Native, TypeScript, NestJS, MongoDB), including OpenAI assistant integration.",
       "Built a native Android prepaid-card app and migrated it to a multi-platform React Native codebase.",
       "Integrated Sentry for error monitoring and Jest for automated testing across projects."
     ],
-    "tech": ["React Native", "Kotlin", "TypeScript", "NestJS", "MongoDB", "Firebase", "GCP"],
+    "tech": [
+      "React Native",
+      "Kotlin",
+      "TypeScript",
+      "NestJS",
+      "MongoDB",
+      "Firebase",
+      "GCP",
+      "Devin",
+      "Windsurf"
+    ],
     "projectIds": ["hang-app", "pass-app", "tune-up"]
   },
   {

@@ -4,7 +4,7 @@
     "name": "EQM",
     "context": "Techint",
     "tech": ["React Native", "TypeScript"],
-    "description": "Stabilized a business-critical, offline-first internal app: 3 releases in 3 months, a full TypeScript migration, and the first AI agent shipped inside the product.",
+    "description": "Stabilized a business-critical, offline-first internal app: 3 releases in 3 months, a 2,000+ test safety net, the full core migrated to TypeScript with AI in about a month, and the first AI agent shipped inside the product.",
     "status": "live",
     "featured": true
   },
@@ -12,9 +12,9 @@
     "id": "tune-up",
     "name": "Tune-Up",
     "context": "Personal",
-    "tech": ["React Native", "Expo", "TypeScript"],
-    "description": "Personal React Native app that turns workout tracking into actionable weekly summaries: users see progress across sessions without manually comparing spreadsheets.",
-    "status": "in-progress",
+    "tech": ["React Native", "Expo", "TypeScript", "Devin", "Windsurf"],
+    "description": "A workout log that turns sessions into weekly summaries, built and launched solo on an agent-driven pipeline: planner, builder and reviewer agents, cost-aware model selection, and scheduled jobs that triage issues into release branches.",
+    "status": "live",
     "featured": true,
     "links": [
       {

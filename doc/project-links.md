@@ -5,7 +5,7 @@ As of the v0.2.0 release, **no public link could be verified** for any
 project, so none of them declare `links` or `screenshot` yet:
 
 - EQM: internal Techint app; no public link expected.
-- Tune-Up: in progress; add App Store / Play Store / website once published.
+- Tune-Up: live on Google Play (link added in `projects.json`); add App Store / website if published there.
 - HangApp: add public store links if available.
 - Be Soul: add public store links if available.
 - PassApp: add public store links if available.
