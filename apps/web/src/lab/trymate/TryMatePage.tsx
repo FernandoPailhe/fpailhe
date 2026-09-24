@@ -13,10 +13,12 @@ import { RoomLobby } from "./components/RoomLobby";
 import { RulesPanel } from "./components/RulesPanel";
 import { SetupModeSelector } from "./components/SetupModeSelector";
 import { SetupPassScreen } from "./components/SetupPassScreen";
+import { DifficultySelector } from "./components/DifficultySelector";
 import { useGameStore } from "./application/GameState";
 import { useComputerTurn } from "./application/useComputerTurn";
 import { useRoomStore } from "./application/RoomState";
 import { createFirebaseRoomsGateway } from "./infrastructure/firebase/FirebaseRoomsGateway";
+import type { BotDifficulty } from "./application/ai/ComputerPlayer";
 import { GameMode, GamePhase, SetupTurnMode } from "./domain/constants/GameRules";
 import { CURRENT_RULES } from "./domain/config/RulesView";
 
@@ -52,6 +54,9 @@ export function TryMatePage() {
   const [screen, setScreen] = useState<Screen>(() => (params.get("room") ? "online" : "menu"));
   const [showRules, setShowRules] = useState(false);
   const [menuSetupMode, setMenuSetupMode] = useState<SetupTurnMode>(SetupTurnMode.ALTERNATING);
+  const [menuDifficulty, setMenuDifficulty] = useState<BotDifficulty>(
+    () => useGameStore.getState().botDifficulty,
+  );
 
   // Composition root: inyecta el adaptador concreto del puerto RoomsGateway.
   // Sin credenciales devuelve null → el lobby avisa y el modo local sigue.
@@ -66,7 +71,7 @@ export function TryMatePage() {
   };
 
   const goVsComputer = () => {
-    useGameStore.getState().startVsComputer(menuSetupMode);
+    useGameStore.getState().startVsComputer(menuSetupMode, menuDifficulty);
     setSetupPassAcknowledged(true);
     setScreen("local");
   };
@@ -140,8 +145,9 @@ export function TryMatePage() {
             <Button type="button" onClick={goLocal}>
               Play local 1v1
             </Button>
+            <DifficultySelector value={menuDifficulty} onChange={setMenuDifficulty} />
             <Button type="button" onClick={goVsComputer}>
-              Play vs computer (Easy)
+              Play vs computer
             </Button>
           </section>
         )}

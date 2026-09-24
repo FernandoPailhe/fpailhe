@@ -62,6 +62,14 @@ describe("TryMatePage", () => {
     expect(screen.getByRole("grid", { name: "TryMate board" })).toBeInTheDocument();
   });
 
+  it("elegir Medium + Play vs computer arranca con botDifficulty 'medium'", () => {
+    renderPage();
+    fireEvent.click(screen.getByRole("radio", { name: "Medium" }));
+    fireEvent.click(screen.getByRole("button", { name: /play vs computer/i }));
+    expect(useGameStore.getState().botDifficulty).toBe("medium");
+    expect(useGameStore.getState().gameMode).toBe(GameMode.VS_COMPUTER);
+  });
+
   it("still opens the setup picker for local play", () => {
     renderPage();
     fireEvent.click(screen.getByRole("button", { name: /play local/i }));

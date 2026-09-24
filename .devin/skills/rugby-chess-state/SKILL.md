@@ -20,6 +20,10 @@ apps/web/src/lab/trymate/application/
     ├── ComputerPlayer.ts     # Interfaz BotContext/ComputerPlayer + registro de fábricas
     ├── rng.ts                # Rng, createSeededRng (mulberry32)
     ├── EasyBot.ts            # Bot fácil agnóstico de reglas
+    ├── MediumBot.ts          # Fachada "medium" (postura → banca → alfa-beta) + lastDecision
+    ├── introspection/profiles.ts # getRulesInsight: perfiles/roles/matchup/geometría por fingerprint
+    ├── analysis/boardAnalysis.ts # analyzeBoard: ataques, avances, tapones, carriles, aislamiento
+    ├── medium/               # config, evaluation, posture, search, benchPlacement, setupStrategy
     ├── arena.ts              # Árbitro bot-vs-bot sobre SimState
     ├── sim/SimState.ts       # Estado funcional para simulación (sin store)
     └── testing/ruleVariants.ts # Variantes de reglas para tests
@@ -42,7 +46,7 @@ pieceIdCounter, moveHistory, isViewingHistory,
 setupMode: SetupTurnMode,        // ALTERNATING | HIDDEN
 setupCompleted: { player1, player2 },
 setupPlayer, lastPassedPlayer,
-botDifficulty: BotDifficulty,    // "easy" (default)
+botDifficulty: BotDifficulty,    // "easy" | "medium" ("easy" default)
 botController: ComputerPlayer | null, // vive la instancia del bot (su estado interno)
 ```
 
@@ -97,7 +101,7 @@ interface BotContext {
   setupMode, rng: Rng,
 }
 interface ComputerPlayer {
-  difficulty: BotDifficulty;                       // "easy"
+  difficulty: BotDifficulty;                       // "easy" | "medium"
   chooseSetupPlacement(ctx): { type, position } | null;
   chooseBenchType(ctx): PieceType | null;
   choosePlayAction(ctx): BotPlayAction;            // bench | move | pass
@@ -111,6 +115,8 @@ interface ComputerPlayer {
 - **ESLint guard** (`eslint.config.js`): `application/ai/**/*.ts` (salvo tests/testing/sim) no puede importar `GAME_RULES`, `GAME_CONFIG`, `PIECE_MOVEMENT_CONFIG`, `QuickStartLayout` ni usar `PieceType.X` — los bots reciben todo por `ctx`.
 
 **Easy:** 1-ply ponderado (score 100, capture 30, advance 3/fila, threatened −15, noise 5; 30% movimiento aleatorio, pick uniforme del top-3). Amenazas vía `engine.getCaptureSquares`. Setup: plan `generateRandomArmy` + `feasibleTypes`.
+
+**Medium:** `choosePlayAction` = `simFromContext` → `analyzeBoard` → `choosePosture` (DEFEND/ATTACK/BALANCED, decide una vez en raíz) → `weightsFor` → `chooseBenchPlacement` (banca libre: mejor tipo × casilla por eval) → `searchBestMove` (negamax alfa-beta, iterative deepening 2 plies / 3 en finales, presupuesto en nodos, tolerancia + blunderChance). `lastDecision` guarda postura/depth/nodos/top-5 para diagnóstico. Setup: `medium/setupStrategy` (composición objetivo por valor de perfil, bloqueadores al frente, corredores en carril abierto, contra-picks por `matchup`). Todo lo que sabe de las reglas lo deriva de `getRulesInsight` (perfiles sondeados del motor: roles runner/attacker/blocker, valor, matchup en [−1,1]) — sin literales de tamaño ni tipos.
 
 **Sim/arena:** `sim/SimState.ts` (`generateMoves`, `applySimMove`, `applySimBench`, `passTurn`, `simFromContext`, `cloneBoard` — todo inmutable) y `arena.ts` (`playArenaGame`, `runArena`) prueban bots con `RuleVariant` sin tocar el store. La arena es árbitro estricto: acción ilegal → `illegalAction`.
 

@@ -6,9 +6,10 @@ import type { SetupTurnMode } from "../../domain/constants/GameRules";
 import type { RulesView } from "../../domain/config/RulesView";
 import type { MovementRuleEngine } from "../rules/MovementRuleEngine";
 import { createEasyBot } from "./EasyBot";
+import { createMediumBot } from "./MediumBot";
 import type { Rng } from "./rng";
 
-export type BotDifficulty = "easy";
+export type BotDifficulty = "easy" | "medium";
 
 /** Acción de juego elegida por un bot en PLAYING. */
 export type BotPlayAction =
@@ -48,6 +49,7 @@ export interface ComputerPlayer {
 
 const FACTORIES: Partial<Record<BotDifficulty, (rng: Rng) => ComputerPlayer>> = {
   easy: createEasyBot,
+  medium: createMediumBot,
 };
 
 export function registerComputerPlayer(

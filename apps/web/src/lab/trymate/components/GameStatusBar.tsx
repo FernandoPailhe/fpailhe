@@ -1,6 +1,12 @@
 import { useGameStore } from "../application/GameState";
+import type { BotDifficulty } from "../application/ai/ComputerPlayer";
 import { GameMode, GamePhase, SetupTurnMode } from "../domain/constants/GameRules";
 import { PHASE_LABEL, PLAYER_LABEL } from "../lib/gameDisplay";
+
+const DIFFICULTY_LABEL: Record<BotDifficulty, string> = {
+  easy: "Easy",
+  medium: "Medium",
+};
 
 /**
  * Barra de estado: fase, turno, marcador y avisos (historial, sin
@@ -18,6 +24,7 @@ export function GameStatusBar() {
     gameMode,
     localPlayer,
     isLocalPlayerTurn,
+    botDifficulty,
     reset,
     quickStart,
   } = useGameStore();
@@ -47,6 +54,11 @@ export function GameStatusBar() {
         {(online || vsComputer) && localPlayer && (
           <span className="bg-gold-soft px-2 py-0.5 text-xs font-semibold text-gold-bright">
             You are {PLAYER_LABEL[localPlayer]}
+          </span>
+        )}
+        {vsComputer && (
+          <span className="bg-gold-soft px-2 py-0.5 text-xs font-semibold text-gold-bright">
+            Computer · {DIFFICULTY_LABEL[botDifficulty]}
           </span>
         )}
         <span className="text-ink">
