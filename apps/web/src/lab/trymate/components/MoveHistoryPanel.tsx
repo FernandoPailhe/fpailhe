@@ -63,8 +63,7 @@ export function MoveHistoryPanel() {
         <div className="min-h-0 flex-1 overflow-hidden border border-line bg-surface">
           <ol className="h-full overflow-y-auto px-2 py-1.5">
             {moves.map((m, i) => {
-              const capturedOwner =
-                m.player === Player.BLANCAS ? Player.NEGRAS : Player.BLANCAS;
+              const capturedOwner = m.player === Player.BLANCAS ? Player.NEGRAS : Player.BLANCAS;
               const description =
                 `Move ${m.moveNumber}: ${PLAYER_LABEL[m.player]} ${PIECE_LABEL[m.pieceType]} ` +
                 `from ${squareName(m.from)} to ${squareName(m.to)}` +

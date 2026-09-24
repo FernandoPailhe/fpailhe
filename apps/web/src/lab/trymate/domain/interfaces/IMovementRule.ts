@@ -12,6 +12,8 @@ export interface MoveValidationContext {
 
 export interface IMovementRule {
   getValidMoves(piece: GamePiece, board: Board): Position[];
+  /** Casillas que `piece` capturaría si hubiera una pieza rival ahí. */
+  getCaptureSquares(piece: GamePiece, board: Board): Position[];
   isValidMove(context: MoveValidationContext): boolean;
   canPassThrough(piece: GamePiece, position: Position, board: Board): boolean;
 }

@@ -2,36 +2,40 @@ import { Board } from "../../domain/entities/Board";
 import { Position } from "../../domain/entities/Position";
 import { PlayerState } from "../../domain/entities/PlayerState";
 import { Player } from "../../domain/constants/PieceConstants";
-import { GAME_RULES } from "../../domain/constants/GameRules";
-import { GAME_CONFIG } from "../../domain/constants/GameConstants";
+import { CURRENT_RULES, type RulesView } from "../../domain/config/RulesView";
 import { MovementRuleEngine } from "./MovementRuleEngine";
 
 /**
  * Consultas puras de turno, sin gating de "jugador local": el store las usa
  * para validar al jugador en turno y el bot para evaluar al rival.
+ * Todas aceptan un `rules` opcional (default: las reglas vigentes) para que
+ * bots y simulaciones puedan jugar con variantes de reglas.
  */
 
-export function getPlacementRows(player: Player): readonly number[] {
-  return player === Player.BLANCAS
-    ? GAME_RULES.PLACEMENT_ROWS_PLAYER1
-    : GAME_RULES.PLACEMENT_ROWS_PLAYER2;
+export function getPlacementRows(
+  player: Player,
+  rules: RulesView = CURRENT_RULES,
+): readonly number[] {
+  return rules.placementRows(player);
 }
 
-export function getScoringRow(player: Player): number {
-  return player === Player.BLANCAS
-    ? GAME_RULES.SCORING_ZONE_PLAYER1
-    : GAME_RULES.SCORING_ZONE_PLAYER2;
+export function getScoringRow(player: Player, rules: RulesView = CURRENT_RULES): number {
+  return rules.scoringRow(player);
 }
 
-/** Casillas vacías de las filas de despliegue con < MAX_PIECES_PER_ROW propias. */
-export function getBenchPlacementSquares(board: Board, player: Player): Position[] {
+/** Casillas vacías de las filas de despliegue con < maxPerRow propias. */
+export function getBenchPlacementSquares(
+  board: Board,
+  player: Player,
+  rules: RulesView = CURRENT_RULES,
+): Position[] {
   const positions: Position[] = [];
-  for (const row of getPlacementRows(player)) {
+  for (const row of rules.placementRows(player)) {
     const piecesInRow = board
       .getAllPieces()
       .filter((p) => p.position && p.position.y === row && p.owner === player).length;
-    if (piecesInRow >= GAME_RULES.MAX_PIECES_PER_ROW) continue;
-    for (let col = 0; col < GAME_CONFIG.BOARD_WIDTH; col++) {
+    if (piecesInRow >= rules.maxPerRow) continue;
+    for (let col = 0; col < rules.width; col++) {
       const pos = new Position(col, row);
       if (!board.getPieceAt(pos)) {
         positions.push(pos);
@@ -41,10 +45,15 @@ export function getBenchPlacementSquares(board: Board, player: Player): Position
   return positions;
 }
 
-/** < PIECES_TO_PLACE piezas propias en tablero y banca no vacía. Sin chequeo de turno. */
-export function canPlaceFromBench(board: Board, player: Player, playerState: PlayerState): boolean {
+/** < piecesToPlace piezas propias en tablero y banca no vacía. Sin chequeo de turno. */
+export function canPlaceFromBench(
+  board: Board,
+  player: Player,
+  playerState: PlayerState,
+  rules: RulesView = CURRENT_RULES,
+): boolean {
   const piecesOnBoard = board.getAllPieces().filter((p) => p.owner === player).length;
-  return piecesOnBoard < GAME_RULES.PIECES_TO_PLACE && playerState.getBenchPieces().length > 0;
+  return piecesOnBoard < rules.piecesToPlace && playerState.getBenchPieces().length > 0;
 }
 
 export function hasAnyLegalMove(board: Board, player: Player, engine: MovementRuleEngine): boolean {
@@ -58,12 +67,13 @@ export function hasAnyLegalAction(
   player: Player,
   playerState: PlayerState,
   engine: MovementRuleEngine,
+  rules: RulesView = CURRENT_RULES,
 ): boolean {
   if (hasAnyLegalMove(board, player, engine)) return true;
   // La banca solo cuenta como acción si además queda una casilla de despliegue
   // válida: banca llena de piezas pero filas tapadas sigue siendo un turno muerto.
   return (
-    canPlaceFromBench(board, player, playerState) &&
-    getBenchPlacementSquares(board, player).length > 0
+    canPlaceFromBench(board, player, playerState, rules) &&
+    getBenchPlacementSquares(board, player, rules).length > 0
   );
 }

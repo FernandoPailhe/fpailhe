@@ -1,23 +1,35 @@
+import { GAME_CONFIG } from "./GameConstants";
+
+const BOARD_HEIGHT = GAME_CONFIG.BOARD_HEIGHT;
+const PLACEMENT_DEPTH = 3;
+const PIECES_TO_PLACE = 5;
+const PIECES_IN_BENCH = 3;
+
+/** Filas de despliegue: las PLACEMENT_DEPTH filas siguientes a la fila base, ascendentes. */
+const placementRowsFrom = (home: number, dir: 1 | -1): readonly number[] =>
+  Array.from({ length: PLACEMENT_DEPTH }, (_, i) => home + dir * (i + 1)).sort((a, b) => a - b);
+
 export const GAME_RULES = {
-  TOTAL_PIECES_PER_PLAYER: 8,
-  PIECES_TO_PLACE: 5,
-  PIECES_IN_BENCH: 3,
+  PIECES_TO_PLACE,
+  PIECES_IN_BENCH,
+  TOTAL_PIECES_PER_PLAYER: PIECES_TO_PLACE + PIECES_IN_BENCH,
 
   MIN_PIECES_PER_TYPE: 2,
   MAX_PIECES_PER_TYPE: 4,
 
-  PLACEMENT_ROWS_PLAYER1: [1, 2, 3],
-  PLACEMENT_ROWS_PLAYER2: [7, 8, 9],
+  PLACEMENT_DEPTH,
+  PLACEMENT_ROWS_PLAYER1: placementRowsFrom(0, 1), // [1,2,3]
+  PLACEMENT_ROWS_PLAYER2: placementRowsFrom(BOARD_HEIGHT - 1, -1), // [7,8,9]
 
   MAX_PIECES_PER_ROW: 2,
 
-  SCORING_ZONE_PLAYER1: 10,
+  SCORING_ZONE_PLAYER1: BOARD_HEIGHT - 1,
   SCORING_ZONE_PLAYER2: 0,
 
   POINTS_TO_WIN: 3,
 
   FORBIDDEN_ZONE_PLAYER1: 0,
-  FORBIDDEN_ZONE_PLAYER2: 10,
+  FORBIDDEN_ZONE_PLAYER2: BOARD_HEIGHT - 1,
 } as const;
 
 export enum GamePhase {

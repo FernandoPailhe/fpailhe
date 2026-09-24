@@ -5,6 +5,8 @@ import { PlayerState } from "../../domain/entities/PlayerState";
 import { Position } from "../../domain/entities/Position";
 import { PieceType, Player } from "../../domain/constants/PieceConstants";
 import { GAME_CONFIG } from "../../domain/constants/GameConstants";
+import { GAME_RULES } from "../../domain/constants/GameRules";
+import { buildRulesView } from "../../domain/config/RulesView";
 import { MovementRuleEngine } from "./MovementRuleEngine";
 import {
   canPlaceFromBench,
@@ -137,5 +139,29 @@ describe("hasAnyLegalMove / hasAnyLegalAction", () => {
     expect(canPlaceFromBench(board, Player.BLANCAS, ps)).toBe(true);
     expect(getBenchPlacementSquares(board, Player.BLANCAS)).toHaveLength(0);
     expect(hasAnyLegalAction(board, Player.BLANCAS, ps, engine)).toBe(false);
+  });
+});
+
+describe("variantes de reglas", () => {
+  const wide = buildRulesView(
+    { BOARD_WIDTH: 7, BOARD_HEIGHT: 13 },
+    { ...GAME_RULES, PLACEMENT_DEPTH: 2 },
+  );
+
+  it("getPlacementRows y getScoringRow siguen a la variante", () => {
+    expect(getPlacementRows(Player.BLANCAS, wide)).toEqual([1, 2]);
+    expect(getPlacementRows(Player.NEGRAS, wide)).toEqual([10, 11]);
+    expect(getScoringRow(Player.BLANCAS, wide)).toBe(12);
+    expect(getScoringRow(Player.NEGRAS, wide)).toBe(0);
+  });
+
+  it("getBenchPlacementSquares devuelve casillas en las filas de la variante", () => {
+    const board = new Board(wide.width, wide.height);
+    const white = getBenchPlacementSquares(board, Player.BLANCAS, wide);
+    expect(white).toHaveLength(14);
+    expect(white.every((p) => [1, 2].includes(p.y))).toBe(true);
+    const black = getBenchPlacementSquares(board, Player.NEGRAS, wide);
+    expect(black).toHaveLength(14);
+    expect(black.every((p) => [10, 11].includes(p.y))).toBe(true);
   });
 });

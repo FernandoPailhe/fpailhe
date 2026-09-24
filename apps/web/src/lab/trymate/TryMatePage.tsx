@@ -18,6 +18,7 @@ import { useComputerTurn } from "./application/useComputerTurn";
 import { useRoomStore } from "./application/RoomState";
 import { createFirebaseRoomsGateway } from "./infrastructure/firebase/FirebaseRoomsGateway";
 import { GameMode, GamePhase, SetupTurnMode } from "./domain/constants/GameRules";
+import { CURRENT_RULES } from "./domain/config/RulesView";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
@@ -113,7 +114,7 @@ export function TryMatePage() {
           <p className="font-ui text-xs uppercase tracking-widest text-gold-bright">Lab</p>
           <h1 className="font-display text-3xl font-bold text-ink">TryMate</h1>
           <p className="mt-2 text-ink-dim">
-            Experimental module: chess-like tactics on a 5×11 rugby field.
+            {`Experimental module: chess-like tactics on a ${CURRENT_RULES.width}×${CURRENT_RULES.height} rugby field.`}
           </p>
           <button
             type="button"

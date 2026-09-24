@@ -4,6 +4,8 @@ import { Position } from "../domain/entities/Position";
 import { PieceType, Player } from "../domain/constants/PieceConstants";
 import { GameMode, GamePhase, SetupTurnMode } from "../domain/constants/GameRules";
 import { canPlaceFromBench, getBenchPlacementSquares } from "./rules/turnRules";
+import { registerComputerPlayer, type ComputerPlayer } from "./ai/ComputerPlayer";
+import { createEasyBot } from "./ai/EasyBot";
 
 const pos = (x: number, y: number) => new Position(x, y);
 
@@ -70,7 +72,7 @@ describe("runBotTurn — setup", () => {
     expect(S().gamePhase).toBe(GamePhase.PLAYING);
     expect(S().currentPlayer).toBe(Player.BLANCAS);
     expect(S().player2State.getBenchPieces()).toHaveLength(3);
-    expect(S().botLayoutId).not.toBeNull();
+    expect(S().botController).not.toBeNull();
   });
 
   it("HIDDEN: el bot completa sus 5+3 encadenadas tras el setup humano", () => {
@@ -88,6 +90,47 @@ describe("runBotTurn — setup", () => {
     expect(S().setupCompleted).toEqual({ player1: true, player2: true });
     expect(S().player2State.getPlacedPiecesCount()).toBe(5);
     expect(S().player2State.getBenchPieces()).toHaveLength(3);
+  });
+
+  it("HIDDEN SETUP: el controller recibe un tablero sin piezas del rival; en PLAYING ya lo ve completo", () => {
+    const sawOpponent: boolean[] = [];
+    const real = createEasyBot(() => 0.5);
+    const spy: ComputerPlayer = {
+      difficulty: "easy",
+      chooseSetupPlacement: (ctx) => {
+        sawOpponent.push(ctx.board.getAllPieces().some((p) => p.owner !== ctx.bot));
+        return real.chooseSetupPlacement(ctx);
+      },
+      chooseBenchType: (ctx) => real.chooseBenchType(ctx),
+      choosePlayAction: (ctx) => {
+        sawOpponent.push(ctx.board.getAllPieces().some((p) => p.owner !== ctx.bot));
+        return real.choosePlayAction(ctx);
+      },
+    };
+    registerComputerPlayer("easy", () => spy);
+    try {
+      const store = createGameStore();
+      store.getState().startVsComputer(SetupTurnMode.HIDDEN);
+      const S = () => store.getState();
+
+      runHumanHiddenSetup(store);
+      // Turno del bot en SETUP: el humano ya puso 5 piezas invisibles para él.
+      S().runBotTurn(() => 0.5);
+      expect(sawOpponent).toEqual([false]);
+
+      drainBot(store);
+      expect(S().gamePhase).toBe(GamePhase.PLAYING);
+      expect(S().currentPlayer).toBe(Player.BLANCAS);
+      expect(sawOpponent.every((v) => v === false)).toBe(true);
+
+      // En PLAYING el tablero ya es completo: el bot ve al rival.
+      S().handleTileClick(pos(0, 3));
+      S().handleTileClick(pos(0, 4));
+      S().runBotTurn(() => 0.31);
+      expect(sawOpponent.at(-1)).toBe(true);
+    } finally {
+      registerComputerPlayer("easy", createEasyBot);
+    }
   });
 });
 

@@ -1,7 +1,6 @@
-import { GAME_CONFIG } from "../constants/GameConstants";
-import { GAME_RULES } from "../constants/GameRules";
 import { PieceType, Player } from "../constants/PieceConstants";
 import { Position } from "../entities/Position";
+import { CURRENT_RULES } from "./RulesView";
 import rawConfig from "./quickstart-layouts.json";
 
 interface RawLayoutPiece {
@@ -24,7 +23,7 @@ export interface QuickStartLayoutPiece {
 
 /**
  * Layout de quick start ya parseado y validado. Las posiciones siempre se
- * expresan desde la perspectiva de BLANCAS (filas PLACEMENT_ROWS_PLAYER1);
+ * expresan desde la perspectiva de BLANCAS (sus filas de despliegue);
  * `layoutForPlayer` las espeja para NEGRAS.
  */
 export interface QuickStartLayout {
@@ -49,108 +48,121 @@ function parseType(layoutId: string, raw: string): PieceType {
   return raw as PieceType;
 }
 
+/**
+ * Parsea la estructura del layout (id, tipos, posiciones). Errores
+ * estructurales — tipo inexistente, id vacío — lanzan: el JSON está roto.
+ * El cumplimiento de las reglas de ejército se valida aparte
+ * (`rulesViolation`) porque un layout incompatible con las reglas vigentes
+ * se descarta, no rompe el módulo.
+ */
 function parseLayout(raw: RawLayout): QuickStartLayout {
   const id = raw.id?.trim();
   if (!id) {
     throw new Error("quickstart-layouts: layout sin id");
   }
-  if (raw.boardPieces.length !== GAME_RULES.PIECES_TO_PLACE) {
-    throw new Error(
-      `quickstart-layouts: "${id}" tiene ${raw.boardPieces.length} piezas en tablero, ` +
-        `esperadas ${GAME_RULES.PIECES_TO_PLACE}`,
-    );
+  const boardPieces = raw.boardPieces.map(({ type, x, y }) => ({
+    type: parseType(id, type),
+    position: new Position(x, y),
+  }));
+  const benchPieces = raw.benchPieces.map((type) => parseType(id, type));
+  return { id, name: raw.name ?? id, boardPieces, benchPieces };
+}
+
+/** Motivo por el que el layout viola las reglas vigentes, o null si cumple. */
+function rulesViolation(layout: QuickStartLayout): string | null {
+  const rules = CURRENT_RULES;
+  const { boardPieces, benchPieces } = layout;
+
+  if (boardPieces.length !== rules.piecesToPlace) {
+    return `tiene ${boardPieces.length} piezas en tablero, esperadas ${rules.piecesToPlace}`;
   }
-  if (raw.benchPieces.length !== GAME_RULES.PIECES_IN_BENCH) {
-    throw new Error(
-      `quickstart-layouts: "${id}" tiene ${raw.benchPieces.length} piezas en banca, ` +
-        `esperadas ${GAME_RULES.PIECES_IN_BENCH}`,
-    );
+  if (benchPieces.length !== rules.benchSize) {
+    return `tiene ${benchPieces.length} piezas en banca, esperadas ${rules.benchSize}`;
   }
 
+  const placementRows = rules.placementRows(Player.BLANCAS);
   const occupied = new Set<string>();
   const rowCount = new Map<number, number>();
-  const boardPieces = raw.boardPieces.map(({ type, x, y }) => {
-    const pieceType = parseType(id, type);
-    if (x < 0 || x >= GAME_CONFIG.BOARD_WIDTH) {
-      throw new Error(`quickstart-layouts: "${id}" tiene x=${x} fuera del tablero`);
+  for (const { position } of boardPieces) {
+    const { x, y } = position;
+    if (x >= rules.width) {
+      return `tiene x=${x} fuera del tablero de ${rules.width} columnas`;
     }
-    if (!(GAME_RULES.PLACEMENT_ROWS_PLAYER1 as readonly number[]).includes(y)) {
-      throw new Error(
-        `quickstart-layouts: "${id}" coloca una pieza en y=${y}, fuera de ` +
-          `las filas de despliegue ${GAME_RULES.PLACEMENT_ROWS_PLAYER1}`,
-      );
+    if (!placementRows.includes(y)) {
+      return `coloca una pieza en y=${y}, fuera de las filas de despliegue ${placementRows}`;
     }
     const key = `${x},${y}`;
     if (occupied.has(key)) {
-      throw new Error(`quickstart-layouts: "${id}" tiene dos piezas en ${key}`);
+      return `tiene dos piezas en ${key}`;
     }
     occupied.add(key);
     const inRow = (rowCount.get(y) ?? 0) + 1;
     rowCount.set(y, inRow);
-    if (inRow > GAME_RULES.MAX_PIECES_PER_ROW) {
-      throw new Error(`quickstart-layouts: "${id}" supera MAX_PIECES_PER_ROW en la fila ${y}`);
+    if (inRow > rules.maxPerRow) {
+      return `supera el máximo de ${rules.maxPerRow} piezas por fila en la fila ${y}`;
     }
-    return { type: pieceType, position: new Position(x, y) };
-  });
-
-  const benchPieces = raw.benchPieces.map((type) => parseType(id, type));
+  }
 
   const totals = new Map<PieceType, number>();
   for (const type of [...boardPieces.map((p) => p.type), ...benchPieces]) {
     totals.set(type, (totals.get(type) ?? 0) + 1);
   }
-  for (const type of Object.values(PieceType)) {
+  for (const type of rules.pieceTypes) {
     const count = totals.get(type) ?? 0;
-    if (count < GAME_RULES.MIN_PIECES_PER_TYPE || count > GAME_RULES.MAX_PIECES_PER_TYPE) {
-      throw new Error(
-        `quickstart-layouts: "${id}" tiene ${count} piezas ${type}, fuera de ` +
-          `[${GAME_RULES.MIN_PIECES_PER_TYPE}, ${GAME_RULES.MAX_PIECES_PER_TYPE}]`,
-      );
+    if (count < rules.minPerType || count > rules.maxPerType) {
+      return `tiene ${count} piezas ${type}, fuera de [${rules.minPerType}, ${rules.maxPerType}]`;
     }
   }
-
-  return { id, name: raw.name ?? id, boardPieces, benchPieces };
+  return null;
 }
 
 function parseLayouts(raw: RawLayout[]): QuickStartLayout[] {
   const ids = new Set<string>();
-  return raw.map((layout) => {
+  const valid: QuickStartLayout[] = [];
+  for (const layout of raw) {
+    // parseLayout lanza solo por errores estructurales (JSON roto).
     const parsed = parseLayout(layout);
     if (ids.has(parsed.id)) {
       throw new Error(`quickstart-layouts: id duplicado "${parsed.id}"`);
     }
     ids.add(parsed.id);
-    return parsed;
-  });
+    const violation = rulesViolation(parsed);
+    if (violation) {
+      console.warn(`quickstart-layouts: "${parsed.id}" descartado: ${violation}`);
+      continue;
+    }
+    valid.push(parsed);
+  }
+  return valid;
 }
 
 /**
- * Layouts disponibles, validados al cargar el módulo: un JSON inválido
- * rompe el build/tests en vez de fallar en runtime.
+ * Layouts disponibles, validados al cargar el módulo. Un JSON estructuralmente
+ * roto sigue lanzando; un layout incompatible con las reglas vigentes se
+ * descarta con un warning y quick start cae a un ejército generado.
  */
 export const QUICK_START_LAYOUTS: readonly QuickStartLayout[] = parseLayouts(
   rawConfig.layouts as RawLayout[],
 );
 
-export function getQuickStartLayout(id: string): QuickStartLayout {
-  const layout = QUICK_START_LAYOUTS.find((l) => l.id === id);
-  if (!layout) {
-    throw new Error(`quickstart-layouts: layout desconocido "${id}"`);
-  }
-  return layout;
+/** True si quedó al menos un layout compatible con las reglas vigentes. */
+export function hasQuickStartLayouts(): boolean {
+  return QUICK_START_LAYOUTS.length > 0;
 }
 
-export function randomQuickStartLayout(rng: () => number = Math.random): QuickStartLayout {
-  const layout = QUICK_START_LAYOUTS[Math.floor(rng() * QUICK_START_LAYOUTS.length)];
-  if (!layout) {
-    throw new Error("quickstart-layouts: no hay layouts configurados");
-  }
-  return layout;
+export function getQuickStartLayout(id: string): QuickStartLayout | undefined {
+  return QUICK_START_LAYOUTS.find((l) => l.id === id);
+}
+
+export function randomQuickStartLayout(
+  rng: () => number = Math.random,
+): QuickStartLayout | undefined {
+  return QUICK_START_LAYOUTS[Math.floor(rng() * QUICK_START_LAYOUTS.length)];
 }
 
 /**
  * Devuelve el layout desde la perspectiva del jugador: NEGRAS espeja las
- * filas (y → BOARD_HEIGHT - 1 - y), igual que el setup simétrico original.
+ * filas (y → height − 1 − y), igual que el setup simétrico original.
  */
 export function layoutForPlayer(layout: QuickStartLayout, player: Player): QuickStartLayout {
   if (player === Player.BLANCAS) return layout;
@@ -158,13 +170,21 @@ export function layoutForPlayer(layout: QuickStartLayout, player: Player): Quick
     ...layout,
     boardPieces: layout.boardPieces.map(({ type, position }) => ({
       type,
-      position: new Position(position.x, GAME_CONFIG.BOARD_HEIGHT - 1 - position.y),
+      position: new Position(position.x, CURRENT_RULES.height - 1 - position.y),
     })),
   };
 }
 
-/** Resuelve el layout de un equipo: `layoutId` explícito o sorteo al azar. */
-export function resolveQuickStartLayout(player: Player, layoutId?: string): QuickStartLayout {
-  const layout = layoutId ? getQuickStartLayout(layoutId) : randomQuickStartLayout();
-  return layoutForPlayer(layout, player);
+/**
+ * Resuelve el layout de un equipo: `layoutId` explícito o sorteo al azar.
+ * Devuelve undefined si no hay layouts válidos o el id no existe — el
+ * llamador decide el fallback (ejército generado).
+ */
+export function resolveQuickStartLayout(
+  player: Player,
+  layoutId?: string,
+  rng: () => number = Math.random,
+): QuickStartLayout | undefined {
+  const layout = layoutId ? getQuickStartLayout(layoutId) : randomQuickStartLayout(rng);
+  return layout ? layoutForPlayer(layout, player) : undefined;
 }

@@ -4,28 +4,38 @@ import { Board } from "../../domain/entities/Board";
 import { IMovementRule, MoveValidationContext } from "../../domain/interfaces/IMovementRule";
 import {
   PIECE_MOVEMENT_CONFIG,
-  PieceType,
   MovementPattern,
   CapturePattern,
+  type PieceMovementConfigMap,
 } from "../../domain/constants/PieceConstants";
 
+type PatternWithClearPath = MovementPattern & { requiresClearPath?: boolean };
+
+/**
+ * Motor de movimientos: data-driven, sin ramas por tipo concreto. Las
+ * mecánicas especiales (L-shape, bypass de bloqueo, bloqueo lateral, captura
+ * que ignora bloqueo) se leen de flags del `PieceMovementConfig` inyectado.
+ */
 export class MovementRuleEngine implements IMovementRule {
+  constructor(public readonly config: PieceMovementConfigMap = PIECE_MOVEMENT_CONFIG) {}
+
   getValidMoves(piece: GamePiece, board: Board): Position[] {
     // Bench pieces don't have a position on the board
     if (!piece.position) {
       return [];
     }
 
-    // Special handling for PIONEER - uses L-shape movement (forward first, then lateral)
-    if (piece.type === PieceType.PIONEER) {
-      return this.getPioneerValidMoves(piece, board);
+    const config = this.config[piece.type];
+
+    // L-shape movement (forward first, then lateral) driven by config flag
+    if (config.lShape) {
+      return this.getLShapeValidMoves(piece, board);
     }
 
     const validMoves: Position[] = [];
-    const config = PIECE_MOVEMENT_CONFIG[piece.type];
     const directionMultiplier = piece.getDirectionMultiplier();
 
-    const checkMovementPattern = (pattern: MovementPattern, isAlternative = false) => {
+    const checkMovementPattern = (pattern: PatternWithClearPath, isAlternative = false) => {
       pattern.directions.forEach((dir) => {
         const adjustedDir = {
           dx: dir.dx,
@@ -52,9 +62,9 @@ export class MovementRuleEngine implements IMovementRule {
 
           if (!this.canPassThrough(piece, newPos, board)) continue;
 
-          // Check if path is clear for STRIKER alternative movement
+          // Alternative patterns may require a clear path (charge moves)
           if (piece.position) {
-            if (piece.type === PieceType.STRIKER && isAlternative) {
+            if (isAlternative && pattern.requiresClearPath) {
               if (!this.isPathClear(piece.position, newPos, board, piece)) continue;
             }
           }
@@ -66,11 +76,11 @@ export class MovementRuleEngine implements IMovementRule {
 
     checkMovementPattern(config.movement);
 
-    if ("alternativeMovement" in config && config.alternativeMovement) {
+    if (config.alternativeMovement) {
       checkMovementPattern(config.alternativeMovement, true);
     }
 
-    if ("capture" in config && config.capture) {
+    if (config.capture) {
       this.addCaptureMovesIfValid(piece, board, config.capture, directionMultiplier, validMoves);
     }
 
@@ -78,19 +88,18 @@ export class MovementRuleEngine implements IMovementRule {
   }
 
   /**
-   * Special movement logic for PIONEER piece:
-   * - MUST move at least 1 square forward (required)
-   * - CAN move laterally (optional) but only AFTER moving forward
-   * - Maximum 3 squares total (forward + lateral)
-   * - Does NOT move diagonally - moves in L-shape (forward then lateral)
-   * - Path must be clear of pieces and blocks
+   * L-shape movement: la pieza DEBE avanzar al menos 1 casilla hacia adelante
+   * y puede seguir lateralmente (sin diagonal), con tope `maxTotalDistance`
+   * (adelante + lateral) y `maxLateral` (costado). El camino debe estar libre.
    */
-  private getPioneerValidMoves(piece: GamePiece, board: Board): Position[] {
+  private getLShapeValidMoves(piece: GamePiece, board: Board): Position[] {
     const validMoves: Position[] = [];
+    const config = this.config[piece.type];
     const directionMultiplier = piece.getDirectionMultiplier();
     const startX = piece.position!.x;
     const startY = piece.position!.y;
-    const maxTotalDistance = 3;
+    const maxTotalDistance = config.maxTotalDistance ?? config.movement.maxDistance;
+    const maxLateralDistance = config.maxLateral ?? 1;
 
     // First, check if the first forward position is blocked
     const firstForwardY = startY + directionMultiplier;
@@ -102,11 +111,11 @@ export class MovementRuleEngine implements IMovementRule {
     // Check if first forward position is blocked by a piece
     if (board.getPieceAt(firstForwardPos)) return [];
 
-    // Check if first forward position is blocked by Fort/Striker
+    // Check if first forward position is blocked by a side-blocker
     if (!this.canPassThrough(piece, firstForwardPos, board)) return [];
 
     // Generate all valid L-shape moves
-    // For each forward distance (1, 2, or 3), check if we can move there
+    // For each forward distance, check if we can move there
     // Then for each valid forward position, check lateral moves
 
     for (let forwardDist = 1; forwardDist <= maxTotalDistance; forwardDist++) {
@@ -138,7 +147,7 @@ export class MovementRuleEngine implements IMovementRule {
           break;
         }
 
-        // Check for Fort/Striker blocking
+        // Check for side-blockers
         if (!this.canPassThrough(piece, stepPos, board)) {
           pathClear = false;
           break;
@@ -155,9 +164,6 @@ export class MovementRuleEngine implements IMovementRule {
       validMoves.push(forwardPos);
 
       // Now check lateral moves from this forward position
-      // PIONEER can only move max 1 square laterally
-      const maxLateralDistance = 1;
-
       for (let lateralDist = 1; lateralDist <= maxLateralDistance; lateralDist++) {
         // Only allow lateral move if total distance doesn't exceed max
         if (forwardDist + lateralDist > maxTotalDistance) continue;
@@ -178,7 +184,7 @@ export class MovementRuleEngine implements IMovementRule {
                 break;
               }
 
-              // Check for Fort/Striker blocking
+              // Check for side-blockers
               if (!this.canPassThrough(piece, latStepPos, board)) {
                 lateralPathClear = false;
                 break;
@@ -207,7 +213,7 @@ export class MovementRuleEngine implements IMovementRule {
               break;
             }
 
-            // Check for Fort/Striker blocking
+            // Check for side-blockers
             if (!this.canPassThrough(piece, latStepPos, board)) {
               lateralPathClear = false;
               break;
@@ -274,10 +280,9 @@ export class MovementRuleEngine implements IMovementRule {
 
     const stepY = deltaY === 0 ? 0 : deltaY / Math.abs(deltaY);
 
-    // For PIONEER: check each forward step in the path
-    // PIONEER moves forward first, then can move laterally at the end
-    if (piece.type === PieceType.PIONEER) {
-      // Check each forward position (staying in same column until final step)
+    // L-shape pieces move forward first, then laterally at the end:
+    // check each forward position (staying in same column until final step)
+    if (this.config[piece.type].lShape) {
       for (let i = 1; i < forwardSteps; i++) {
         const checkX = from.x;
         const checkY = from.y + stepY * i;
@@ -291,7 +296,7 @@ export class MovementRuleEngine implements IMovementRule {
           return false;
         }
 
-        // Check if this position is blocked by Fort
+        // Check if this position is blocked by a side-blocker
         if (!this.canPassThrough(piece, checkPos, board)) {
           return false;
         }
@@ -331,14 +336,15 @@ export class MovementRuleEngine implements IMovementRule {
     if (!piece.position) return [];
 
     const blockedPositions: Position[] = [];
-    const config = PIECE_MOVEMENT_CONFIG[piece.type];
+    const config = this.config[piece.type];
     const directionMultiplier = piece.getDirectionMultiplier();
 
-    // Special handling for PIONEER: if forward position is blocked, ALL moves are blocked
-    if (piece.type === PieceType.PIONEER) {
+    // L-shape pieces: if forward position is blocked, ALL moves are blocked
+    if (config.lShape) {
       const startX = piece.position.x;
       const startY = piece.position.y;
-      const maxTotalDistance = 3;
+      const maxTotalDistance = config.maxTotalDistance ?? config.movement.maxDistance;
+      const maxLateralDistance = config.maxLateral ?? 1;
 
       const forwardY = startY + directionMultiplier;
 
@@ -348,7 +354,7 @@ export class MovementRuleEngine implements IMovementRule {
           const forwardPiece = board.getPieceAt(forwardPos);
           const canPassForward = this.canPassThrough(piece, forwardPos, board);
 
-          // If forward position is blocked (by piece or Fort/Striker), ALL potential moves are blocked
+          // If forward position is blocked (by piece or side-blocker), ALL potential moves are blocked
           if (forwardPiece !== undefined || !canPassForward) {
             // Add all potential L-shape move positions as blocked
             for (let fwd = 1; fwd <= maxTotalDistance; fwd++) {
@@ -360,8 +366,7 @@ export class MovementRuleEngine implements IMovementRule {
                 blockedPositions.push(fwdPos);
               }
 
-              // Add lateral positions (max 1 square lateral for PIONEER)
-              const maxLateralDistance = 1;
+              // Add lateral positions
               for (let lat = 1; lat <= maxLateralDistance; lat++) {
                 // Only add if total distance doesn't exceed max
                 if (fwd + lat > maxTotalDistance) continue;
@@ -388,12 +393,12 @@ export class MovementRuleEngine implements IMovementRule {
         }
       }
 
-      // For PIONEER, return empty blocked positions if forward is not blocked
-      // (the getValidMoves function already handles all the blocking logic)
+      // For L-shape pieces, return empty blocked positions if forward is not blocked
+      // (getValidMoves already handles all the blocking logic)
       return [];
     }
 
-    const checkPattern = (pattern: MovementPattern) => {
+    const checkPattern = (pattern: PatternWithClearPath) => {
       pattern.directions.forEach((dir) => {
         const adjustedDir = {
           dx: dir.dx,
@@ -417,15 +422,15 @@ export class MovementRuleEngine implements IMovementRule {
             continue;
           }
 
-          // For PIONEER, only add to blocked if cannot pass through (Fort blocking)
-          // Don't use isPathClear for diagonal moves since PIONEER doesn't move diagonally
-          if (piece.type === PieceType.PIONEER) {
+          // For L-shape pieces, only add to blocked if cannot pass through (side block).
+          // Don't use isPathClear for diagonal moves since L-shape isn't diagonal.
+          if (config.lShape) {
             const canPass = this.canPassThrough(piece, newPos, board);
             if (!canPass) {
               blockedPositions.push(newPos);
             }
           } else {
-            // For other pieces, check both path and Fort blocking
+            // For other pieces, check both path and side-blockers
             const pathClear = this.isPathClear(piece.position!, newPos, board, piece);
             const canPass = this.canPassThrough(piece, newPos, board);
 
@@ -439,7 +444,7 @@ export class MovementRuleEngine implements IMovementRule {
 
     checkPattern(config.movement);
 
-    if ("alternativeMovement" in config && config.alternativeMovement) {
+    if (config.alternativeMovement) {
       checkPattern(config.alternativeMovement);
     }
 
@@ -458,6 +463,58 @@ export class MovementRuleEngine implements IMovementRule {
     return true;
   }
 
+  /**
+   * Casillas que `piece` capturaría si hubiera una pieza rival ahí: el patrón
+   * de captura filtrado por los bloqueos, evaluados como si el destino tuviera
+   * un rival (respeta `captureIgnoresSideBlock`).
+   */
+  getCaptureSquares(piece: GamePiece, board: Board): Position[] {
+    if (!piece.position) return [];
+    const capture = this.config[piece.type].capture;
+    if (!capture) return [];
+
+    const directionMultiplier = piece.getDirectionMultiplier();
+    const squares: Position[] = [];
+
+    for (const dir of capture.directions) {
+      for (let distance = capture.minDistance; distance <= capture.maxDistance; distance++) {
+        const newX = piece.position.x + dir.dx * distance;
+        const newY = piece.position.y + dir.dy * directionMultiplier * distance;
+
+        // Position lanza con coordenadas negativas: chequear bordes antes.
+        if (newX < 0 || newY < 0) continue;
+
+        const newPos = new Position(newX, newY);
+        if (!board.isValidPosition(newPos)) continue;
+        if (!this.canPassThroughAsCapture(piece, newPos, board)) continue;
+
+        if (!squares.some((pos) => pos.equals(newPos))) {
+          squares.push(newPos);
+        }
+      }
+    }
+
+    return squares;
+  }
+
+  /** `canPassThrough` evaluado como si el destino tuviera una pieza rival. */
+  private canPassThroughAsCapture(
+    piece: GamePiece,
+    targetPosition: Position,
+    board: Board,
+  ): boolean {
+    // Si capturar ignora el bloqueo lateral, la casilla siempre es amenazada.
+    if (this.config[piece.type].captureIgnoresSideBlock) return true;
+
+    const blockers = this.findBlockingPieces(piece, targetPosition, board);
+    for (const blocker of blockers) {
+      if (!this.canBypassBlocker(piece, blocker, targetPosition, board)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   private findBlockingPieces(
     piece: GamePiece,
     targetPosition: Position,
@@ -468,16 +525,14 @@ export class MovementRuleEngine implements IMovementRule {
 
     for (const potentialBlocker of allPieces) {
       if (potentialBlocker.owner === piece.owner) continue;
+      if (!potentialBlocker.position) continue;
 
-      // Only FORT can block sides
-      if (potentialBlocker.type !== PieceType.FORT) continue;
-
-      const config = PIECE_MOVEMENT_CONFIG[potentialBlocker.type];
-      if (!config.blocksSides) continue;
+      const blockerConfig = this.config[potentialBlocker.type];
+      if (!blockerConfig.blocksSides || !blockerConfig.blockedSideOffsets) continue;
 
       const directionMultiplier = potentialBlocker.getDirectionMultiplier();
-      const blockedPositions = config
-        .blockedSideOffsets!.map((offset) => {
+      const blockedPositions = blockerConfig.blockedSideOffsets
+        .map((offset) => {
           const newX = potentialBlocker.position!.x + offset.dx;
           const newY = potentialBlocker.position!.y + offset.dy * directionMultiplier;
 
@@ -502,22 +557,24 @@ export class MovementRuleEngine implements IMovementRule {
     targetPosition: Position,
     board: Board,
   ): boolean {
-    if (movingPiece.type === PieceType.FORT) {
+    const moverConfig = this.config[movingPiece.type];
+
+    // Capture that ignores the side block: allowed only onto an enemy piece.
+    if (moverConfig.captureIgnoresSideBlock) {
       const targetPiece = board.getPieceAt(targetPosition);
       if (targetPiece && targetPiece.owner !== movingPiece.owner) {
         return true;
       }
     }
 
-    if (movingPiece.type === PieceType.PIONEER) {
+    if (moverConfig.canBypassBlocker) {
       const directionMultiplier = movingPiece.getDirectionMultiplier();
-      // Distance from PIONEER to Fort (in forward direction)
+      // Distance from the mover to the blocker (in forward direction)
       const blockerDeltaY = (blocker.position!.y - movingPiece.position!.y) * directionMultiplier;
 
-      // PIONEER can only bypass Fort if it's at MORE than 1 row distance
-      // If Fort is at 2+ rows ahead -> can bypass
-      // Otherwise (0, 1 row, or behind) -> blocked
-      return blockerDeltaY >= 2;
+      // The mover can only bypass the blocker if it's at MORE than the
+      // minimum distance ahead — closer (or behind) means blocked.
+      return blockerDeltaY >= (moverConfig.bypassMinDistance ?? 2);
     }
 
     return false;

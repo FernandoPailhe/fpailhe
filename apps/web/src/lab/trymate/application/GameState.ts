@@ -21,16 +21,19 @@ import {
   hasAnyLegalMove,
 } from "./rules/turnRules";
 import {
-  choosePlayAction,
-  nextBenchType,
-  nextSetupPlacement,
-  pickBotLayoutId,
-  type Rng,
-} from "./ai/EasyBot";
+  createComputerPlayer,
+  type BotContext,
+  type BotDifficulty,
+  type ComputerPlayer,
+} from "./ai/ComputerPlayer";
+import type { Rng } from "./ai/rng";
 import {
   resolveQuickStartLayout,
   type QuickStartLayoutSelection,
 } from "../domain/config/QuickStartLayout";
+import { CURRENT_RULES } from "../domain/config/RulesView";
+import { countsOf, feasibleTypes } from "../domain/rules/composition";
+import { generateRandomArmy } from "../domain/rules/randomArmy";
 import { MoveHistory, MoveRecord } from "../domain/entities/MoveHistory";
 import {
   boardFromPieceSnapshots,
@@ -67,8 +70,10 @@ interface GameStateStore {
   setupPlayer: Player;
   /** Último jugador que pasó el turno por no tener acciones legales (aviso UI). */
   lastPassedPlayer: Player | null;
-  /** Layout de quick start que usa el bot para su setup (VS_COMPUTER). */
-  botLayoutId: string | null;
+  /** Dificultad del bot en VS_COMPUTER. */
+  botDifficulty: BotDifficulty;
+  /** Controller del bot de la partida actual; null fuera de VS_COMPUTER. */
+  botController: ComputerPlayer | null;
 
   selectPieceTypeForSetup: (type: PieceType) => void;
   selectPieceTypeForBench: (type: PieceType) => void;
@@ -95,7 +100,7 @@ interface GameStateStore {
   /** Cambia el modo de turnos del setup; solo válido antes de colocar piezas. */
   setSetupMode: (mode: SetupTurnMode) => void;
   /** Inicia partida contra la computadora: humano BLANCAS, bot NEGRAS. */
-  startVsComputer: (setupMode: SetupTurnMode) => void;
+  startVsComputer: (setupMode: SetupTurnMode, difficulty?: BotDifficulty) => void;
   /** Reinicia la partida conservando el modo actual (PVP / VS_COMPUTER). */
   playAgain: () => void;
   /** Bando que controla el bot en VS_COMPUTER; null en otros modos. */
@@ -141,6 +146,18 @@ function restoreBoardFromSnapshot(json: string): Board {
   return boardFromPieceSnapshots(JSON.parse(json) as PieceSnapshot[]);
 }
 
+/**
+ * Tablero que solo contiene las piezas de `owner` (clones): lo que el bot
+ * puede ver durante el setup HIDDEN.
+ */
+function boardWithOnlyOwner(board: Board, owner: Player): Board {
+  const filtered = new Board(board.width, board.height);
+  for (const piece of board.getAllPieces()) {
+    if (piece.owner === owner) filtered.addPiece(piece.clone());
+  }
+  return filtered;
+}
+
 interface InitialGameState {
   board: Board;
   player1State: PlayerState;
@@ -162,7 +179,9 @@ function buildManualStartState(): InitialGameState {
  * Arma los ejércitos de quick start desde los layouts del JSON de
  * configuración (`domain/config/quickstart-layouts.json`). Sin ids en
  * `selection`, cada equipo sortea un layout independiente — puede tocar el
- * mismo o distinto. Compartido entre `quickStart` (local) y
+ * mismo o distinto. Si no quedan layouts válidos para las reglas vigentes
+ * (o el id pedido no existe), cae a un ejército generado por
+ * `generateRandomArmy`. Compartido entre `quickStart` (local) y
  * `prepareOnlineGame("quick")` para que ambos modos no dupliquen la
  * disposición ni los contadores.
  */
@@ -178,14 +197,16 @@ function buildQuickStartState(selection: QuickStartLayoutSelection = {}): Initia
     idPrefix: string,
     layoutId?: string,
   ): void => {
-    const layout = resolveQuickStartLayout(player, layoutId);
-    layout.boardPieces.forEach(({ type, position }) => {
+    const army =
+      resolveQuickStartLayout(player, layoutId) ??
+      generateRandomArmy(CURRENT_RULES, player, Math.random);
+    army.boardPieces.forEach(({ type, position }) => {
       const piece = new GamePiece(`${idPrefix}-${pieceCounter++}`, type, position, player);
       board.addPiece(piece);
       playerState.addSelectedPiece(type);
       playerState.addPlacedPiece(piece);
     });
-    layout.benchPieces.forEach((type) => {
+    army.benchPieces.forEach((type) => {
       const benchPiece = new GamePiece(`${idPrefix}-bench-${pieceCounter++}`, type, null, player);
       playerState.addBenchPiece(benchPiece);
     });
@@ -223,7 +244,8 @@ const gameStoreInitializer: StateCreator<GameStateStore> = (set, get) => {
     setupCompleted: { player1: false, player2: false },
     setupPlayer: Player.BLANCAS,
     lastPassedPlayer: null,
-    botLayoutId: null,
+    botDifficulty: "easy",
+    botController: null,
 
     isLocalPlayerTurn: () => {
       if (botActing) return true;
@@ -242,12 +264,15 @@ const gameStoreInitializer: StateCreator<GameStateStore> = (set, get) => {
       return state.currentPlayer === state.localPlayer;
     },
 
-    startVsComputer: (setupMode: SetupTurnMode) => {
+    startVsComputer: (setupMode: SetupTurnMode, difficulty?: BotDifficulty) => {
+      const botDifficulty = difficulty ?? get().botDifficulty;
       get().reset(setupMode);
       set({
         gameMode: GameMode.VS_COMPUTER,
         localPlayer: Player.BLANCAS,
         roomId: null,
+        botDifficulty,
+        botController: createComputerPlayer(botDifficulty, Math.random),
       });
     },
 
@@ -278,29 +303,44 @@ const gameStoreInitializer: StateCreator<GameStateStore> = (set, get) => {
         return false;
       }
 
-      const layoutId = s.botLayoutId ?? pickBotLayoutId(rng);
-      if (!s.botLayoutId) set({ botLayoutId: layoutId });
-      const layout = resolveQuickStartLayout(bot, layoutId);
+      // Defensivo: si la partida arrancó sin controller (estado restaurado).
+      const controller = s.botController ?? createComputerPlayer(s.botDifficulty, rng);
+      if (!s.botController) set({ botController: controller });
       const before = JSON.stringify(get().toSnapshot());
 
       botActing = true;
       try {
         const st = get();
         const ps = st.getCurrentPlayerState();
+        // En SETUP HIDDEN el bot solo ve sus propias piezas.
+        const observable =
+          st.gamePhase === GamePhase.SETUP && st.setupMode === SetupTurnMode.HIDDEN
+            ? boardWithOnlyOwner(st.board, bot)
+            : st.board;
+        const ctx: BotContext = {
+          board: observable,
+          bot,
+          botState: ps,
+          opponentState: st.getOpponentPlayerState(),
+          engine: st.movementEngine,
+          rules: CURRENT_RULES,
+          setupMode: st.setupMode,
+          rng,
+        };
         if (
           st.gamePhase === GamePhase.SETUP &&
-          ps.getPlacedPiecesCount() < GAME_RULES.PIECES_TO_PLACE
+          ps.getPlacedPiecesCount() < CURRENT_RULES.piecesToPlace
         ) {
-          const next = nextSetupPlacement(st.board, bot, layout);
+          const next = controller.chooseSetupPlacement(ctx);
           if (next) {
             st.selectPieceTypeForSetup(next.type);
             get().placePieceInSetup(next.position);
           }
         } else if (st.gamePhase === GamePhase.SETUP || st.gamePhase === GamePhase.BENCH_SELECTION) {
-          const type = nextBenchType(ps, layout);
+          const type = controller.chooseBenchType(ctx);
           if (type) st.selectPieceTypeForBench(type);
         } else {
-          const action = choosePlayAction(st.board, bot, ps, st.movementEngine, rng);
+          const action = controller.choosePlayAction(ctx);
           if (action.kind === "bench") {
             const piece = ps.getBenchPieces().find((p) => p.id === action.benchPieceId);
             if (piece) {
@@ -404,10 +444,18 @@ const gameStoreInitializer: StateCreator<GameStateStore> = (set, get) => {
       if (state.selectedPieceTypeForPlacement !== null) return false;
 
       const playerState = state.getCurrentPlayerState();
-      const currentCount = playerState.getSelectedPieceCount(type);
 
-      if (currentCount >= GAME_RULES.MAX_PIECES_PER_TYPE) return false;
-      if (playerState.getTotalSelectedCount() >= GAME_RULES.TOTAL_PIECES_PER_PLAYER) return false;
+      // La elección debe dejar un ejército posible: máximos por tipo y
+      // mínimos alcanzables con los slots que quedan (tablero + banca).
+      const chosen = playerState
+        .getSelectedPieces()
+        .concat(playerState.getBenchPieces().map((p) => p.type));
+      const remaining = CURRENT_RULES.piecesToPlace + CURRENT_RULES.benchSize - chosen.length;
+      if (
+        !feasibleTypes(countsOf(chosen, CURRENT_RULES), remaining, CURRENT_RULES).includes(type)
+      ) {
+        return false;
+      }
 
       // HIDDEN: al completar las 5 piezas se pasa a banca; no se puede elegir
       // más tipos para colocar.
@@ -437,43 +485,20 @@ const gameStoreInitializer: StateCreator<GameStateStore> = (set, get) => {
         if (playerState.getPlacedPiecesCount() < GAME_RULES.PIECES_TO_PLACE) return false;
       }
       const benchCount = playerState.getBenchPieces().length;
-      const currentBenchTypeCount = playerState
-        .getBenchPieces()
-        .filter((p) => p.type === type).length;
 
       if (benchCount >= GAME_RULES.PIECES_IN_BENCH) {
         return false;
       }
 
-      const totalOfType = playerState.getSelectedPieceCount(type) + currentBenchTypeCount;
-      if (totalOfType >= GAME_RULES.MAX_PIECES_PER_TYPE) {
-        return false;
-      }
-
-      // Check if selecting this piece would prevent meeting MIN_PIECES_PER_TYPE for other types
-      const remainingBenchSlots = GAME_RULES.PIECES_IN_BENCH - benchCount;
-
-      // For each piece type, check if we can still meet the minimum requirement
-      const allPieceTypes = Object.values(PieceType);
-      for (const otherType of allPieceTypes) {
-        if (otherType === type) continue;
-
-        const otherTypeTotal =
-          playerState.getSelectedPieceCount(otherType) +
-          playerState.getBenchPieces().filter((p) => p.type === otherType).length;
-
-        // If this other type is below minimum and we don't have enough slots to reach it
-        if (otherTypeTotal < GAME_RULES.MIN_PIECES_PER_TYPE) {
-          const neededToReachMin = GAME_RULES.MIN_PIECES_PER_TYPE - otherTypeTotal;
-          const slotsAvailableForOthers = remainingBenchSlots - 1; // -1 for current selection
-
-          if (slotsAvailableForOthers < neededToReachMin) {
-            return false;
-          }
-        }
-      }
-
-      return true;
+      // La elección debe dejar un ejército posible considerando la SUMA de
+      // faltantes para los mínimos, no cada tipo por separado.
+      const chosen = playerState
+        .getSelectedPieces()
+        .concat(playerState.getBenchPieces().map((p) => p.type));
+      const remaining = CURRENT_RULES.piecesToPlace + CURRENT_RULES.benchSize - chosen.length;
+      return feasibleTypes(countsOf(chosen, CURRENT_RULES), remaining, CURRENT_RULES).includes(
+        type,
+      );
     },
 
     canPlaceBenchPiece: () => {
@@ -926,7 +951,7 @@ const gameStoreInitializer: StateCreator<GameStateStore> = (set, get) => {
         setupCompleted: { player1: false, player2: false },
         setupPlayer: Player.BLANCAS,
         lastPassedPlayer: null,
-        botLayoutId: null,
+        botController: null,
       });
     },
 

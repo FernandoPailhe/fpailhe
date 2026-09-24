@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { RulesPanel } from "./RulesPanel";
 import { useUiPrefsStore } from "../application/uiPrefs";
+import { buildRulesContent } from "../lib/rulesContent";
+import { buildRulesView } from "../domain/config/RulesView";
+import { GAME_RULES } from "../domain/constants/GameRules";
 
 describe("RulesPanel", () => {
   it("renders the rules in English by default, with a diagram per piece", () => {
@@ -32,5 +35,18 @@ describe("RulesPanel", () => {
     expect(screen.getByText(/gana el primero en llegar a 3/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "English" }));
     expect(screen.getByRole("region", { name: "How to play" })).toBeInTheDocument();
+  });
+
+  it("buildRulesContent genera los números desde una variante de reglas", () => {
+    const wide = buildRulesView(
+      { BOARD_WIDTH: 7, BOARD_HEIGHT: 13 },
+      { ...GAME_RULES, PLACEMENT_DEPTH: 2 },
+    );
+    const content = buildRulesContent(wide);
+    expect(content.en.board).toContain("7 columns × 13 rows");
+    expect(content.en.board).toContain("rows 2–3 (White) or 11–12 (Black)");
+    expect(content.en.board).toContain("row 13 for White, row 1 for Black");
+    expect(content.es.board).toContain("filas 2–3 (Blancas) u 11–12 (Negras)");
+    expect(content.en.objective).toContain("7×13");
   });
 });

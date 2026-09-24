@@ -3,7 +3,12 @@ import { MovementRuleEngine } from "./MovementRuleEngine";
 import { Board } from "../../domain/entities/Board";
 import { GamePiece } from "../../domain/entities/GamePiece";
 import { Position } from "../../domain/entities/Position";
-import { PieceType, Player } from "../../domain/constants/PieceConstants";
+import {
+  PieceType,
+  Player,
+  PIECE_MOVEMENT_CONFIG,
+  type PieceMovementConfigMap,
+} from "../../domain/constants/PieceConstants";
 import { GAME_CONFIG } from "../../domain/constants/GameConstants";
 
 const engine = new MovementRuleEngine();
@@ -271,5 +276,125 @@ describe("NEGRAS symmetry", () => {
     const striker = add(PieceType.STRIKER, 1, 6, Player.NEGRAS);
     const moves = engine.getValidMoves(striker, board);
     expect(at(moves, 1, 5)).toBe(false);
+  });
+});
+
+describe("getCaptureSquares", () => {
+  it("devuelve las diagonales del FORT y el frente del STRIKER", () => {
+    const fort = add(PieceType.FORT, 2, 5, Player.BLANCAS);
+    const striker = add(PieceType.STRIKER, 0, 3, Player.BLANCAS);
+    const pioneer = add(PieceType.PIONEER, 4, 4, Player.BLANCAS);
+
+    const fortSquares = engine.getCaptureSquares(fort, board);
+    expect(at(fortSquares, 1, 6)).toBe(true);
+    expect(at(fortSquares, 3, 6)).toBe(true);
+    expect(fortSquares).toHaveLength(2);
+
+    const strikerSquares = engine.getCaptureSquares(striker, board);
+    expect(at(strikerSquares, 0, 4)).toBe(true);
+    expect(strikerSquares).toHaveLength(1);
+
+    expect(engine.getCaptureSquares(pioneer, board)).toHaveLength(0);
+  });
+
+  it("el bloqueo lateral del FORT tapona capturas del STRIKER pero no las suyas", () => {
+    add(PieceType.FORT, 2, 5, Player.NEGRAS);
+    const striker = add(PieceType.STRIKER, 1, 4, Player.BLANCAS);
+    const fort = add(PieceType.FORT, 0, 4, Player.BLANCAS);
+
+    // (1,5) está en el patrón de captura de ambos pero taponeado para el STRIKER.
+    expect(at(engine.getCaptureSquares(striker, board), 1, 5)).toBe(false);
+    // El FORT captura ignorando el bloqueo lateral.
+    expect(at(engine.getCaptureSquares(fort, board), 1, 5)).toBe(true);
+  });
+});
+
+describe("config inyectado", () => {
+  it("un FORT con captura frontal solo aplica en el motor configurado", () => {
+    const customConfig: PieceMovementConfigMap = {
+      ...PIECE_MOVEMENT_CONFIG,
+      [PieceType.FORT]: {
+        ...PIECE_MOVEMENT_CONFIG[PieceType.FORT],
+        capture: {
+          directions: [
+            { dx: 1, dy: 1 },
+            { dx: -1, dy: 1 },
+            { dx: 0, dy: 1 },
+          ],
+          minDistance: 1,
+          maxDistance: 1,
+        },
+      },
+    };
+    const customEngine = new MovementRuleEngine(customConfig);
+
+    const fort = add(PieceType.FORT, 2, 2, Player.BLANCAS);
+    add(PieceType.STRIKER, 2, 3, Player.NEGRAS);
+
+    expect(at(customEngine.getValidMoves(fort, board), 2, 3)).toBe(true);
+    expect(at(customEngine.getCaptureSquares(fort, board), 2, 3)).toBe(true);
+    expect(at(engine.getValidMoves(fort, board), 2, 3)).toBe(false);
+  });
+});
+
+describe("getCaptureSquares — contrato con getValidMoves", () => {
+  const TYPES = [PieceType.FORT, PieceType.STRIKER, PieceType.PIONEER];
+  const other = (p: Player) => (p === Player.BLANCAS ? Player.NEGRAS : Player.BLANCAS);
+
+  const mulberry32 = (seed: number) => {
+    let a = seed >>> 0;
+    return () => {
+      a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  };
+
+  const randomBoard = (rng: () => number): Board => {
+    const b = new Board(GAME_CONFIG.BOARD_WIDTH, GAME_CONFIG.BOARD_HEIGHT);
+    const count = 8 + Math.floor(rng() * 5);
+    for (let i = 0; i < count; i++) {
+      const x = Math.floor(rng() * GAME_CONFIG.BOARD_WIDTH);
+      const y = Math.floor(rng() * GAME_CONFIG.BOARD_HEIGHT);
+      if (b.getPieceAt(new Position(x, y))) continue;
+      const type = TYPES[Math.floor(rng() * TYPES.length)]!;
+      const owner = rng() < 0.5 ? Player.BLANCAS : Player.NEGRAS;
+      b.addPiece(new GamePiece(`r-${i}`, type, new Position(x, y), owner));
+    }
+    return b;
+  };
+
+  it("capturas válidas ⊆ captureSquares y toda captureSquare es capturable (200 tableros)", () => {
+    for (let seed = 1; seed <= 200; seed++) {
+      const b = randomBoard(mulberry32(seed));
+      for (const piece of b.getAllPieces()) {
+        if (!piece.position) continue;
+        const captures = engine.getCaptureSquares(piece, b);
+        const captureKeys = new Set(captures.map((p) => `${p.x},${p.y}`));
+
+        // (a) todo destino de getValidMoves ocupado por un rival es captureSquare
+        for (const to of engine.getValidMoves(piece, b)) {
+          const target = b.getPieceAt(to);
+          if (target && target.owner !== piece.owner) {
+            expect(captureKeys.has(`${to.x},${to.y}`)).toBe(true);
+          }
+        }
+
+        // (b) cada captureSquare es alcanzable con un rival en la casilla
+        for (const sq of captures) {
+          const occupant = b.getPieceAt(sq);
+          if (occupant && occupant.owner === piece.owner) continue;
+          const clone = new Board(b.width, b.height);
+          for (const p of b.getAllPieces()) clone.addPiece(p.clone());
+          if (!occupant) {
+            clone.addPiece(new GamePiece("probe", PieceType.FORT, sq, other(piece.owner)));
+          }
+          const clonedPiece = clone.getPieceById(piece.id)!;
+          const moves = engine.getValidMoves(clonedPiece, clone);
+          expect(moves.some((m) => m.equals(sq))).toBe(true);
+        }
+      }
+    }
   });
 });

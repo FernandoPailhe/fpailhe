@@ -1,7 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { Player, PieceType } from "../constants/PieceConstants";
 import { GAME_CONFIG } from "../constants/GameConstants";
-import { GAME_RULES } from "../constants/GameRules";
+import { GAME_RULES, GamePhase } from "../constants/GameRules";
 import {
   getQuickStartLayout,
   layoutForPlayer,
@@ -9,6 +9,13 @@ import {
   randomQuickStartLayout,
   resolveQuickStartLayout,
 } from "./QuickStartLayout";
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.doUnmock("./quickstart-layouts.json");
+  vi.doUnmock("./QuickStartLayout");
+  vi.resetModules();
+});
 
 describe("QUICK_START_LAYOUTS", () => {
   it("carga los layouts del JSON ya validados al importar el módulo", () => {
@@ -67,20 +74,95 @@ describe("QUICK_START_LAYOUTS", () => {
 });
 
 describe("getQuickStartLayout", () => {
-  it("devuelve el layout por id y falla con uno desconocido", () => {
-    expect(getQuickStartLayout("classic").id).toBe("classic");
-    expect(() => getQuickStartLayout("no-existe")).toThrow(/layout desconocido/);
+  it("devuelve el layout por id y undefined con uno desconocido", () => {
+    expect(getQuickStartLayout("classic")?.id).toBe("classic");
+    expect(getQuickStartLayout("no-existe")).toBeUndefined();
+  });
+});
+
+describe("carga tolerante a reglas", () => {
+  it("descarta con warning un layout incompatible con las reglas, sin romper el import", async () => {
+    vi.resetModules();
+    vi.doMock("./quickstart-layouts.json", () => ({
+      default: {
+        layouts: [
+          {
+            id: "fuera-de-filas",
+            boardPieces: [
+              { type: "FORT", x: 0, y: 5 }, // fila fuera del despliegue
+              { type: "FORT", x: 1, y: 1 },
+              { type: "STRIKER", x: 2, y: 1 },
+              { type: "PIONEER", x: 3, y: 1 },
+              { type: "PIONEER", x: 4, y: 1 },
+            ],
+            benchPieces: ["FORT", "STRIKER", "STRIKER"],
+          },
+          {
+            id: "ok",
+            boardPieces: [
+              { type: "FORT", x: 0, y: 1 },
+              { type: "STRIKER", x: 1, y: 1 },
+              { type: "PIONEER", x: 0, y: 2 },
+              { type: "FORT", x: 1, y: 2 },
+              { type: "STRIKER", x: 0, y: 3 },
+            ],
+            benchPieces: ["STRIKER", "PIONEER", "PIONEER"],
+          },
+        ],
+      },
+    }));
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const mod = await import("./QuickStartLayout");
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('"fuera-de-filas" descartado'));
+    expect(mod.QUICK_START_LAYOUTS.map((l) => l.id)).toEqual(["ok"]);
+    expect(mod.hasQuickStartLayouts()).toBe(true);
+  });
+
+  it("sigue lanzando con errores estructurales (tipo inexistente)", async () => {
+    vi.resetModules();
+    vi.doMock("./quickstart-layouts.json", () => ({
+      default: {
+        layouts: [
+          {
+            id: "roto",
+            boardPieces: [{ type: "DRAGON", x: 0, y: 1 }],
+            benchPieces: [],
+          },
+        ],
+      },
+    }));
+    await expect(import("./QuickStartLayout")).rejects.toThrow(/tipo de pieza inválido/);
+  });
+
+  it("quickStart sin layouts válidos cae a ejército generado (5+3 por jugador)", async () => {
+    vi.resetModules();
+    vi.doMock("./QuickStartLayout", () => ({
+      QUICK_START_LAYOUTS: [],
+      hasQuickStartLayouts: () => false,
+      getQuickStartLayout: () => undefined,
+      randomQuickStartLayout: () => undefined,
+      layoutForPlayer: (l: unknown) => l,
+      resolveQuickStartLayout: () => undefined,
+    }));
+    const { createGameStore } = await import("../../application/GameState");
+    const store = createGameStore();
+    store.getState().quickStart();
+    const s = store.getState();
+    expect(s.gamePhase).toBe(GamePhase.PLAYING);
+    expect(s.board.getAllPieces()).toHaveLength(10);
+    expect(s.player1State.getBenchPieces()).toHaveLength(3);
+    expect(s.player2State.getBenchPieces()).toHaveLength(3);
   });
 });
 
 describe("layoutForPlayer", () => {
   it("deja intactas las posiciones para BLANCAS", () => {
-    const layout = getQuickStartLayout("classic");
+    const layout = getQuickStartLayout("classic")!;
     expect(layoutForPlayer(layout, Player.BLANCAS)).toBe(layout);
   });
 
   it("espeja las filas para NEGRAS conservando las columnas", () => {
-    const layout = getQuickStartLayout("classic");
+    const layout = getQuickStartLayout("classic")!;
     const mirrored = layoutForPlayer(layout, Player.NEGRAS);
     const mirrorY = (y: number) => GAME_CONFIG.BOARD_HEIGHT - 1 - y;
 
@@ -106,16 +188,17 @@ describe("randomQuickStartLayout", () => {
 
 describe("resolveQuickStartLayout", () => {
   it("con id explícito devuelve ese layout orientado al jugador", () => {
-    const forBlack = resolveQuickStartLayout(Player.NEGRAS, "classic");
+    const forBlack = resolveQuickStartLayout(Player.NEGRAS, "classic")!;
     const pioneer = forBlack.boardPieces.find((p) => p.type === PieceType.PIONEER);
     expect(pioneer?.position.x).toBe(2);
     expect(pioneer?.position.y).toBe(8);
   });
 
-  it("sin id sortea un layout válido para el equipo", () => {
-    const layout = resolveQuickStartLayout(Player.NEGRAS);
+  it("sin id sortea un layout válido para el equipo; id inexistente da undefined", () => {
+    const layout = resolveQuickStartLayout(Player.NEGRAS)!;
     for (const { position } of layout.boardPieces) {
       expect(GAME_RULES.PLACEMENT_ROWS_PLAYER2).toContain(position.y);
     }
+    expect(resolveQuickStartLayout(Player.NEGRAS, "no-existe")).toBeUndefined();
   });
 });

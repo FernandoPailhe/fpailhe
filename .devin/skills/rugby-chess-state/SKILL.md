@@ -1,19 +1,28 @@
 ---
 name: rugby-chess-state
-description: Expert skill for the Rugby Chess Application State layer. Handles apps/web/src/lab/rugby-chess/application/GameState.ts (Zustand store) and apps/web/src/lab/rugby-chess/application/rules/MovementRuleEngine.ts. Use this skill whenever adding a new game action, modifying state transitions, changing game phase logic, updating player state management, adding move validation rules, modifying the Zustand store shape, or wiring new domain entities into the game flow. Triggers for "add game action", "modify game state", "change phase logic", "update store", "add selectTile behavior", "modify movePiece", "change turn logic", "update PLACEMENT phase", "add to GameStateStore", "modify movement validation", "change how moves are calculated". Always use this skill for any GameState.ts or MovementRuleEngine.ts work — never modify state directly from React components.
+description: Expert skill for the TryMate (rugby-chess) Application State layer. Handles apps/web/src/lab/trymate/application/GameState.ts (Zustand store), application/rules/ (MovementRuleEngine, turnRules) and application/ai/ (ComputerPlayer, EasyBot, rng, sim, arena). Use this skill whenever adding a new game action, modifying state transitions, changing game phase logic, updating player state management, adding move validation rules, modifying the Zustand store shape, wiring new domain entities into the game flow, or changing bot behavior. Triggers for "add game action", "modify game state", "change phase logic", "update store", "add selectTile behavior", "modify movePiece", "change turn logic", "update PLACEMENT phase", "add to GameStateStore", "modify movement validation", "change how moves are calculated", "bot", "ComputerPlayer". Always use this skill for any GameState.ts or MovementRuleEngine.ts work — never modify state directly from React components.
 ---
 
-# Rugby Chess — State Layer Skill
+# TryMate — State Layer Skill
+
+> El módulo vive en `apps/web/src/lab/trymate/` (antes `rugby-chess`).
 
 ## Scope
 
-This skill owns:
-
 ```
-apps/web/src/lab/rugby-chess/application/
+apps/web/src/lab/trymate/application/
 ├── GameState.ts              # Zustand store — single source of truth
-└── rules/
-    └── MovementRuleEngine.ts # Movement validation engine
+├── useComputerTurn.ts        # Hook: agenda runBotTurn con demora
+├── rules/
+│   ├── MovementRuleEngine.ts # Motor de movimiento data-driven (config inyectado)
+│   └── turnRules.ts          # Consultas puras de turno; todas aceptan `rules?`
+└── ai/
+    ├── ComputerPlayer.ts     # Interfaz BotContext/ComputerPlayer + registro de fábricas
+    ├── rng.ts                # Rng, createSeededRng (mulberry32)
+    ├── EasyBot.ts            # Bot fácil agnóstico de reglas
+    ├── arena.ts              # Árbitro bot-vs-bot sobre SimState
+    ├── sim/SimState.ts       # Estado funcional para simulación (sin store)
+    └── testing/ruleVariants.ts # Variantes de reglas para tests
 ```
 
 **Dependencies:** imports from `../domain/` only (plus `zustand`). Never imports from `components/`.
@@ -22,79 +31,26 @@ apps/web/src/lab/rugby-chess/application/
 
 ## Zustand Store Architecture
 
-`GameState.ts` exports a single Zustand store: `useGameStore`. It is both the state shape and the action definitions.
+`GameState.ts` exports `useGameStore` (shape + actions) and `createGameStore()` (instancia aislada para tests).
 
 ```typescript
-export const useGameStore = create<GameStateStore>((set, get) => ({
-  // State fields
-  board: createInitialBoard(),
-  gamePhase: GamePhase.SETUP,
-  gameMode: GameMode.PVP,
-  currentPlayer: Player.BLANCAS,
-  player1State: new PlayerState('player1'),
-  player2State: new PlayerState('player2'),
-  selectedPiece: null,
-  selectedPieceTypeForPlacement: PieceType | null,
-  selectedBenchPiece: GamePiece | null,
-  validMoves: Position[],
-  blockedMoves: Position[],
-  movementEngine: new MovementRuleEngine(),
-  pieceIdCounter: number,
-  moveHistory: MoveHistory,
-  isViewingHistory: boolean,
-
-  // Actions (30+ methods)
-  selectPieceTypeForSetup, selectPieceTypeForBench, placePieceInSetup,
-  placeBenchPiece, selectBenchPiece, selectTile, handleTileClick, hoverTile,
-  movePiece, startGame, reset, quickStart,
-  getCurrentPlayerState, getOpponentPlayerState,
-  checkScoring, checkGameOver, canSelectPieceType,
-  canSelectBenchPieceType, canPlaceBenchPiece,
-  setGameMode,
-  goBackInHistory, goForwardInHistory, returnToPresent,
-  getMoveHistory, canGoBack, canGoForward,
-}));
+// State fields relevantes a reglas/bot
+board, gamePhase, gameMode, currentPlayer, player1State, player2State,
+selectedPiece, selectedPieceTypeForPlacement, selectedBenchPiece,
+validMoves, blockedMoves, movementEngine: new MovementRuleEngine(),
+pieceIdCounter, moveHistory, isViewingHistory,
+setupMode: SetupTurnMode,        // ALTERNATING | HIDDEN
+setupCompleted: { player1, player2 },
+setupPlayer, lastPassedPlayer,
+botDifficulty: BotDifficulty,    // "easy" (default)
+botController: ComputerPlayer | null, // vive la instancia del bot (su estado interno)
 ```
 
 ---
 
 ## Tile Interaction: `handleTileClick` Is the Only Entry Point
 
-UI components **never** call `selectTile`/`movePiece`/`placeBenchPiece` directly. Every board click goes through `handleTileClick(position)`, which encapsulates:
-
-1. `isViewingHistory` guard — history viewing is read-only.
-2. Phase guard — only `SETUP` and `PLAYING` accept tile clicks.
-3. Bench placement priority — free action when `canPlaceBenchPiece()` and the tile is empty, **but only** if a bench piece is selected, or no board piece is selected and the tile is a valid deployment square (`getBenchPlacementSquares`). Otherwise the click falls through to the move/selection steps so a selected piece can still move to empty squares.
-4. Confirmed move — `selectedPiece` + `validMoves` hit → `movePiece`.
-5. Otherwise → `selectTile` (select / reselect / deselect / setup placement).
-
-When adding interaction behavior, extend `handleTileClick` (or the action it delegates to) — never bypass it from a component.
-
----
-
-## Adding a New Action
-
-Actions live inside the `create()` callback. Use `set()` for state mutations and `get()` to read current state.
-
-```typescript
-// Pattern for a new action
-myNewAction: (param: SomeType) => {
-  const state = get();
-  // 1. Read what you need from state
-  // 2. Compute next state (pure logic, no side effects)
-  // 3. Call set() once with the new state slice
-  set({
-    someField: newValue,
-    otherField: otherNewValue,
-  });
-},
-```
-
-Key rules:
-- Keep actions pure — no direct DOM manipulation, no rendering calls.
-- Use `get()` to access other state fields and call other actions (`get().checkGameOver()`).
-- If an action needs to run after a state update (async or sequenced), use `setTimeout(() => get().nextAction(), 0)` to avoid nested `set()` calls.
-- React components subscribe via `useGameStore`; they automatically re-render after `set()`.
+UI components **never** call `selectTile`/`movePiece`/`placeBenchPiece` directly. Every board click goes through `handleTileClick(position)`: `isViewingHistory` guard → phase guard (SETUP/PLAYING) → bench free-action → confirmed move → `selectTile`.
 
 ---
 
@@ -104,98 +60,65 @@ Key rules:
 SETUP → BENCH_SELECTION → PLAYING → GAME_OVER
 ```
 
-- **SETUP:** Players select and place pieces on their rows (`PLACEMENT_ROWS_PLAYER1/2`). Each player places 5 pieces; 3 remain as bench. Enforces `MIN/MAX_PIECES_PER_TYPE`, `MAX_PIECES_PER_ROW`.
-- **BENCH_SELECTION:** Player assigns 3 pieces to bench from remaining allocation.
-- **PLAYING:** Turn-based. `handleTileClick()` → `selectTile()`/`movePiece()` cycle. After each move: `checkScoring()` → `checkGameOver()` → toggle `currentPlayer`.
-- **GAME_OVER:** Triggered when a player reaches `POINTS_TO_WIN` (3 scores), or when neither side has legal moves.
-
-When adding a new phase, add it to `GamePhase` enum in `domain/constants/GameRules.ts` first (domain skill), then handle transitions here.
+- **SETUP:** colocación en `CURRENT_RULES.placementRows(player)` (derivadas de `PLACEMENT_DEPTH` + alto). La selección de tipo usa `feasibleTypes` (`domain/rules/composition.ts`) en `canSelectPieceType`/`canSelectBenchPieceType` — respeta mínimos/máximos por tipo y capacidad restante.
+- **HIDDEN setup:** cada jugador completa 5+3 por su lado; `setupCompleted` trackea ambos. El bot recibe un tablero **filtrado con solo sus piezas** (`boardWithOnlyOwner`).
+- **PLAYING:** `handleTileClick` → select/move; `checkScoring` retira la pieza que llega a `rules.scoringRow` y suma; `resolveStalledTurn` corre tras cada acción: si el jugador en turno no tiene acción legal pasa el turno (`lastPassedPlayer`), si ninguno tiene → `GAME_OVER`.
+- **GAME_OVER:** `POINTS_TO_WIN` puntos o bloqueo mutuo.
 
 ---
 
-## MovementRuleEngine
+## MovementRuleEngine (data-driven)
 
-`MovementRuleEngine` implements `IMovementRule` and is instantiated once in the store as `movementEngine`.
+`new MovementRuleEngine(config = PIECE_MOVEMENT_CONFIG)` — el config se **inyecta**; el motor no tiene ramas por `PieceType.X`. Las mecánicas se leen de flags (`lShape`, `maxLateral`, `maxTotalDistance`, `canBypassBlocker`, `bypassMinDistance`, `requiresClearPath`, `blocksSides`, `blockedSideOffsets`, `captureIgnoresSideBlock`).
 
-**Public API:**
 ```typescript
-getValidMoves(piece: GamePiece, board: Board): Position[]
-getBlockedMoves(piece: GamePiece, board: Board): Position[]
-isValidMove(context: MoveValidationContext): boolean
-canPassThrough(piece: GamePiece, targetPosition: Position, board: Board): boolean
+getValidMoves(piece, board): Position[]
+getBlockedMoves(piece, board): Position[]
+isValidMove(context): boolean
+canPassThrough(piece, targetPosition, board): boolean
+getCaptureSquares(piece, board): Position[]  // casillas que capturaría si hubiera rival
 ```
 
-**When to modify `MovementRuleEngine`:**
-- New piece type requires special move logic (like APEX's L-shape)
-- Existing piece movement rules change in `PIECE_MOVEMENT_CONFIG`
-- New blocking mechanic is introduced
+- `getCaptureSquares` evalúa el patrón de captura con bloqueos "como si hubiera rival" — la fuente de amenazas del bot y de los tests de contrato.
+- Para mecánicas nuevas: extender `PieceMovementConfig` (domain skill) + el motor — no agregar `if (piece.type === X)`.
 
-**Pattern for special piece movement:**
-- Add a `get[PieceName]ValidMoves()` private method (see `getApexValidMoves()` as reference)
-- Add a branch in `getValidMoves()` for the new piece type
-- Blocked moves (`getBlockedMoves()`) should mirror the same special-case handling
+**`turnRules.ts`:** `getPlacementRows`, `getScoringRow`, `getBenchPlacementSquares`, `canPlaceFromBench`, `hasAnyLegalMove`, `hasAnyLegalAction` — todas aceptan `rules: RulesView = CURRENT_RULES` como último parámetro.
 
-**Direction convention:** `dy` is always expressed as positive = forward (toward opponent). The `piece.getDirectionMultiplier()` converts: +1 for BLANCAS, -1 for NEGRAS.
+---
+
+## Bots: `ComputerPlayer`
+
+`application/ai/ComputerPlayer.ts` define el contrato:
+
+```typescript
+interface BotContext {
+  board, bot, botState, opponentState,
+  engine: MovementRuleEngine, rules: RulesView,
+  setupMode, rng: Rng,
+}
+interface ComputerPlayer {
+  difficulty: BotDifficulty;                       // "easy"
+  chooseSetupPlacement(ctx): { type, position } | null;
+  chooseBenchType(ctx): PieceType | null;
+  choosePlayAction(ctx): BotPlayAction;            // bench | move | pass
+}
+```
+
+- El estado interno del bot (plan de despliegue) vive en la instancia, no en el store.
+- `createComputerPlayer(difficulty, rng)` via `FACTORIES`; registrar bots nuevos con `registerComputerPlayer`.
+- `startVsComputer(setupMode, difficulty?)` crea el controller; `playAgain` lo recrea; `reset` lo limpia.
+- `runBotTurn(rng?)` ejecuta UNA acción atómica via acciones públicas con `botActing` (flag de closure que habilita `isLocalPlayerTurn()`). Construye el `BotContext` con `rules: CURRENT_RULES`; en SETUP HIDDEN pasa `boardWithOnlyOwner(board, bot)`.
+- **ESLint guard** (`eslint.config.js`): `application/ai/**/*.ts` (salvo tests/testing/sim) no puede importar `GAME_RULES`, `GAME_CONFIG`, `PIECE_MOVEMENT_CONFIG`, `QuickStartLayout` ni usar `PieceType.X` — los bots reciben todo por `ctx`.
+
+**Easy:** 1-ply ponderado (score 100, capture 30, advance 3/fila, threatened −15, noise 5; 30% movimiento aleatorio, pick uniforme del top-3). Amenazas vía `engine.getCaptureSquares`. Setup: plan `generateRandomArmy` + `feasibleTypes`.
+
+**Sim/arena:** `sim/SimState.ts` (`generateMoves`, `applySimMove`, `applySimBench`, `passTurn`, `simFromContext`, `cloneBoard` — todo inmutable) y `arena.ts` (`playArenaGame`, `runArena`) prueban bots con `RuleVariant` sin tocar el store. La arena es árbitro estricto: acción ilegal → `illegalAction`.
 
 ---
 
 ## Key Patterns in GameState
 
-**Move execution flow:**
-```typescript
-handleTileClick(position) → {
-  if isViewingHistory: return
-  if PLAYING && canPlaceBenchPiece() && empty tile: placeBenchPiece(position)
-  if selectedPiece && validMoves hit: movePiece(position)
-  else: selectTile(position)
-}
-
-movePiece(to) → {
-  board.movePiece(pieceId, to)
-  addToMoveHistory()
-  checkScoring(movedPiece)
-  checkGameOver()
-  toggle currentPlayer
-  clearSelection()
-}
-```
-
-**Scoring check:**
-- BLANCAS scores when a piece reaches `SCORING_ZONE_PLAYER1` (row 10)
-- NEGRAS scores when a piece reaches `SCORING_ZONE_PLAYER2` (row 0)
-- On score: piece is removed from the board, score incremented
-
-**History navigation:**
-- `moveHistory: MoveHistory` stores `MoveRecord[]` with `boardSnapshot` JSON
-- `isViewingHistory: boolean` — while true, `handleTileClick` no-ops and the UI disables the board
-- `goBackInHistory()`, `goForwardInHistory()`, `returnToPresent()` restore the board via `restoreBoardFromSnapshot()` — they navigate without mutating canonical state
-
-**Important:** `board`, `playerNState`, `moveHistory` are class instances that **mutate in place**. Components that render board content must subscribe to fields that change per action (or the whole store) — see the code-review skill.
-
----
-
-## IGameState Interface
-
-`domain/interfaces/IGameState.ts` defines the public contract implemented by the `GameState` wrapper class at the bottom of `GameState.ts`. When adding new public actions intended for external consumers:
-1. Add the method signature to `IGameState`
-2. Implement it in `useGameStore`
-3. Expose it via the `GameState` wrapper if needed
-
----
-
-## TypeScript Notes
-
-- `useGameStore` is typed as `create<GameStateStore>` — the full interface must stay in sync.
-- Actions that return values (e.g., `getCurrentPlayerState()`) use `get()` and return directly — they don't call `set()`.
-- `canSelectPieceType()` and similar predicates are pure computed — keep them side-effect free.
-- The `pieceIdCounter` is a monotonic integer used to generate unique piece IDs: `piece_${++get().pieceIdCounter}`.
-- `GameMode` has `PVP` (local hot-seat), `ONLINE` (rooms via roomSync) and
-  `VS_COMPUTER` (human plays BLANCAS against the EasyBot).
-- `resolveStalledTurn()` runs after every `movePiece`, `placeBenchPiece` and on
-  entering `PLAYING`: if the current player has no legal action the turn passes
-  (`lastPassedPlayer` set for the UI badge); if neither has, `GAME_OVER`.
-- `runBotTurn(rng?)` executes ONE atomic bot action via the public actions —
-  `botActing` (closure flag, not reactive state) makes `isLocalPlayerTurn()` /
-  `isSetupTurnForLocalPlayer()` return true while it runs. It never calls
-  `handleTileClick`. `useComputerTurn()` schedules it with `setTimeout`.
-- `EasyBot.ts` (application/ai) is pure: no React/Zustand, injectable `rng`.
+- `movePiece` → `board.movePiece` → `MoveRecord` con snapshot → `checkScoring` → `checkGameOver` → toggle → `resolveStalledTurn`.
+- `placeBenchPiece` es acción libre (no cambia turno) → `resolveStalledTurn`.
+- `board`, `playerNState`, `moveHistory` mutan in place — los componentes deben suscribirse a campos que cambian por acción (ver code-review skill).
+- `quickStart(player1LayoutId?, player2LayoutId?)`: layout compatible o ejército aleatorio (`generateRandomArmy`) como fallback; nunca rompe por reglas.

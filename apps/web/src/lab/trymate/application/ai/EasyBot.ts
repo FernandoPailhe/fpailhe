@@ -1,18 +1,15 @@
 import { Board } from "../../domain/entities/Board";
 import { Position } from "../../domain/entities/Position";
-import { PlayerState } from "../../domain/entities/PlayerState";
-import { PieceType, Player } from "../../domain/constants/PieceConstants";
-import { GAME_CONFIG } from "../../domain/constants/GameConstants";
-import { QUICK_START_LAYOUTS, type QuickStartLayout } from "../../domain/config/QuickStartLayout";
+import type { PieceType, Player } from "../../domain/constants/PieceConstants";
 import { MovementRuleEngine } from "../rules/MovementRuleEngine";
-import { canPlaceFromBench, getBenchPlacementSquares, getScoringRow } from "../rules/turnRules";
+import { canPlaceFromBench, getBenchPlacementSquares } from "../rules/turnRules";
+import { countsOf, feasibleTypes } from "../../domain/rules/composition";
+import { generateRandomArmy, type GeneratedArmy } from "../../domain/rules/randomArmy";
+import type { BotContext, BotPlayAction, ComputerPlayer } from "./ComputerPlayer";
+import type { Rng } from "./rng";
 
-export type Rng = () => number;
-
-export type BotPlayAction =
-  | { kind: "bench"; benchPieceId: string; to: Position }
-  | { kind: "move"; pieceId: string; to: Position }
-  | { kind: "pass" };
+export type { Rng } from "./rng";
+export type { BotPlayAction } from "./ComputerPlayer";
 
 export interface EasyBotConfig {
   randomMoveChance: number;
@@ -33,80 +30,29 @@ export const EASY_BOT_CONFIG: EasyBotConfig = {
 };
 
 /**
- * Bot "fácil": 1-ply con ponderación y azar. Puro — sin React ni Zustand —
- * y con `rng` inyectable para tests deterministas. Nunca muta el tablero.
+ * Bot "fácil": 1-ply con ponderación y azar. Puro — sin React ni Zustand.
+ * No conoce ninguna regla propia: todo sale de `ctx.rules` y `ctx.engine`,
+ * así sigue jugando legal si cambian tamaño, filas o movimientos.
  */
 
 const pickIndex = <T>(arr: readonly T[], rng: Rng): T | undefined =>
   arr[Math.floor(rng() * arr.length)];
 
-/** Id de un layout de quick start al azar (el bot arma su ejército con él). */
-export function pickBotLayoutId(rng: Rng): string {
-  const layout = pickIndex(QUICK_START_LAYOUTS, rng);
-  if (!layout) {
-    throw new Error("EasyBot: no hay layouts de quick start configurados");
-  }
-  return layout.id;
-}
-
 /**
- * Siguiente pieza del `layout` aún no colocada: la primera cuya casilla está
- * libre. El layout ya viene espejado (`resolveQuickStartLayout(bot, id)`).
+ * Casillas amenazadas por el rival del bot: unión de lo que cada pieza rival
+ * capturaría según el motor (`getCaptureSquares`), así respeta bloqueos
+ * laterales y cualquier cambio de patrones de captura. Claves "x,y".
  */
-export function nextSetupPlacement(
+export function getThreatenedSquares(
   board: Board,
   bot: Player,
-  layout: QuickStartLayout,
-): { type: PieceType; position: Position } | null {
-  for (const { type, position } of layout.boardPieces) {
-    const occupant = board.getPieceAt(position);
-    if (occupant === undefined) return { type, position };
-    // Defensivo: el setup rival nunca ocupa las filas del bot; si pasara,
-    // salteamos la casilla en vez de proponer una colocación inválida.
-    if (occupant.owner !== bot) continue;
-  }
-  return null;
-}
-
-/** Siguiente tipo de `layout.benchPieces` que la banca aún no completó. */
-export function nextBenchType(
-  playerState: PlayerState,
-  layout: QuickStartLayout,
-): PieceType | null {
-  const remaining = new Map<PieceType, number>();
-  for (const type of layout.benchPieces) {
-    remaining.set(type, (remaining.get(type) ?? 0) + 1);
-  }
-  for (const piece of playerState.getBenchPieces()) {
-    const left = remaining.get(piece.type);
-    if (left !== undefined) remaining.set(piece.type, left - 1);
-  }
-  for (const type of layout.benchPieces) {
-    if ((remaining.get(type) ?? 0) > 0) return type;
-  }
-  return null;
-}
-
-/**
- * Aproximación barata de casillas amenazadas por el rival del bot: las 2
- * diagonales hacia adelante de cada FORT rival y la casilla de enfrente de
- * cada STRIKER rival. No simula bloqueos. Claves "x,y".
- */
-export function getThreatenedSquares(board: Board, bot: Player): Set<string> {
+  engine: MovementRuleEngine,
+): Set<string> {
   const threatened = new Set<string>();
   for (const piece of board.getAllPieces()) {
     if (piece.owner === bot || !piece.position) continue;
-    const dxs: readonly number[] =
-      piece.type === PieceType.FORT ? [-1, 1] : piece.type === PieceType.STRIKER ? [0] : [];
-    const dir = piece.getDirectionMultiplier();
-    for (const dx of dxs) {
-      const x = piece.position.x + dx;
-      const y = piece.position.y + dir;
-      // Position lanza con coordenadas negativas: chequear bordes antes.
-      if (x < 0 || x >= GAME_CONFIG.BOARD_WIDTH || y < 0 || y >= GAME_CONFIG.BOARD_HEIGHT) {
-        continue;
-      }
-      threatened.add(`${x},${y}`);
+    for (const square of engine.getCaptureSquares(piece, board)) {
+      threatened.add(`${square.x},${square.y}`);
     }
   }
   return threatened;
@@ -125,36 +71,35 @@ interface MoveCandidate {
  * cualquier candidato. Sin movimientos ni banca → `pass`.
  */
 export function choosePlayAction(
-  board: Board,
-  bot: Player,
-  playerState: PlayerState,
-  engine: MovementRuleEngine,
-  rng: Rng,
+  ctx: BotContext,
   config: EasyBotConfig = EASY_BOT_CONFIG,
 ): BotPlayAction {
-  if (canPlaceFromBench(board, bot, playerState)) {
-    const squares = getBenchPlacementSquares(board, bot);
-    const benchPiece = playerState.getBenchPieces()[0];
+  const { board, bot, botState, engine, rules, rng } = ctx;
+
+  if (canPlaceFromBench(board, bot, botState, rules)) {
+    const squares = getBenchPlacementSquares(board, bot, rules);
+    const benchPiece = botState.getBenchPieces()[0];
     if (squares.length > 0 && benchPiece) {
       // Preferencia por la fila de despliegue más adelantada.
-      const bestRow =
-        bot === Player.BLANCAS
-          ? Math.max(...squares.map((p) => p.y))
-          : Math.min(...squares.map((p) => p.y));
+      const home = rules.homeRow(bot);
+      const bestRow = squares.reduce(
+        (best, p) => (Math.abs(p.y - home) > Math.abs(best - home) ? p.y : best),
+        squares[0]!.y,
+      );
       const candidates = squares.filter((p) => p.y === bestRow);
       const to = pickIndex(candidates, rng);
       if (to) return { kind: "bench", benchPieceId: benchPiece.id, to };
     }
   }
 
-  const threatened = getThreatenedSquares(board, bot);
-  const scoringRow = getScoringRow(bot);
+  const threatened = getThreatenedSquares(board, bot, engine);
+  const scoringRow = rules.scoringRow(bot);
+  const dir = rules.forward(bot);
   const candidates: MoveCandidate[] = [];
 
   for (const piece of board.getAllPieces()) {
     if (piece.owner !== bot || !piece.position) continue;
     const from = piece.position;
-    const dir = piece.getDirectionMultiplier();
     for (const to of engine.getValidMoves(piece, board)) {
       let score = (to.y - from.y) * dir * config.weights.advancePerRow;
       if (to.y === scoringRow) score += config.weights.score;
@@ -176,4 +121,65 @@ export function choosePlayAction(
   const ranked = [...candidates].sort((a, b) => b.score - a.score);
   const pick = pickIndex(ranked.slice(0, config.topK), rng);
   return pick ? { kind: "move", pieceId: pick.pieceId, to: pick.to } : { kind: "pass" };
+}
+
+/** Tipos ya elegidos por el bot (tablero + banca) y los que aún puede tomar. */
+function allowedTypes(ctx: BotContext): PieceType[] {
+  const chosen = ctx.botState
+    .getSelectedPieces()
+    .concat(ctx.botState.getBenchPieces().map((p) => p.type));
+  const remaining = ctx.rules.piecesToPlace + ctx.rules.benchSize - chosen.length;
+  return feasibleTypes(countsOf(chosen, ctx.rules), remaining, ctx.rules);
+}
+
+/**
+ * Bot Easy con estado propio: al primer uso genera un ejército plan
+ * (`generateRandomArmy`) y lo sigue mientras las casillas y la composición lo
+ * permitan; si el plan se agota o no aplica, elige cualquier casilla/tipo
+ * válido. Las decisiones usan `ctx.rng`; el plan usa el rng de la fábrica.
+ */
+export function createEasyBot(rng: Rng): ComputerPlayer {
+  let plan: GeneratedArmy | null = null;
+  const plannedArmy = (ctx: BotContext): GeneratedArmy => {
+    plan ??= generateRandomArmy(ctx.rules, ctx.bot, rng);
+    return plan;
+  };
+
+  return {
+    difficulty: "easy",
+
+    chooseSetupPlacement(ctx) {
+      const army = plannedArmy(ctx);
+      const allowed = allowedTypes(ctx);
+      const squares = getBenchPlacementSquares(ctx.board, ctx.bot, ctx.rules);
+      // Primera pieza del plan cuya casilla siga libre y cuyo tipo sea legal.
+      for (const { type, position } of army.boardPieces) {
+        if (allowed.includes(type) && squares.some((s) => s.equals(position))) {
+          return { type, position };
+        }
+      }
+      const type = pickIndex(allowed, ctx.rng);
+      const position = pickIndex(squares, ctx.rng);
+      if (type === undefined || position === undefined) return null;
+      return { type, position };
+    },
+
+    chooseBenchType(ctx) {
+      const army = plannedArmy(ctx);
+      const allowed = allowedTypes(ctx);
+      if (allowed.length === 0) return null;
+      // Siguiente tipo del plan de banca todavía no elegido (multiset).
+      const pending = [...army.benchPieces];
+      for (const piece of ctx.botState.getBenchPieces()) {
+        const i = pending.indexOf(piece.type);
+        if (i >= 0) pending.splice(i, 1);
+      }
+      const planned = pending.find((t) => allowed.includes(t));
+      return planned ?? pickIndex(allowed, ctx.rng) ?? null;
+    },
+
+    choosePlayAction(ctx) {
+      return choosePlayAction(ctx);
+    },
+  };
 }
