@@ -22,10 +22,14 @@ import {
 } from "./rules/turnRules";
 import {
   createComputerPlayer,
+  loadComputerPlayer,
+  needsAsyncLoad,
   type BotContext,
   type BotDifficulty,
+  type BotPlayAction,
   type ComputerPlayer,
 } from "./ai/ComputerPlayer";
+import type { Personality } from "./ai/personality";
 import type { Rng } from "./ai/rng";
 import {
   resolveQuickStartLayout,
@@ -74,6 +78,14 @@ interface GameStateStore {
   botDifficulty: BotDifficulty;
   /** Controller del bot de la partida actual; null fuera de VS_COMPUTER. */
   botController: ComputerPlayer | null;
+  /** Id del controller actual: sube cada vez que se crea uno (invalida turnos async). */
+  botControllerId: number;
+  /** True mientras un bot async calcula su turno (búsqueda en worker). */
+  botThinking: boolean;
+  /** Personalidad del bot (solo Hard la usa hoy). */
+  botPersonality: Personality;
+  /** True mientras se descarga/crea el controller lazy (Hard). */
+  botLoading: boolean;
 
   selectPieceTypeForSetup: (type: PieceType) => void;
   selectPieceTypeForBench: (type: PieceType) => void;
@@ -100,7 +112,11 @@ interface GameStateStore {
   /** Cambia el modo de turnos del setup; solo válido antes de colocar piezas. */
   setSetupMode: (mode: SetupTurnMode) => void;
   /** Inicia partida contra la computadora: humano BLANCAS, bot NEGRAS. */
-  startVsComputer: (setupMode: SetupTurnMode, difficulty?: BotDifficulty) => void;
+  startVsComputer: (
+    setupMode: SetupTurnMode,
+    difficulty?: BotDifficulty,
+    personality?: Personality,
+  ) => void;
   /** Reinicia la partida conservando el modo actual (PVP / VS_COMPUTER). */
   playAgain: () => void;
   /** Bando que controla el bot en VS_COMPUTER; null en otros modos. */
@@ -110,6 +126,28 @@ interface GameStateStore {
    * las acciones públicas. Devuelve true si el estado cambió.
    */
   runBotTurn: (rng?: Rng) => boolean;
+  /**
+   * Variante async: usa `choosePlayActionAsync`/`prepareSetupAsync` si el
+   * controller los tiene (Hard); si no, cae a `runBotTurn`. Descarta la
+   * respuesta si el turno cambió mientras pensaba (token) o se abortó.
+   */
+  runBotTurnAsync: (signal: AbortSignal, rng?: Rng) => Promise<boolean>;
+  /**
+   * Contexto del bot para este instante; null si no es turno del bot, fase
+   * inválida o se está viendo el historial. Incluye el filtro HIDDEN.
+   */
+  buildBotContext: (rng?: Rng) => BotContext | null;
+  /**
+   * Aplica UNA acción de PLAYING del bot (banca, movimiento o pase) por las
+   * acciones públicas. Devuelve true si el estado cambió.
+   */
+  applyBotAction: (action: BotPlayAction) => boolean;
+  /**
+   * Huella del turno actual: cambia con fase, turno, movimientos, banca,
+   * historial, sala y controller. Un resultado async cuyo token ya no
+   * coincide se descarta (llegó tarde a una partida distinta).
+   */
+  getBotTurnToken: () => string;
   /** True si el jugador local debe ver/actuar en el setup (siempre true en local). */
   isSetupTurnForLocalPlayer: () => boolean;
   getCurrentPlayerState: () => PlayerState;
@@ -222,6 +260,19 @@ const gameStoreInitializer: StateCreator<GameStateStore> = (set, get) => {
   // Flag interno (no reactivo): mientras el bot ejecuta su acción, las
   // validaciones de "turno local" lo dejan pasar. Siempre vuelve a false.
   let botActing = false;
+
+  /** Devuelve el controller vigente o crea uno sync; null mientras carga (Hard). */
+  const ensureController = (rng: Rng): ComputerPlayer | null => {
+    const s = get();
+    if (s.botController) return s.botController;
+    if (needsAsyncLoad(s.botDifficulty)) return null; // carga lazy en curso
+    const controller = createComputerPlayer(s.botDifficulty, rng, {
+      personality: s.botPersonality,
+    });
+    set({ botController: controller, botControllerId: s.botControllerId + 1 });
+    return controller;
+  };
+
   return {
     board: createInitialBoard(),
     gamePhase: GamePhase.SETUP,
@@ -246,6 +297,10 @@ const gameStoreInitializer: StateCreator<GameStateStore> = (set, get) => {
     lastPassedPlayer: null,
     botDifficulty: "easy",
     botController: null,
+    botControllerId: 0,
+    botThinking: false,
+    botPersonality: "balanced",
+    botLoading: false,
 
     isLocalPlayerTurn: () => {
       if (botActing) return true;
@@ -264,16 +319,49 @@ const gameStoreInitializer: StateCreator<GameStateStore> = (set, get) => {
       return state.currentPlayer === state.localPlayer;
     },
 
-    startVsComputer: (setupMode: SetupTurnMode, difficulty?: BotDifficulty) => {
-      const botDifficulty = difficulty ?? get().botDifficulty;
-      get().reset(setupMode);
+    startVsComputer: (
+      setupMode: SetupTurnMode,
+      difficulty?: BotDifficulty,
+      personality?: Personality,
+    ) => {
+      const s = get();
+      const botDifficulty = difficulty ?? s.botDifficulty;
+      const botPersonality = personality ?? s.botPersonality;
+      s.reset(setupMode); // también hace dispose del controller anterior
+      const controllerId = get().botControllerId + 1;
       set({
         gameMode: GameMode.VS_COMPUTER,
         localPlayer: Player.BLANCAS,
         roomId: null,
         botDifficulty,
-        botController: createComputerPlayer(botDifficulty, Math.random),
+        botPersonality,
+        botControllerId: controllerId,
       });
+      if (needsAsyncLoad(botDifficulty)) {
+        // Carga diferida: el chunk de Hard se descarga recién acá.
+        set({ botController: null, botLoading: true });
+        void loadComputerPlayer(botDifficulty, Math.random, { personality: botPersonality })
+          .then((controller) => {
+            const cur = get();
+            if (cur.botControllerId === controllerId && cur.gameMode === GameMode.VS_COMPUTER) {
+              set({ botController: controller, botLoading: false });
+            } else {
+              controller.dispose?.();
+            }
+          })
+          .catch((err) => {
+            if (import.meta.env.DEV) {
+              console.error("startVsComputer: no se pudo cargar el bot", err);
+            }
+            set({ botLoading: false });
+          });
+      } else {
+        set({
+          botController: createComputerPlayer(botDifficulty, Math.random, {
+            personality: botPersonality,
+          }),
+        });
+      }
     },
 
     playAgain: () => {
@@ -291,42 +379,91 @@ const gameStoreInitializer: StateCreator<GameStateStore> = (set, get) => {
       return state.localPlayer === Player.BLANCAS ? Player.NEGRAS : Player.BLANCAS;
     },
 
-    runBotTurn: (rng: Rng = Math.random): boolean => {
+    buildBotContext: (rng: Rng = Math.random): BotContext | null => {
       const s = get();
       const bot = s.getBotPlayer();
-      if (!bot || s.currentPlayer !== bot || s.isViewingHistory) return false;
+      if (!bot || s.currentPlayer !== bot || s.isViewingHistory) return null;
       if (
         s.gamePhase !== GamePhase.SETUP &&
         s.gamePhase !== GamePhase.BENCH_SELECTION &&
         s.gamePhase !== GamePhase.PLAYING
       ) {
+        return null;
+      }
+      // En SETUP HIDDEN el bot solo ve sus propias piezas.
+      const observable =
+        s.gamePhase === GamePhase.SETUP && s.setupMode === SetupTurnMode.HIDDEN
+          ? boardWithOnlyOwner(s.board, bot)
+          : s.board;
+      return {
+        board: observable,
+        bot,
+        botState: s.getCurrentPlayerState(),
+        opponentState: s.getOpponentPlayerState(),
+        engine: s.movementEngine,
+        rules: CURRENT_RULES,
+        setupMode: s.setupMode,
+        rng,
+      };
+    },
+
+    applyBotAction: (action: BotPlayAction): boolean => {
+      const s = get();
+      const bot = s.getBotPlayer();
+      if (!bot || s.currentPlayer !== bot || s.gamePhase !== GamePhase.PLAYING) {
         return false;
       }
+      const before = JSON.stringify(s.toSnapshot());
+      botActing = true;
+      try {
+        const st = get();
+        const ps = st.getCurrentPlayerState();
+        if (action.kind === "bench") {
+          const piece = ps.getBenchPieces().find((p) => p.id === action.benchPieceId);
+          if (piece) {
+            st.selectBenchPiece(piece);
+            get().placeBenchPiece(action.to);
+          }
+        } else if (action.kind === "move") {
+          const piece = st.board.getPieceById(action.pieceId);
+          if (piece?.position) {
+            st.selectTile(piece.position);
+            get().movePiece(action.to);
+          }
+        } else {
+          get().resolveStalledTurn();
+        }
+      } finally {
+        botActing = false;
+      }
+      return JSON.stringify(get().toSnapshot()) !== before;
+    },
 
-      // Defensivo: si la partida arrancó sin controller (estado restaurado).
-      const controller = s.botController ?? createComputerPlayer(s.botDifficulty, rng);
-      if (!s.botController) set({ botController: controller });
+    getBotTurnToken: (): string => {
+      const s = get();
+      return [
+        s.gamePhase,
+        s.currentPlayer,
+        s.moveHistory.getTotalMoves(),
+        s.player1State.getBenchPieces().length,
+        s.player2State.getBenchPieces().length,
+        s.isViewingHistory,
+        s.roomId ?? "",
+        s.botControllerId,
+      ].join("|");
+    },
+
+    runBotTurn: (rng: Rng = Math.random): boolean => {
+      const ctx = get().buildBotContext(rng);
+      if (!ctx) return false;
+      const controller = ensureController(rng);
+      if (!controller) return false; // bot lazy aún cargando
       const before = JSON.stringify(get().toSnapshot());
 
       botActing = true;
       try {
         const st = get();
         const ps = st.getCurrentPlayerState();
-        // En SETUP HIDDEN el bot solo ve sus propias piezas.
-        const observable =
-          st.gamePhase === GamePhase.SETUP && st.setupMode === SetupTurnMode.HIDDEN
-            ? boardWithOnlyOwner(st.board, bot)
-            : st.board;
-        const ctx: BotContext = {
-          board: observable,
-          bot,
-          botState: ps,
-          opponentState: st.getOpponentPlayerState(),
-          engine: st.movementEngine,
-          rules: CURRENT_RULES,
-          setupMode: st.setupMode,
-          rng,
-        };
         if (
           st.gamePhase === GamePhase.SETUP &&
           ps.getPlacedPiecesCount() < CURRENT_RULES.piecesToPlace
@@ -340,27 +477,72 @@ const gameStoreInitializer: StateCreator<GameStateStore> = (set, get) => {
           const type = controller.chooseBenchType(ctx);
           if (type) st.selectPieceTypeForBench(type);
         } else {
-          const action = controller.choosePlayAction(ctx);
-          if (action.kind === "bench") {
-            const piece = ps.getBenchPieces().find((p) => p.id === action.benchPieceId);
-            if (piece) {
-              st.selectBenchPiece(piece);
-              get().placeBenchPiece(action.to);
-            }
-          } else if (action.kind === "move") {
-            const piece = st.board.getPieceById(action.pieceId);
-            if (piece?.position) {
-              st.selectTile(piece.position);
-              get().movePiece(action.to);
-            }
-          } else {
-            get().resolveStalledTurn();
-          }
+          get().applyBotAction(controller.choosePlayAction(ctx));
         }
       } finally {
         botActing = false;
       }
       return JSON.stringify(get().toSnapshot()) !== before;
+    },
+
+    runBotTurnAsync: async (signal: AbortSignal, rng: Rng = Math.random): Promise<boolean> => {
+      const ctx = get().buildBotContext(rng);
+      if (!ctx) return false;
+      const controller = ensureController(rng);
+      if (!controller) return false;
+      const st = get();
+      const inSetupPhase =
+        st.gamePhase === GamePhase.SETUP || st.gamePhase === GamePhase.BENCH_SELECTION;
+
+      if (inSetupPhase) {
+        if (!controller.prepareSetupAsync) return get().runBotTurn(rng);
+        const token = get().getBotTurnToken();
+        set({ botThinking: true });
+        try {
+          await controller.prepareSetupAsync(ctx, signal);
+        } catch (err) {
+          if ((err as Error).name !== "AbortError" && import.meta.env.DEV) {
+            console.error("runBotTurnAsync: prepareSetupAsync falló", err);
+          }
+          return false;
+        } finally {
+          set({ botThinking: false });
+        }
+        if (signal.aborted || get().getBotTurnToken() !== token) return false;
+        return get().runBotTurn(rng);
+      }
+
+      if (!controller.choosePlayActionAsync) return get().runBotTurn(rng);
+      const token = get().getBotTurnToken();
+      set({ botThinking: true });
+      let actions: BotPlayAction[];
+      try {
+        actions = await controller.choosePlayActionAsync(ctx, signal);
+      } catch (err) {
+        if ((err as Error).name !== "AbortError" && import.meta.env.DEV) {
+          console.error("runBotTurnAsync: choosePlayActionAsync falló", err);
+        }
+        return false;
+      } finally {
+        set({ botThinking: false });
+      }
+      // La partida siguió sin el bot (historial, reset, jugada remota): descartar.
+      if (signal.aborted || get().getBotTurnToken() !== token) return false;
+
+      let changed = false;
+      let stalled = actions.length === 0;
+      for (const action of actions) {
+        if (!get().applyBotAction(action)) {
+          stalled = true;
+          break;
+        }
+        changed = true;
+      }
+      if (stalled) {
+        get().resolveStalledTurn();
+        return true;
+      }
+      return changed;
     },
 
     setSetupMode: (mode: SetupTurnMode) => {
@@ -926,6 +1108,7 @@ const gameStoreInitializer: StateCreator<GameStateStore> = (set, get) => {
     },
 
     reset: (setupMode: SetupTurnMode = SetupTurnMode.ALTERNATING) => {
+      get().botController?.dispose?.();
       const board = createInitialBoard();
       const player1State = new PlayerState("player1");
       const player2State = new PlayerState("player2");
@@ -952,6 +1135,8 @@ const gameStoreInitializer: StateCreator<GameStateStore> = (set, get) => {
         setupPlayer: Player.BLANCAS,
         lastPassedPlayer: null,
         botController: null,
+        botThinking: false,
+        botLoading: false,
       });
     },
 

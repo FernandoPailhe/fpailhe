@@ -1,0 +1,18 @@
+{
+  "fingerprint": "{\"width\":5,\"height\":11,\"pieceTypes\":[\"FORT\",\"STRIKER\",\"PIONEER\"],\"piecesToPlace\":5,\"benchSize\":3,\"minPerType\":2,\"maxPerType\":4,\"maxPerRow\":2,\"pointsToWin\":3,\"placementRows\":{\"BLANCAS\":[1,2,3],\"NEGRAS\":[7,8,9]},\"homeRow\":{\"BLANCAS\":0,\"NEGRAS\":10},\"scoringRow\":{\"BLANCAS\":10,\"NEGRAS\":0},\"pieceConfig\":{\"FORT\":{\"movement\":{\"directions\":[{\"dx\":0,\"dy\":1}],\"minDistance\":1,\"maxDistance\":1,\"canCapture\":false},\"capture\":{\"directions\":[{\"dx\":1,\"dy\":1},{\"dx\":-1,\"dy\":1}],\"minDistance\":1,\"maxDistance\":1},\"blocksSides\":true,\"blockedSideOffsets\":[{\"dx\":-1,\"dy\":0},{\"dx\":1,\"dy\":0}],\"captureIgnoresSideBlock\":true},\"STRIKER\":{\"movement\":{\"directions\":[{\"dx\":0,\"dy\":1},{\"dx\":1,\"dy\":1},{\"dx\":-1,\"dy\":1}],\"minDistance\":1,\"maxDistance\":1,\"canCapture\":false},\"alternativeMovement\":{\"directions\":[{\"dx\":0,\"dy\":1}],\"minDistance\":2,\"maxDistance\":2,\"canCapture\":false,\"requiresClearPath\":true},\"capture\":{\"directions\":[{\"dx\":0,\"dy\":1}],\"minDistance\":1,\"maxDistance\":1},\"blocksSides\":false},\"PIONEER\":{\"movement\":{\"directions\":[{\"dx\":0,\"dy\":1}],\"minDistance\":1,\"maxDistance\":3,\"canCapture\":false},\"blocksSides\":false,\"lShape\":true,\"maxLateral\":1,\"maxTotalDistance\":3,\"canBypassBlocker\":true,\"bypassMinDistance\":2}}}",
+  "tunedAt": "2026-09-24T20:15:42.095529+00:00",
+  "games": 40,
+  "terms": {
+    "points": 0.8994976074535539,
+    "material": 1.1463158460208958,
+    "progress": 0.987118417314389,
+    "hanging": 1.5362778939805075,
+    "cohesion": 1.189669986099319,
+    "containment": 1.0630726193144329,
+    "runnerThreat": 0.5339950913635103,
+    "freeLane": 0.5036988991396494,
+    "mobility": 0.707940562402861,
+    "see": 1.08036271700059,
+    "race": 0.24259036151583205
+  }
+}

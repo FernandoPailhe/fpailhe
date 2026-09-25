@@ -24,9 +24,12 @@ apps/web/src/lab/trymate/application/
     ├── introspection/profiles.ts # getRulesInsight: perfiles/roles/matchup/geometría por fingerprint
     ├── analysis/boardAnalysis.ts # analyzeBoard: ataques, avances, tapones, carriles, aislamiento
     ├── medium/               # config, evaluation, posture, search, benchPlacement, setupStrategy
-    ├── arena.ts              # Árbitro bot-vs-bot sobre SimState
+    ├── hard/                 # SearchBoard(make/unmake), zobrist+TT, search PVS, evaluation+SEE+race,
+    │                         # setup planning, personalities, HardBot facade, HardBotClient+worker
+    ├── personality.ts        # Personality union ("balanced"|"offensive"|"defensive")
+    ├── arena.ts              # Árbitro bot-vs-bot sobre SimState (+ runArenaAsync + métricas)
     ├── sim/SimState.ts       # Estado funcional para simulación (sin store)
-    └── testing/ruleVariants.ts # Variantes de reglas para tests
+    └── testing/              # ruleVariants, hardTestBot (factories de test), tuneHard (SPSA)
 ```
 
 **Dependencies:** imports from `../domain/` only (plus `zustand`). Never imports from `components/`.
@@ -46,8 +49,11 @@ pieceIdCounter, moveHistory, isViewingHistory,
 setupMode: SetupTurnMode,        // ALTERNATING | HIDDEN
 setupCompleted: { player1, player2 },
 setupPlayer, lastPassedPlayer,
-botDifficulty: BotDifficulty,    // "easy" | "medium" ("easy" default)
+botDifficulty: BotDifficulty,    // "easy" | "medium" | "hard"
+botPersonality: Personality,     // "balanced" | "offensive" | "defensive"
 botController: ComputerPlayer | null, // vive la instancia del bot (su estado interno)
+botThinking: boolean,            // búsqueda async en curso (UI: "thinking…")
+botLoading: boolean,             // chunk lazy del bot descargando (UI: "loading…")
 ```
 
 ---
@@ -109,9 +115,10 @@ interface ComputerPlayer {
 ```
 
 - El estado interno del bot (plan de despliegue) vive en la instancia, no en el store.
-- `createComputerPlayer(difficulty, rng)` via `FACTORIES`; registrar bots nuevos con `registerComputerPlayer`.
-- `startVsComputer(setupMode, difficulty?)` crea el controller; `playAgain` lo recrea; `reset` lo limpia.
+- `createComputerPlayer(difficulty, rng)` via `FACTORIES`; registrar bots nuevos con `registerComputerPlayer`. **Hard usa loader lazy** (`LOADERS`/`loadComputerPlayer` con `import()`) — el chunk solo se descarga si se elige Hard.
+- `startVsComputer(setupMode, difficulty?, personality?)` crea el controller; con loader lazy queda `botLoading` hasta resolver (guardado por `botControllerId`+`gameMode`: un controller tardío de una partida vieja se dispone); `playAgain` lo recrea; `reset`/`startVsComputer` disponen el anterior (`dispose()`).
 - `runBotTurn(rng?)` ejecuta UNA acción atómica via acciones públicas con `botActing` (flag de closure que habilita `isLocalPlayerTurn()`). Construye el `BotContext` con `rules: CURRENT_RULES`; en SETUP HIDDEN pasa `boardWithOnlyOwner(board, bot)`.
+- `runBotTurnAsync(signal, rng?)`: variante async para bots con `choosePlayActionAsync`/`prepareSetupAsync` (Hard). Prepara el setup una vez, setea `botThinking`, y aplica cada acción solo si el **token de turno** (`fase|jugador|jugadas|banca|historial|controller`) no cambió — reset/menú/historial abortan vía `signal` y el resultado tardío se descarta.
 - **ESLint guard** (`eslint.config.js`): `application/ai/**/*.ts` (salvo tests/testing/sim) no puede importar `GAME_RULES`, `GAME_CONFIG`, `PIECE_MOVEMENT_CONFIG`, `QuickStartLayout` ni usar `PieceType.X` — los bots reciben todo por `ctx`.
 
 **Easy:** 1-ply ponderado (score 100, capture 30, advance 3/fila, threatened −15, noise 5; 30% movimiento aleatorio, pick uniforme del top-3). Amenazas vía `engine.getCaptureSquares`. Setup: plan `generateRandomArmy` + `feasibleTypes`.

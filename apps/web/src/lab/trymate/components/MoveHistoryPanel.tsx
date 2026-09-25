@@ -60,7 +60,7 @@ export function MoveHistoryPanel() {
         )}
       </div>
       {moves.length > 0 && (
-        <div className="min-h-0 flex-1 overflow-hidden border border-line bg-surface">
+        <div className="min-h-0 w-fit max-w-full flex-1 overflow-hidden border border-line bg-surface">
           <ol className="h-full overflow-y-auto px-2 py-1.5">
             {moves.map((m, i) => {
               const capturedOwner = m.player === Player.BLANCAS ? Player.NEGRAS : Player.BLANCAS;

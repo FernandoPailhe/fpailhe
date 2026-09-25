@@ -81,8 +81,9 @@ No other file in `domain/` needs to change: the engine, `feasibleTypes`, `genera
 2. Si una mecánica no entra en los flags: extender `PieceMovementConfig` + `MovementRuleEngine`, y el test de contrato de `getCaptureSquares`.
 3. Actualizar la prosa de piezas en `lib/rulesContent.ts` (los números se generan solos desde `CURRENT_RULES`).
 4. `pnpm test`: contrato del motor, composición, quick start (mirar warnings de layouts descartados y ajustar `quickstart-layouts.json` si se quieren conservar), variantes de la arena (`application/ai/variants.test.ts`).
-5. Los tests tácticos del Medium (`medium/tactics.current-rules.test.ts`) están anclados a `rulesFingerprint`: si cambiaron las reglas se saltean con warn — re-anclar escenarios y `EXPECTED_FINGERPRINT`. Los perfiles del bot (`getRulesInsight`) se recalculan solos.
-6. Jugar una partida vs Easy y otra vs Medium.
+5. Los tests tácticos del Medium (`medium/tactics.current-rules.test.ts`) y del Hard (`hard/tactics.current-rules.test.ts`) están anclados a `rulesFingerprint`: si cambiaron las reglas se saltean con warn — re-anclar escenarios y `EXPECTED_FINGERPRINT`. Los perfiles del bot (`getRulesInsight`) se recalculan solos.
+6. Re-ajustar los pesos de evaluación de Hard: `TRYMATE_TUNE=1 pnpm exec vitest run application/ai/testing/tuneHard.run.test.ts` y commitear `hard/weights.json` (lleva el fingerprint de las reglas vigentes; si difiere, `loadHardWeights` cae al fallback tuned con warning "stale" en dev).
+7. Jugar una partida vs cada dificultad (Easy, Medium, Hard).
 
 ---
 

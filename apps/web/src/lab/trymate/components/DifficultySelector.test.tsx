@@ -16,6 +16,13 @@ describe("DifficultySelector", () => {
     expect(onChange).toHaveBeenCalledWith("medium");
   });
 
+  it("ofrece Hard y el clic llama onChange('hard')", () => {
+    const onChange = vi.fn();
+    render(<DifficultySelector value="easy" onChange={onChange} />);
+    fireEvent.click(screen.getByRole("radio", { name: "Hard" }));
+    expect(onChange).toHaveBeenCalledWith("hard");
+  });
+
   it("muestra el hint de la opción seleccionada", () => {
     const { rerender } = render(<DifficultySelector value="easy" onChange={() => {}} />);
     expect(screen.getByText(/quick, imperfect/i)).toBeInTheDocument();

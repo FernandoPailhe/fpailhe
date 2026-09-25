@@ -4,7 +4,11 @@ import { Position } from "../domain/entities/Position";
 import { PieceType, Player } from "../domain/constants/PieceConstants";
 import { GameMode, GamePhase, SetupTurnMode } from "../domain/constants/GameRules";
 import { canPlaceFromBench, getBenchPlacementSquares } from "./rules/turnRules";
-import { registerComputerPlayer, type ComputerPlayer } from "./ai/ComputerPlayer";
+import {
+  registerComputerPlayer,
+  type BotPlayAction,
+  type ComputerPlayer,
+} from "./ai/ComputerPlayer";
 import { createEasyBot } from "./ai/EasyBot";
 
 const pos = (x: number, y: number) => new Position(x, y);
@@ -228,5 +232,117 @@ describe("partida simulada humano vs bot", () => {
       }
     }
     expect(S().gamePhase).toBe(GamePhase.GAME_OVER);
+  });
+});
+
+describe("runBotTurnAsync", () => {
+  const playingVsBot = () => {
+    const store = createGameStore();
+    store.getState().startVsComputer(SetupTurnMode.ALTERNATING);
+    store.getState().quickStart("classic", "classic");
+    store.getState().handleTileClick(pos(2, 2));
+    store.getState().handleTileClick(pos(2, 4));
+    return store;
+  };
+
+  const syncStubs = {
+    difficulty: "easy" as const,
+    chooseSetupPlacement: () => null,
+    chooseBenchType: () => null,
+    choosePlayAction: (): BotPlayAction => ({ kind: "pass" }),
+  };
+
+  it("sin métodos async cae a runBotTurn (Easy se comporta igual)", async () => {
+    const store = playingVsBot();
+    const S = () => store.getState();
+    expect(S().currentPlayer).toBe(Player.NEGRAS);
+    const ok = await S().runBotTurnAsync(new AbortController().signal, () => 0.31);
+    expect(ok).toBe(true);
+    expect(S().currentPlayer).toBe(Player.BLANCAS);
+    expect(S().botThinking).toBe(false);
+  });
+
+  it("aplica [bench, move] en orden dentro de un solo turno", async () => {
+    const store = playingVsBot();
+    const S = () => store.getState();
+    // La banca solo baja si hay menos de piecesToPlace piezas propias en juego.
+    const victim = S()
+      .board.getAllPieces()
+      .find((p) => p.owner === Player.NEGRAS)!;
+    S().board.removePiece(victim.id);
+    const benchPiece = S().player2State.getBenchPieces()[0]!;
+    const square = getBenchPlacementSquares(S().board, Player.NEGRAS)[0]!;
+    let move: BotPlayAction = { kind: "pass" };
+    for (const p of S().board.getAllPieces()) {
+      if (p.owner !== Player.NEGRAS || !p.position) continue;
+      const moves = S().movementEngine.getValidMoves(p, S().board);
+      if (moves[0]) {
+        move = { kind: "move", pieceId: p.id, to: moves[0] };
+        break;
+      }
+    }
+    const fake: ComputerPlayer = {
+      ...syncStubs,
+      choosePlayActionAsync: async () => [
+        { kind: "bench", benchPieceId: benchPiece.id, to: square },
+        move,
+      ],
+    };
+    store.setState({ botController: fake });
+
+    const ok = await S().runBotTurnAsync(new AbortController().signal);
+    expect(ok).toBe(true);
+    expect(S().board.getPieceAt(square)?.owner).toBe(Player.NEGRAS);
+    expect(S().player2State.getBenchPieces()).toHaveLength(2);
+    expect(S().currentPlayer).toBe(Player.BLANCAS);
+  });
+
+  it("descarta la respuesta si el turno cambió mientras pensaba (token)", async () => {
+    const store = playingVsBot();
+    const S = () => store.getState();
+    // Historial con ≥2 movimientos para habilitar goBackInHistory.
+    S().runBotTurn(() => 0.31);
+    S().handleTileClick(pos(3, 1));
+    S().handleTileClick(pos(3, 2));
+    expect(S().currentPlayer).toBe(Player.NEGRAS);
+    let resolveSearch!: (a: BotPlayAction[]) => void;
+    const fake: ComputerPlayer = {
+      ...syncStubs,
+      choosePlayActionAsync: () =>
+        new Promise((res) => {
+          resolveSearch = res;
+        }),
+    };
+    store.setState({ botController: fake });
+
+    const p = S().runBotTurnAsync(new AbortController().signal);
+    expect(S().botThinking).toBe(true);
+    // La partida cambió antes de que llegara la respuesta.
+    S().goBackInHistory();
+    resolveSearch([{ kind: "pass" }]);
+    expect(await p).toBe(false);
+    expect(S().botThinking).toBe(false);
+    expect(S().currentPlayer).toBe(Player.NEGRAS);
+  });
+
+  it("señal abortada → false sin aplicar nada", async () => {
+    const store = playingVsBot();
+    const S = () => store.getState();
+    const fake: ComputerPlayer = {
+      ...syncStubs,
+      choosePlayActionAsync: (_ctx, signal) =>
+        new Promise((_, rej) => {
+          signal.addEventListener("abort", () =>
+            rej(Object.assign(new Error("x"), { name: "AbortError" })),
+          );
+        }),
+    };
+    store.setState({ botController: fake });
+    const ctl = new AbortController();
+    const p = S().runBotTurnAsync(ctl.signal);
+    ctl.abort();
+    expect(await p).toBe(false);
+    expect(S().botThinking).toBe(false);
+    expect(S().currentPlayer).toBe(Player.NEGRAS);
   });
 });

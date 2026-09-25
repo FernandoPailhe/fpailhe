@@ -118,7 +118,7 @@ export function buildRulesContent(
       online:
         "Online: create a room and share the link, or join an open room. The host always plays White. Check 'Quick start' when creating a room to skip setup and start with armies already placed.",
       computer:
-        "Vs computer: you play White. Easy makes quick, imperfect decisions; Medium looks one reply ahead, blocks your runners and advances in formation.",
+        "Vs computer: you play White. Easy makes quick, imperfect decisions; Medium looks one reply ahead, blocks your runners and advances in formation; Hard calculates several moves ahead and punishes loose pieces.",
       labels: { move: "Move", capture: "Capture", special: "Special" },
       diagramLegend: { move: "Move", capture: "Capture", block: "Blocked" },
     },
@@ -174,7 +174,7 @@ export function buildRulesContent(
       online:
         "Online: creá una sala y compartí el link, o sumate a una sala abierta. El host siempre juega Blancas. Marcá 'Quick start' al crear la sala para saltar el despliegue y arrancar con los ejércitos listos.",
       computer:
-        "Vs computadora: jugás con Blancas. Fácil decide rápido y con errores; Medio mira tu respuesta, frena tus corredores y avanza en bloque.",
+        "Vs computadora: jugás con Blancas. Fácil decide rápido y con errores; Medio mira tu respuesta, frena tus corredores y avanza en bloque; Difícil calcula varias jugadas adelante y castiga las piezas sueltas.",
       labels: { move: "Movimiento", capture: "Captura", special: "Especial" },
       diagramLegend: { move: "Movimiento", capture: "Captura", block: "Bloqueada" },
     },

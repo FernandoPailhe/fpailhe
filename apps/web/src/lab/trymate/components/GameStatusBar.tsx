@@ -1,11 +1,19 @@
 import { useGameStore } from "../application/GameState";
 import type { BotDifficulty } from "../application/ai/ComputerPlayer";
+import type { Personality } from "../application/ai/personality";
 import { GameMode, GamePhase, SetupTurnMode } from "../domain/constants/GameRules";
 import { PHASE_LABEL, PLAYER_LABEL } from "../lib/gameDisplay";
 
 const DIFFICULTY_LABEL: Record<BotDifficulty, string> = {
   easy: "Easy",
   medium: "Medium",
+  hard: "Hard",
+};
+
+const PERSONALITY_LABEL: Record<Personality, string> = {
+  balanced: "Balanced",
+  offensive: "Offensive",
+  defensive: "Defensive",
 };
 
 /**
@@ -25,6 +33,8 @@ export function GameStatusBar() {
     localPlayer,
     isLocalPlayerTurn,
     botDifficulty,
+    botPersonality,
+    botLoading,
     reset,
     quickStart,
   } = useGameStore();
@@ -38,7 +48,9 @@ export function GameStatusBar() {
         ? "Your turn"
         : online
           ? "Opponent's turn"
-          : "Computer is thinking…"
+          : botLoading
+            ? "Loading computer…"
+            : "Computer is thinking…"
       : `${PLAYER_LABEL[currentPlayer]} to move`;
 
   return (
@@ -59,6 +71,7 @@ export function GameStatusBar() {
         {vsComputer && (
           <span className="bg-gold-soft px-2 py-0.5 text-xs font-semibold text-gold-bright">
             Computer · {DIFFICULTY_LABEL[botDifficulty]}
+            {botDifficulty === "hard" && ` · ${PERSONALITY_LABEL[botPersonality]}`}
           </span>
         )}
         <span className="text-ink">

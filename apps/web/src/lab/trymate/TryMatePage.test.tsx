@@ -70,6 +70,25 @@ describe("TryMatePage", () => {
     expect(useGameStore.getState().gameMode).toBe(GameMode.VS_COMPUTER);
   });
 
+  it("el selector de personalidad solo aparece con Hard y su valor llega al store", () => {
+    renderPage();
+    expect(
+      screen.queryByRole("radiogroup", { name: "Computer personality" }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("radio", { name: "Medium" }));
+    expect(
+      screen.queryByRole("radiogroup", { name: "Computer personality" }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("radio", { name: "Hard" }));
+    const group = screen.getByRole("radiogroup", { name: "Computer personality" });
+    expect(group).toBeInTheDocument();
+    fireEvent.click(within(group).getByRole("radio", { name: "Offensive" }));
+    fireEvent.click(screen.getByRole("button", { name: /play vs computer/i }));
+    expect(useGameStore.getState().botDifficulty).toBe("hard");
+    expect(useGameStore.getState().botPersonality).toBe("offensive");
+  });
+
   it("still opens the setup picker for local play", () => {
     renderPage();
     fireEvent.click(screen.getByRole("button", { name: /play local/i }));

@@ -7,9 +7,19 @@ import type { RulesView } from "../../domain/config/RulesView";
 import type { MovementRuleEngine } from "../rules/MovementRuleEngine";
 import { createEasyBot } from "./EasyBot";
 import { createMediumBot } from "./MediumBot";
+import type { Personality } from "./personality";
 import type { Rng } from "./rng";
 
-export type BotDifficulty = "easy" | "medium";
+export type BotDifficulty = "easy" | "medium" | "hard";
+
+/** Opciones de creación del bot (Easy/Medium las ignoran). */
+export interface BotFactoryOpts {
+  personality: Personality;
+}
+
+export const DEFAULT_BOT_OPTS: BotFactoryOpts = { personality: "balanced" };
+
+export type BotFactory = (rng: Rng, opts: BotFactoryOpts) => ComputerPlayer;
 
 /** Acción de juego elegida por un bot en PLAYING. */
 export type BotPlayAction =
@@ -45,24 +55,67 @@ export interface ComputerPlayer {
   chooseBenchType(ctx: BotContext): PieceType | null;
   /** Acción de PLAYING: banca, movimiento o pase. */
   choosePlayAction(ctx: BotContext): BotPlayAction;
+  /**
+   * Variante async de choosePlayAction (bots pesados como Hard): devuelve la
+   * secuencia completa del turno — 0..k bajadas de banca seguidas de un
+   * movimiento o pase. Cancelable vía `signal`; resultados tardíos se
+   * descartan por token de turno.
+   */
+  choosePlayActionAsync?(ctx: BotContext, signal: AbortSignal): Promise<BotPlayAction[]>;
+  /**
+   * Cálculo pesado previo a las decisiones de setup/banca (Hard planifica su
+   * ejército en el worker). Después, `chooseSetupPlacement`/`chooseBenchType`
+   * síncronos consumen lo preparado.
+   */
+  prepareSetupAsync?(ctx: BotContext, signal: AbortSignal): Promise<void>;
+  /** Libera recursos (Hard: termina el worker). Opcional. */
+  dispose?(): void;
 }
 
-const FACTORIES: Partial<Record<BotDifficulty, (rng: Rng) => ComputerPlayer>> = {
+const FACTORIES: Partial<Record<BotDifficulty, BotFactory>> = {
   easy: createEasyBot,
   medium: createMediumBot,
 };
 
-export function registerComputerPlayer(
-  difficulty: BotDifficulty,
-  factory: (rng: Rng) => ComputerPlayer,
-): void {
+/**
+ * Cargas diferidas: el `import()` dinámico mantiene el código de Hard fuera
+ * del chunk principal — se descarga recién al elegir la dificultad. Ningún
+ * archivo de producción importa `ai/hard/**` estáticamente.
+ */
+const LOADERS: Partial<Record<BotDifficulty, () => Promise<BotFactory>>> = {
+  hard: () => import("./hard/HardBot").then((m) => m.createHardBot),
+};
+
+/** True si la dificultad no tiene fábrica sync y necesita `loadComputerPlayer`. */
+export function needsAsyncLoad(difficulty: BotDifficulty): boolean {
+  return !FACTORIES[difficulty] && !!LOADERS[difficulty];
+}
+
+export function registerComputerPlayer(difficulty: BotDifficulty, factory: BotFactory): void {
   FACTORIES[difficulty] = factory;
 }
 
-export function createComputerPlayer(difficulty: BotDifficulty, rng: Rng): ComputerPlayer {
+export function createComputerPlayer(
+  difficulty: BotDifficulty,
+  rng: Rng,
+  opts: BotFactoryOpts = DEFAULT_BOT_OPTS,
+): ComputerPlayer {
   const factory = FACTORIES[difficulty];
+  if (!factory) {
+    throw new Error(`ComputerPlayer: dificultad "${difficulty}" requiere loadComputerPlayer`);
+  }
+  return factory(rng, opts);
+}
+
+/** Resuelve el bot: fábrica sync si existe, o el loader lazy (Hard). */
+export async function loadComputerPlayer(
+  difficulty: BotDifficulty,
+  rng: Rng,
+  opts: BotFactoryOpts = DEFAULT_BOT_OPTS,
+): Promise<ComputerPlayer> {
+  const factory = FACTORIES[difficulty] ?? (await LOADERS[difficulty]?.());
   if (!factory) {
     throw new Error(`ComputerPlayer: dificultad no registrada "${difficulty}"`);
   }
-  return factory(rng);
+  return factory(rng, opts);
 }

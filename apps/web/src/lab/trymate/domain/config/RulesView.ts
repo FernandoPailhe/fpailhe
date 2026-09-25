@@ -87,6 +87,30 @@ export function buildRulesView(
 /** Reglas vigentes del juego real (derivadas de GAME_CONFIG + GAME_RULES). */
 export const CURRENT_RULES: RulesView = buildRulesView(GAME_CONFIG, GAME_RULES);
 
+/**
+ * Serializa una RulesView a los parámetros de `buildRulesView` (para enviarla
+ * por `postMessage` a un worker). `PLACEMENT_DEPTH` se deduce de las filas.
+ */
+export function toRulesSource(view: RulesView): {
+  board: { BOARD_WIDTH: number; BOARD_HEIGHT: number };
+  rules: RulesSource;
+  pieceTypes: readonly PieceType[];
+} {
+  return {
+    board: { BOARD_WIDTH: view.width, BOARD_HEIGHT: view.height },
+    rules: {
+      PIECES_TO_PLACE: view.piecesToPlace,
+      PIECES_IN_BENCH: view.benchSize,
+      MIN_PIECES_PER_TYPE: view.minPerType,
+      MAX_PIECES_PER_TYPE: view.maxPerType,
+      MAX_PIECES_PER_ROW: view.maxPerRow,
+      POINTS_TO_WIN: view.pointsToWin,
+      PLACEMENT_DEPTH: view.placementRows(Player.BLANCAS).length,
+    },
+    pieceTypes: view.pieceTypes,
+  };
+}
+
 /** Huella estable de una combinación reglas + config de piezas (para memoizar). */
 export function rulesFingerprint(rules: RulesView, pieceConfig: unknown): string {
   return JSON.stringify({

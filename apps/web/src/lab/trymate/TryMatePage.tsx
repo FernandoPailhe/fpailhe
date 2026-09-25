@@ -14,11 +14,13 @@ import { RulesPanel } from "./components/RulesPanel";
 import { SetupModeSelector } from "./components/SetupModeSelector";
 import { SetupPassScreen } from "./components/SetupPassScreen";
 import { DifficultySelector } from "./components/DifficultySelector";
+import { PersonalitySelector } from "./components/PersonalitySelector";
 import { useGameStore } from "./application/GameState";
 import { useComputerTurn } from "./application/useComputerTurn";
 import { useRoomStore } from "./application/RoomState";
 import { createFirebaseRoomsGateway } from "./infrastructure/firebase/FirebaseRoomsGateway";
 import type { BotDifficulty } from "./application/ai/ComputerPlayer";
+import type { Personality } from "./application/ai/personality";
 import { GameMode, GamePhase, SetupTurnMode } from "./domain/constants/GameRules";
 import { CURRENT_RULES } from "./domain/config/RulesView";
 
@@ -57,6 +59,9 @@ export function TryMatePage() {
   const [menuDifficulty, setMenuDifficulty] = useState<BotDifficulty>(
     () => useGameStore.getState().botDifficulty,
   );
+  const [menuPersonality, setMenuPersonality] = useState<Personality>(
+    () => useGameStore.getState().botPersonality,
+  );
 
   // Composition root: inyecta el adaptador concreto del puerto RoomsGateway.
   // Sin credenciales devuelve null → el lobby avisa y el modo local sigue.
@@ -71,7 +76,7 @@ export function TryMatePage() {
   };
 
   const goVsComputer = () => {
-    useGameStore.getState().startVsComputer(menuSetupMode, menuDifficulty);
+    useGameStore.getState().startVsComputer(menuSetupMode, menuDifficulty, menuPersonality);
     setSetupPassAcknowledged(true);
     setScreen("local");
   };
@@ -146,6 +151,9 @@ export function TryMatePage() {
               Play local 1v1
             </Button>
             <DifficultySelector value={menuDifficulty} onChange={setMenuDifficulty} />
+            {menuDifficulty === "hard" && (
+              <PersonalitySelector value={menuPersonality} onChange={setMenuPersonality} />
+            )}
             <Button type="button" onClick={goVsComputer}>
               Play vs computer
             </Button>

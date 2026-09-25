@@ -1,10 +1,13 @@
 import { Tile, TileState } from "./Tile";
 import { Position } from "./Position";
 import { GamePiece } from "./GamePiece";
+import type { Player } from "../constants/PieceConstants";
 
 export class Board {
   private tiles: Map<string, Tile>;
   private pieces: Map<string, GamePiece>;
+  private positionIndex: Map<string, string>;
+  private piecesByOwner: Map<Player, GamePiece[]> | null;
 
   constructor(
     public readonly width: number,
@@ -16,6 +19,8 @@ export class Board {
 
     this.tiles = new Map();
     this.pieces = new Map();
+    this.positionIndex = new Map();
+    this.piecesByOwner = null;
     this.initializeTiles();
   }
 
@@ -95,38 +100,72 @@ export class Board {
       tile.setState(TileState.EMPTY);
     });
     this.pieces.clear();
+    this.positionIndex.clear();
+    this.piecesByOwner = null;
   }
 
   addPiece(piece: GamePiece): void {
     this.pieces.set(piece.id, piece);
     if (piece.position) {
+      this.positionIndex.set(this.getKey(piece.position), piece.id);
       const tile = this.getTile(piece.position);
       if (tile) {
         tile.setState(TileState.OCCUPIED);
       }
     }
+    this.piecesByOwner = null;
   }
 
   removePiece(pieceId: string): void {
     const piece = this.pieces.get(pieceId);
     if (piece) {
       if (piece.position) {
+        this.positionIndex.delete(this.getKey(piece.position));
         const tile = this.getTile(piece.position);
         if (tile) {
           tile.setState(TileState.EMPTY);
         }
       }
       this.pieces.delete(pieceId);
+      this.piecesByOwner = null;
+    }
+  }
+
+  private rebuildIndex(): void {
+    this.positionIndex.clear();
+    for (const piece of this.pieces.values()) {
+      if (piece.position) {
+        this.positionIndex.set(this.getKey(piece.position), piece.id);
+      }
     }
   }
 
   getPieceAt(position: Position): GamePiece | undefined {
-    for (const piece of this.pieces.values()) {
-      if (piece.position && piece.position.equals(position)) {
-        return piece;
+    const id = this.positionIndex.get(this.getKey(position));
+    const piece = id === undefined ? undefined : this.pieces.get(id);
+    // La posición pudo cambiar por fuera (piece.moveTo directo): verificar.
+    if (piece?.position?.equals(position)) {
+      return piece;
+    }
+    this.rebuildIndex();
+    const retryId = this.positionIndex.get(this.getKey(position));
+    const retry = retryId === undefined ? undefined : this.pieces.get(retryId);
+    return retry?.position?.equals(position) ? retry : undefined;
+  }
+
+  getPiecesOf(player: Player): GamePiece[] {
+    if (this.piecesByOwner === null) {
+      this.piecesByOwner = new Map();
+      for (const piece of this.pieces.values()) {
+        const list = this.piecesByOwner.get(piece.owner);
+        if (list) {
+          list.push(piece);
+        } else {
+          this.piecesByOwner.set(piece.owner, [piece]);
+        }
       }
     }
-    return undefined;
+    return this.piecesByOwner.get(player) ?? [];
   }
 
   getPieceById(pieceId: string): GamePiece | undefined {
@@ -144,6 +183,7 @@ export class Board {
     }
 
     if (piece.position) {
+      this.positionIndex.delete(this.getKey(piece.position));
       const oldTile = this.getTile(piece.position);
       if (oldTile) {
         oldTile.setState(TileState.EMPTY);
@@ -156,6 +196,7 @@ export class Board {
     }
 
     piece.moveTo(to);
+    this.positionIndex.set(this.getKey(to), piece.id);
 
     const newTile = this.getTile(to);
     if (newTile) {

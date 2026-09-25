@@ -38,6 +38,7 @@ ferpa/
 │       ├── domain/                  ← Hooks de lógica derivada (useMemo)
 │       ├── store/                   ← Zustand stores (UI efímera)
 │       ├── layout/                  ← Layout wrappers con <Outlet />
+│       ├── lab/trymate/             ← Módulo independiente del juego TryMate (ver sección abajo)
 │       ├── lib/                     ← Utilidades de infra
 │       │   └── queryClient.ts       ← QueryClient singleton
 │       └── styles/
@@ -70,6 +71,50 @@ ferpa/
 └── wrangler.toml                    ← Deploy a Cloudflare Workers
 ```
 
+## Módulo `apps/web/src/lab/trymate/` (ruta `/lab/trymate`)
+
+Módulo autocontenido: su dominio, estado y componentes viven en esta carpeta (no usa
+`packages/data-model`). ✅ = existe · 🗓 = planificado (ver `doc/detailed-plan/`).
+
+```
+lab/trymate/
+├── TryMatePage.tsx                  ← Página: menú (online / local / vs computer), tablero, sidebar
+├── index.ts                         ← Barrel (TryMatePage)
+├── domain/                          ← Sin React ni store
+│   ├── constants/                   ← ✅ GameConstants (tablero), GameRules (cantidades, PLACEMENT_DEPTH,
+│   │                                   filas derivadas), PieceConstants (PieceType, Player, PIECE_MOVEMENT_CONFIG)
+│   ├── config/                      ← ✅ RulesView (CURRENT_RULES, rulesFingerprint), QuickStartLayout + JSON
+│   ├── rules/                       ← ✅ composition (feasibleTypes), randomArmy (generateRandomArmy)
+│   ├── entities/                    ← ✅ Board, GamePiece, Position, Tile, PlayerState, MoveHistory, GameSnapshot
+│   └── interfaces/                  ← ✅ IGameState, IMovementRule, RoomsGateway
+├── application/
+│   ├── GameState.ts                 ← ✅ Store Zustand (juego + vs computer: runBotTurn, botController)
+│   ├── RoomState.ts, roomSync.ts    ← ✅ Salas online (Firebase)
+│   ├── useComputerTurn.ts           ← ✅ Hook que agenda el turno del bot
+│   ├── rules/                       ← ✅ MovementRuleEngine (config inyectable, getCaptureSquares), turnRules
+│   └── ai/                          ← Bots: puros y agnósticos de reglas (lint)
+│       ├── ComputerPlayer.ts        ← ✅ BotContext, ComputerPlayer, registro por dificultad
+│       ├── EasyBot.ts, rng.ts       ← ✅ Bot Easy, rng sembrado
+│       ├── sim/SimState.ts          ← ✅ Simulación inmutable con reglas inyectadas
+│       ├── arena.ts                 ← ✅ Árbitro bot-vs-bot (solo tests / selfplay)
+│       ├── testing/ruleVariants.ts  ← ✅ Variantes de reglas para tests
+│       ├── introspection/, analysis/, medium/, MediumBot.ts   ← 🗓 Medium
+│       └── hard/, personality.ts    ← 🗓 Hard (worker, chunk lazy) + personalidades
+├── selfplay/                        ← 🗓 Auto-juego y estadísticas (NO entra al bundle web)
+│   ├── core/                        ← TS puro: formato de partidas, grabador, experimentos, agregación, reportes
+│   ├── node/                        ← CLI + worker_threads + I/O (build SSR a apps/web/.selfplay-dist/)
+│   ├── experiments/                 ← Presets JSON (smoke, balance-*, rules-*, personalities-matrix)
+│   └── duckdb/                      ← Consultas SQL opcionales
+├── infrastructure/                  ← ✅ Firebase / InMemory RoomsGateway
+├── components/                      ← ✅ Organismos del juego (tablero, diálogos, sidebar, lobby, reglas)
+└── lib/                             ← ✅ gameDisplay, rulesContent (textos generados desde CURRENT_RULES), useBoardSize
+```
+
+Skills: `trymate-rules-agnostic` (reglas y motor), `trymate-computer-player` (bots),
+`trymate-selfplay` (auto-juego), `rugby-chess-state` / `rugby-chess-domain` / `rugby-chess-code-review`
+(store, dominio y revisión del módulo). Planes: `doc/detailed-plan/trymate-*`.
+Datos de selfplay: fuera del repo (`~/TryMateData/selfplay/` o `TRYMATE_DATA_DIR`).
+
 ## Scopes de paquetes
 
 | Package | Scope | Directorio |
@@ -86,3 +131,6 @@ ferpa/
 | `pnpm build` | Build producción (data-model → ui → web) |
 | `pnpm typecheck` | TypeScript check en los 3 paquetes |
 | `pnpm preview` | Serve del build de producción |
+| `pnpm lint` / `pnpm test` | ESLint (incluye guardas de agnosticismo en `lab/trymate/application/ai/**`) / Vitest |
+| `pnpm trymate:selfplay --config <preset>` | 🗓 Auto-juego bot-vs-bot (ver skill `trymate-selfplay`) |
+| `pnpm trymate:report <batch>` / `trymate:compare <A> <B>` / `trymate:validate <batch>` | 🗓 Reporte, comparación y validación de batches |

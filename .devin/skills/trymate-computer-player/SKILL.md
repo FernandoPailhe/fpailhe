@@ -25,7 +25,7 @@ triggers:
 | --- | --- | --- |
 | Easy (1-ply + azar), `ComputerPlayer`, `BotContext`, `rng.ts`, `SimState`, `arena.ts`, `ruleVariants` | Implementado | `doc/detailed-plan/trymate-computer-player/`, `trymate-rules-agnostic-easy/` |
 | Medium (introspección, análisis, evaluación con desglose, posturas, alfa-beta 2–3, banca, setup por roles) | Implementado | `doc/detailed-plan/trymate-computer-player-medium/` |
-| Hard (make/unmake, Zobrist+TT, PVS+quiescence, SEE, carreras, worker, lazy chunk, pesos SPSA) + personalidades | Planificado | `doc/detailed-plan/trymate-computer-player-hard/` |
+| Hard (make/unmake, Zobrist+TT, PVS+quiescence, SEE, carreras con bloqueo por banca, worker, lazy chunk, pesos SPSA) + personalidades | Implementado | `doc/detailed-plan/trymate-computer-player-hard/` |
 
 Al implementar un plan: seguir sus `tasks/NN-*.md` en orden; cada task es autocontenida. Si el
 código real difiere de un nombre del plan, **manda el código** y se ajusta el plan.
@@ -53,7 +53,12 @@ application/
     medium/benchPlacement.ts  # chooseBenchPlacement (tipo × casilla → eval)
     medium/setupStrategy.ts   # targetComposition, chooseSetupPlacement, chooseBenchType
     MediumBot.ts          # fachada ComputerPlayer "medium" + lastDecision (MediumDecision)
-    (planificados) hard/, personality.ts
+    personality.ts        # union Personality (balanced|offensive|defensive)
+    hard/                 # SearchBoard (make/unmake), zobrist+TT, search PVS+quiescence,
+                          # see, race (corredores + bloqueo por banca), evaluation, weights(.json),
+                          # personalities (perfiles de datos), setup (plan de ejército),
+                          # worker+protocol+cliente (async, abortable), HardBot (facade lazy)
+    testing/hardTestBot.ts  # factories de tests (forceInline, nodos); tuneHard.ts (SPSA)
 ```
 
 ## Contrato (no romper)
@@ -103,9 +108,11 @@ en HIDDEN los términos de rival valen 0 porque el tablero llega filtrado).
 - **Nunca** usar `handleTileClick` desde un bot.
 - Una acción por llamada: la banca no consume turno, por eso el hook re-agenda (`tick`).
 - **Historial:** `isViewingHistory` reemplaza `board` por un snapshot → el bot no debe actuar.
-- **Planificado (Hard):** `runBotTurnAsync(signal)` con `botThinking`, token de turno
+- **Async (Hard):** `runBotTurnAsync(signal)` con `botThinking`, token de turno
   (`fase|jugador|jugadas|banca|historial|controller`) y descarte de resultados viejos; loaders lazy
-  (`import()`) por dificultad y `botLoading`.
+  (`import()`) por dificultad y `botLoading`. Hard corre la búsqueda en Web Worker
+  (`HardBotClient` + `hard.worker`) con fallback inline, y `prepareSetupAsync` planifica el ejército
+  una vez por partida (re-plan solo si cambia lo visible del rival en HIDDEN).
 
 ## Recetas
 

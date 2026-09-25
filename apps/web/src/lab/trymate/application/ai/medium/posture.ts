@@ -25,39 +25,46 @@ export function weightsFor(posture: Posture): TermWeights {
  *    ventaja material clara, o va ganando sin corredores rivales.
  * 3. BALANCED en el resto.
  */
+export interface PostureOverrides {
+  defendZone?: number;
+  attackZone?: number;
+  attackMaterialLeadRatio?: number;
+}
+
 export function choosePosture(
   state: SimState,
   bot: Player,
   engine: MovementRuleEngine,
   insight: RulesInsight,
   analysis?: BoardAnalysis,
+  overrides: PostureOverrides = {},
 ): Posture {
   const opp = opponentOf(bot);
   const G = insight.geometry;
+  const defendZone = overrides.defendZone ?? G.runnerZone;
+  const attackZone = overrides.attackZone ?? G.runnerZone + 1;
+  const leadRatio = overrides.attackMaterialLeadRatio ?? POSTURE_RULES.attackMaterialLeadRatio;
   const A = analysis ?? analyzeBoard(state.board, engine, insight);
   const pieces = state.board.getAllPieces();
   const oppPieces = pieces.filter((p) => p.owner === opp && p.position);
   const botPieces = pieces.filter((p) => p.owner === bot && p.position);
 
   const runnerLoose = oppPieces.some(
-    (p) => insight.distToGoal(p) <= G.runnerZone && !A.isAdvanceControlled(p, bot),
+    (p) => insight.distToGoal(p) <= defendZone && !A.isAdvanceControlled(p, bot),
   );
   if (runnerLoose || state.scores[opp] === state.rules.pointsToWin - 1) {
     return "DEFEND";
   }
 
-  const ownRunner = botPieces.some(
-    (p) => A.hasFreeLane(p) && insight.distToGoal(p) <= G.runnerZone + 1,
-  );
+  const ownRunner = botPieces.some((p) => A.hasFreeLane(p) && insight.distToGoal(p) <= attackZone);
   const meanValue =
     [...insight.profiles.values()].reduce((sum, p) => sum + p.value, 0) /
     Math.max(1, insight.profiles.size);
   const materialLead =
-    materialOf(state, bot, insight) - materialOf(state, opp, insight) >=
-    POSTURE_RULES.attackMaterialLeadRatio * meanValue;
+    materialOf(state, bot, insight) - materialOf(state, opp, insight) >= leadRatio * meanValue;
   const ahead =
     state.scores[bot] > state.scores[opp] &&
-    !oppPieces.some((p) => insight.distToGoal(p) <= G.runnerZone + 1);
+    !oppPieces.some((p) => insight.distToGoal(p) <= attackZone);
   if (ownRunner || materialLead || ahead) {
     return "ATTACK";
   }

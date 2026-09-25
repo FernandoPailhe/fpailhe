@@ -182,6 +182,50 @@ export function explainEvaluation(
   return breakdown;
 }
 
+export type SideBreakdown = Record<EvalTerm, { self: number; opp: number }>;
+
+/**
+ * Los mismos cálculos que `explainEvaluation` pero sin restar: los términos
+ * del bot (`self`) y del rival (`opp`) por separado. `containment` y
+ * `runnerThreat` van en `self` (los aplica el bot sobre piezas rivales).
+ * Sirve para ponderar por bando (personalidades).
+ */
+export function explainEvaluationSides(
+  state: SimState,
+  bot: Player,
+  engine: MovementRuleEngine,
+  insight: RulesInsight,
+  analysis?: BoardAnalysis,
+): SideBreakdown {
+  const opp = opponentOf(bot);
+  const A = analysis ?? analyzeBoard(state.board, engine, insight);
+  const G = insight.geometry;
+  const own = sideTerms(state, bot, A, insight);
+  const theirs = sideTerms(state, opp, A, insight);
+
+  let runnerThreat = 0;
+  const floor = cfg.runner.base / Math.pow(G.runnerZone + 1, cfg.runner.exponent);
+  for (const piece of state.board.getAllPieces()) {
+    if (piece.owner !== opp || !piece.position) continue;
+    const d = insight.distToGoal(piece);
+    if (d <= G.runnerZone + 1 && !A.isAdvanceControlled(piece, bot)) {
+      runnerThreat -= cfg.runner.threatFactor * Math.max(runnerBonus(d, insight), floor);
+    }
+  }
+
+  return {
+    points: { self: state.scores[bot] * cfg.pointValue, opp: state.scores[opp] * cfg.pointValue },
+    material: { self: own.material, opp: theirs.material },
+    progress: { self: own.progress, opp: theirs.progress },
+    hanging: { self: own.hanging, opp: theirs.hanging },
+    cohesion: { self: own.cohesion, opp: theirs.cohesion },
+    containment: { self: own.containment, opp: theirs.containment },
+    runnerThreat: { self: runnerThreat, opp: 0 },
+    freeLane: { self: own.freeLane, opp: theirs.freeLane },
+    mobility: { self: own.mobility, opp: theirs.mobility },
+  };
+}
+
 /** Evaluación escalar desde la perspectiva del bot. */
 export function evaluate(
   state: SimState,

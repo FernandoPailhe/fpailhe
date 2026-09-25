@@ -12,6 +12,11 @@ const OPTIONS: { value: BotDifficulty; label: string; hint: string }[] = [
     label: "Medium",
     hint: "Looks one reply ahead, blocks runners and advances in formation.",
   },
+  {
+    value: "hard",
+    label: "Hard",
+    hint: "Calculates several moves ahead, wins races and trades. Takes about a second to think.",
+  },
 ];
 
 export interface DifficultySelectorProps {
