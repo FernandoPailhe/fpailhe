@@ -1,0 +1,49 @@
+{
+  "name": "rules-board-7x13",
+  "games": 4000,
+  "seed": 45,
+  "maxPlies": 500,
+  "workers": "auto",
+  "setupModes": {
+    "ALTERNATING": 2,
+    "HIDDEN": 1,
+    "RANDOM": 1
+  },
+  "opening": {
+    "randomPlies": 4,
+    "epsilon": 0.15
+  },
+  "swapColors": true,
+  "recordPositions": true,
+  "matchups": [
+    {
+      "white": {
+        "bot": "medium",
+        "budget": {
+          "kind": "nodes",
+          "n": 3000
+        }
+      },
+      "black": {
+        "bot": "medium",
+        "budget": {
+          "kind": "nodes",
+          "n": 3000
+        }
+      },
+      "weight": 1
+    }
+  ],
+  "rules": [
+    {
+      "variant": "current"
+    },
+    {
+      "variant": "wide-7x13",
+      "board": {
+        "BOARD_WIDTH": 7,
+        "BOARD_HEIGHT": 13
+      }
+    }
+  ]
+}

@@ -98,9 +98,9 @@ lab/trymate/
 │       ├── sim/SimState.ts          ← ✅ Simulación inmutable con reglas inyectadas
 │       ├── arena.ts                 ← ✅ Árbitro bot-vs-bot (solo tests / selfplay)
 │       ├── testing/ruleVariants.ts  ← ✅ Variantes de reglas para tests
-│       ├── introspection/, analysis/, medium/, MediumBot.ts   ← 🗓 Medium
-│       └── hard/, personality.ts    ← 🗓 Hard (worker, chunk lazy) + personalidades
-├── selfplay/                        ← 🗓 Auto-juego y estadísticas (NO entra al bundle web)
+│       ├── introspection/, analysis/, medium/, MediumBot.ts   ← ✅ Medium
+│       └── hard/, personality.ts    ← ✅ Hard (worker, chunk lazy) + personalidades
+├── selfplay/                        ← ✅ Auto-juego y estadísticas (NO entra al bundle web)
 │   ├── core/                        ← TS puro: formato de partidas, grabador, experimentos, agregación, reportes
 │   ├── node/                        ← CLI + worker_threads + I/O (build SSR a apps/web/.selfplay-dist/)
 │   ├── experiments/                 ← Presets JSON (smoke, balance-*, rules-*, personalities-matrix)

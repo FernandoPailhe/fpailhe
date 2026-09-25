@@ -20,7 +20,12 @@
     "format:check": "prettier --check .",
     "test": "pnpm build:packages && vitest run",
     "test:watch": "pnpm build:packages && vitest",
-    "preview": "pnpm --filter @ferpa/web preview"
+    "preview": "pnpm --filter @ferpa/web preview",
+    "trymate:build-selfplay": "pnpm build:packages && pnpm --filter @ferpa/web exec vite build -c vite.selfplay.config.ts",
+    "trymate:selfplay": "pnpm trymate:build-selfplay && node apps/web/.selfplay-dist/cli.js selfplay",
+    "trymate:report": "pnpm trymate:build-selfplay && node apps/web/.selfplay-dist/cli.js report",
+    "trymate:compare": "pnpm trymate:build-selfplay && node apps/web/.selfplay-dist/cli.js compare",
+    "trymate:validate": "pnpm trymate:build-selfplay && node apps/web/.selfplay-dist/cli.js validate"
   },
   "devDependencies": {
     "@eslint/js": "^9.20.0",

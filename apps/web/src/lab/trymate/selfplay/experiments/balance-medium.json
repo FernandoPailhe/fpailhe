@@ -1,0 +1,19 @@
+{
+  "name": "balance-medium",
+  "games": 2000,
+  "seed": 42,
+  "maxPlies": 400,
+  "workers": "auto",
+  "setupModes": { "ALTERNATING": 2, "HIDDEN": 1, "RANDOM": 1 },
+  "opening": { "randomPlies": 4, "epsilon": 0.15 },
+  "swapColors": true,
+  "recordPositions": true,
+  "matchups": [
+    {
+      "white": { "bot": "medium", "budget": { "kind": "nodes", "n": 3000 } },
+      "black": { "bot": "medium", "budget": { "kind": "nodes", "n": 3000 } },
+      "weight": 1
+    }
+  ],
+  "rules": [{ "variant": "current" }]
+}

@@ -1,0 +1,139 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`renderReport > snapshot con summary sintético fijo 1`] = `
+"# Reporte de selfplay — TryMate
+
+**Batch:** \`b-snap\`  
+**Partidas:** 12 · **Fallas:** 0
+**Estado:** completed
+**Período:** <ts> → <ts>
+**Ritmo:** 5000 partidas/hora
+**Variantes:** \`current@95a6e954\`
+**Matchups:** \`easyvsmedium\`
+**Duración media:** 4.0 plies (p50 4.0)
+**Apertura aleatoria:** 0.0% de los plies
+**Duplicados:** 12 partidas en 1 grupos con secuencia repetida ⚠
+
+### Advertencias
+- ⚠ grupo "all": n=12 (< 200)
+- ⚠ grupo "all": 100.0% de partidas duplicadas
+- ⚠ grupo "variant:current@95a6e954": n=12 (< 200)
+- ⚠ grupo "variant:current@95a6e954": 100.0% de partidas duplicadas
+- ⚠ grupo "variant:current@95a6e954|matchup:easyvsmedium": n=12 (< 200)
+- ⚠ grupo "variant:current@95a6e954|matchup:easyvsmedium": 100.0% de partidas duplicadas
+- ⚠ grupo "variant:current@95a6e954|setup:ALTERNATING": n=12 (< 200)
+- ⚠ grupo "variant:current@95a6e954|setup:ALTERNATING": 100.0% de partidas duplicadas
+
+## Balance por variante
+
+| Variante | n | % Blancas | % Negras | Empates | Razones | Plies p10/p50/p90 |
+|---|---|---|---|---|---|---|
+| current@95a6e954 | 12 ⚠ | 58.3% [32.0% – 80.7%] ⚠ | 41.7% [19.3% – 68.0%] ⚠ | 0.0% [0.0% – 24.3%] ⚠ | points 12 | 4.0 / 4.0 / 4.0 |
+
+- **current@95a6e954:** sin ventaja de color significativa (Blancas 58.3% de decididas, IC [32.0% – 80.7%]).
+
+## Piezas
+
+| Tipo | Desplegadas | Supervivencia | Capturas hechas | Sufridas | Puntos | Ply medio al anotar | Bajadas |
+|---|---|---|---|---|---|---|---|
+| FORT | 12 | 50.0% [31.4% – 68.6%] ⚠ | 0 | 12 | 0 | - | 12 |
+| PIONEER | 24 | 0.0% [0.0% – 13.8%] ⚠ | 0 | 0 | 24 | 2.0 | 0 |
+| STRIKER | 12 | 100.0% [75.7% – 100.0%] ⚠ | 12 | 0 | 0 | - | 0 |
+
+### Matriz de capturas (captor → víctima)
+
+| Captor \\ Víctima | FORT |
+|---|---|
+| STRIKER | 12 |
+
+## Composiciones
+
+### Composición (top/bottom por win rate)
+
+_Sin claves con n ≥ 30._
+
+### Formación front-mid-back (top/bottom)
+
+_Sin claves con n ≥ 30._
+
+## Tablero — current@95a6e954
+
+### Ocupación
+
+\`\`\`
+0 0 0 0 0
+0 0 0 0 7
+0 0 0 0 0
+0 0 0 0 0
+0 0 0 0 0
+0 0 9 0 0
+0 0 2 0 0
+0 0 0 0 0
+0 0 0 0 0
+0 7 0 0 0
+0 0 0 0 0
+\`\`\`
+
+_0–9 normalizado; fila de anotación de Blancas arriba._
+
+### Capturas
+
+\`\`\`
+0 0 0 0 0
+0 0 0 0 0
+0 0 0 0 0
+0 0 0 0 0
+0 0 0 0 0
+0 0 9 0 0
+0 0 0 0 0
+0 0 0 0 0
+0 0 0 0 0
+0 0 0 0 0
+0 0 0 0 0
+\`\`\`
+
+_0–9 normalizado; fila de anotación de Blancas arriba._
+
+### Columnas de anotación
+
+\`\`\`
+ ████████████   ████████████
+\`\`\`
+
+## Banca y tempo
+
+- Bajadas por partida: **1.0**
+- Ply medio de bajada: **2.0**
+
+| Bajadas del bando | n | Win rate |
+|---|---|---|
+| 0 | 12 ⚠ | 41.7% [19.3% – 68.0%] ⚠ |
+| 1 | 12 ⚠ | 58.3% [32.0% – 80.7%] ⚠ |
+
+- **Quien anota primero gana:** 41.7% [19.3% – 68.0%] ⚠
+- **Remontadas** (ganó quien cedió el primer tanto): 58.3% [32.0% – 80.7%] ⚠
+
+## Personalidades
+
+| Blancas \\ Negras | n | % Blancas |
+|---|---|---|
+| balanced×balanced | 12 ⚠ | 58.3% [32.0% – 80.7%] ⚠ |
+
+| Personalidad | n | Frente medio | Progreso máx | Capturas | Plies 1er tanto | Bajadas | Random |
+|---|---|---|---|---|---|---|---|
+| balanced | 24 ⚠ | 0.5 | 2.0 | 1.0 | 20.0 | 1.0 | 0.0 |
+
+## Datos
+
+- Schema: \`trymate.summary/1\` · Generado: <ts>
+- Git: \`abc123\`
+- Fingerprints de reglas: \`95a6e954\`
+
+### Config del experimento
+
+\`\`\`json
+{"name":"snap","games":12}
+\`\`\`
+
+"
+`;

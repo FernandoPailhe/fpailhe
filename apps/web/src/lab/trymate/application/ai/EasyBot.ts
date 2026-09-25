@@ -5,7 +5,7 @@ import { MovementRuleEngine } from "../rules/MovementRuleEngine";
 import { canPlaceFromBench, getBenchPlacementSquares } from "../rules/turnRules";
 import { countsOf, feasibleTypes } from "../../domain/rules/composition";
 import { generateRandomArmy, type GeneratedArmy } from "../../domain/rules/randomArmy";
-import type { BotContext, BotPlayAction, ComputerPlayer } from "./ComputerPlayer";
+import type { BotContext, BotPlayAction, ComputerPlayer, DecisionInfo } from "./ComputerPlayer";
 import type { Rng } from "./rng";
 
 export type { Rng } from "./rng";
@@ -74,6 +74,17 @@ export function choosePlayAction(
   ctx: BotContext,
   config: EasyBotConfig = EASY_BOT_CONFIG,
 ): BotPlayAction {
+  return choosePlayActionScored(ctx, config).action;
+}
+
+/**
+ * Igual que `choosePlayAction` pero además devuelve el diagnóstico de la
+ * decisión (top de candidatas puntuadas, eval de la elegida, n = candidatas).
+ */
+export function choosePlayActionScored(
+  ctx: BotContext,
+  config: EasyBotConfig = EASY_BOT_CONFIG,
+): { action: BotPlayAction; info: DecisionInfo } {
   const { board, bot, botState, engine, rules, rng } = ctx;
 
   if (canPlaceFromBench(board, bot, botState, rules)) {
@@ -88,7 +99,12 @@ export function choosePlayAction(
       );
       const candidates = squares.filter((p) => p.y === bestRow);
       const to = pickIndex(candidates, rng);
-      if (to) return { kind: "bench", benchPieceId: benchPiece.id, to };
+      if (to) {
+        return {
+          action: { kind: "bench", benchPieceId: benchPiece.id, to },
+          info: { nodes: 0, top: [] },
+        };
+      }
     }
   }
 
@@ -111,16 +127,30 @@ export function choosePlayAction(
     }
   }
 
-  if (candidates.length === 0) return { kind: "pass" };
+  const toAction = (c: MoveCandidate): BotPlayAction => ({
+    kind: "move",
+    pieceId: c.pieceId,
+    to: c.to,
+  });
+  const infoOf = (pick: MoveCandidate | undefined): DecisionInfo => ({
+    eval: pick?.score,
+    nodes: candidates.length,
+    top: [...candidates]
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5)
+      .map((c) => ({ action: toAction(c), score: c.score })),
+  });
+
+  if (candidates.length === 0) return { action: { kind: "pass" }, info: infoOf(undefined) };
 
   if (rng() < config.randomMoveChance) {
     const pick = pickIndex(candidates, rng);
-    return pick ? { kind: "move", pieceId: pick.pieceId, to: pick.to } : { kind: "pass" };
+    return { action: pick ? toAction(pick) : { kind: "pass" }, info: infoOf(pick) };
   }
 
   const ranked = [...candidates].sort((a, b) => b.score - a.score);
   const pick = pickIndex(ranked.slice(0, config.topK), rng);
-  return pick ? { kind: "move", pieceId: pick.pieceId, to: pick.to } : { kind: "pass" };
+  return { action: pick ? toAction(pick) : { kind: "pass" }, info: infoOf(pick) };
 }
 
 /** Tipos ya elegidos por el bot (tablero + banca) y los que aún puede tomar. */
@@ -140,6 +170,7 @@ function allowedTypes(ctx: BotContext): PieceType[] {
  */
 export function createEasyBot(rng: Rng): ComputerPlayer {
   let plan: GeneratedArmy | null = null;
+  let lastInfo: DecisionInfo | null = null;
   const plannedArmy = (ctx: BotContext): GeneratedArmy => {
     plan ??= generateRandomArmy(ctx.rules, ctx.bot, rng);
     return plan;
@@ -179,7 +210,13 @@ export function createEasyBot(rng: Rng): ComputerPlayer {
     },
 
     choosePlayAction(ctx) {
-      return choosePlayAction(ctx);
+      const { action, info } = choosePlayActionScored(ctx);
+      lastInfo = info;
+      return action;
+    },
+
+    getLastDecisionInfo() {
+      return lastInfo;
     },
   };
 }

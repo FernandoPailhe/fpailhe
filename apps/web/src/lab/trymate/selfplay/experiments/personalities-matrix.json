@@ -1,0 +1,131 @@
+{
+  "name": "personalities-matrix",
+  "games": 4500,
+  "seed": 44,
+  "maxPlies": 400,
+  "workers": "auto",
+  "setupModes": { "ALTERNATING": 1 },
+  "opening": { "randomPlies": 4, "epsilon": 0.15 },
+  "swapColors": true,
+  "recordPositions": true,
+  "matchups": [
+    {
+      "white": {
+        "bot": "hard",
+        "personality": "balanced",
+        "budget": { "kind": "nodes", "n": 20000 }
+      },
+      "black": {
+        "bot": "hard",
+        "personality": "balanced",
+        "budget": { "kind": "nodes", "n": 20000 }
+      },
+      "weight": 1
+    },
+    {
+      "white": {
+        "bot": "hard",
+        "personality": "balanced",
+        "budget": { "kind": "nodes", "n": 20000 }
+      },
+      "black": {
+        "bot": "hard",
+        "personality": "offensive",
+        "budget": { "kind": "nodes", "n": 20000 }
+      },
+      "weight": 1
+    },
+    {
+      "white": {
+        "bot": "hard",
+        "personality": "balanced",
+        "budget": { "kind": "nodes", "n": 20000 }
+      },
+      "black": {
+        "bot": "hard",
+        "personality": "defensive",
+        "budget": { "kind": "nodes", "n": 20000 }
+      },
+      "weight": 1
+    },
+    {
+      "white": {
+        "bot": "hard",
+        "personality": "offensive",
+        "budget": { "kind": "nodes", "n": 20000 }
+      },
+      "black": {
+        "bot": "hard",
+        "personality": "balanced",
+        "budget": { "kind": "nodes", "n": 20000 }
+      },
+      "weight": 1
+    },
+    {
+      "white": {
+        "bot": "hard",
+        "personality": "offensive",
+        "budget": { "kind": "nodes", "n": 20000 }
+      },
+      "black": {
+        "bot": "hard",
+        "personality": "offensive",
+        "budget": { "kind": "nodes", "n": 20000 }
+      },
+      "weight": 1
+    },
+    {
+      "white": {
+        "bot": "hard",
+        "personality": "offensive",
+        "budget": { "kind": "nodes", "n": 20000 }
+      },
+      "black": {
+        "bot": "hard",
+        "personality": "defensive",
+        "budget": { "kind": "nodes", "n": 20000 }
+      },
+      "weight": 1
+    },
+    {
+      "white": {
+        "bot": "hard",
+        "personality": "defensive",
+        "budget": { "kind": "nodes", "n": 20000 }
+      },
+      "black": {
+        "bot": "hard",
+        "personality": "balanced",
+        "budget": { "kind": "nodes", "n": 20000 }
+      },
+      "weight": 1
+    },
+    {
+      "white": {
+        "bot": "hard",
+        "personality": "defensive",
+        "budget": { "kind": "nodes", "n": 20000 }
+      },
+      "black": {
+        "bot": "hard",
+        "personality": "offensive",
+        "budget": { "kind": "nodes", "n": 20000 }
+      },
+      "weight": 1
+    },
+    {
+      "white": {
+        "bot": "hard",
+        "personality": "defensive",
+        "budget": { "kind": "nodes", "n": 20000 }
+      },
+      "black": {
+        "bot": "hard",
+        "personality": "defensive",
+        "budget": { "kind": "nodes", "n": 20000 }
+      },
+      "weight": 1
+    }
+  ],
+  "rules": [{ "variant": "current" }]
+}

@@ -1,6 +1,6 @@
 import { rulesFingerprint } from "../../../domain/config/RulesView";
 import { Position } from "../../../domain/entities/Position";
-import type { BotContext, ComputerPlayer } from "../ComputerPlayer";
+import type { BotContext, BotPlayAction, ComputerPlayer, DecisionInfo } from "../ComputerPlayer";
 import { getRulesInsight, type RulesInsight } from "../introspection/profiles";
 import { chooseBenchType, chooseSetupPlacement, targetComposition } from "../medium/setupStrategy";
 import type { Personality } from "../personality";
@@ -46,6 +46,7 @@ export function createHardBot(
   });
   const profile = getPersonalityProfile(opts.personality);
   let lastResult: HardSearchResult | null = null;
+  let lastTopAction: BotPlayAction | null = null;
   let plan: ArmyPlan | null = null;
   let planFoeVisible = -1;
   let requestId = 0;
@@ -75,6 +76,18 @@ export function createHardBot(
 
     get lastResult() {
       return lastResult;
+    },
+
+    getLastDecisionInfo(): DecisionInfo | null {
+      if (!lastResult) return null;
+      return {
+        eval: lastResult.score,
+        depth: lastResult.depth,
+        nodes: lastResult.nodes,
+        ms: lastResult.ms,
+        personality: opts.personality,
+        top: lastTopAction ? [{ action: lastTopAction, score: lastResult.score }] : [],
+      };
     },
 
     dispose() {
@@ -125,7 +138,9 @@ export function createHardBot(
       );
       const res = await client.search(req, signal);
       lastResult = res;
-      return toBotPlayActions(res.actions, ctx);
+      const actions = toBotPlayActions(res.actions, ctx);
+      lastTopAction = actions[0] ?? null;
+      return actions;
     },
 
     // Sincrónico (fallback / tests): búsqueda inline con presupuesto reducido.
@@ -143,7 +158,9 @@ export function createHardBot(
         ctx.rng,
       );
       lastResult = res;
-      return toBotPlayAction(res.actions[0] ?? null, ctx);
+      const action = toBotPlayAction(res.actions[0] ?? null, ctx);
+      lastTopAction = action;
+      return action;
     },
   };
 }

@@ -8,7 +8,13 @@ import { GAME_CONFIG } from "../../domain/constants/GameConstants";
 import { SetupTurnMode } from "../../domain/constants/GameRules";
 import { CURRENT_RULES } from "../../domain/config/RulesView";
 import { MovementRuleEngine } from "../rules/MovementRuleEngine";
-import { choosePlayAction, createEasyBot, EASY_BOT_CONFIG, getThreatenedSquares } from "./EasyBot";
+import {
+  choosePlayAction,
+  choosePlayActionScored,
+  createEasyBot,
+  EASY_BOT_CONFIG,
+  getThreatenedSquares,
+} from "./EasyBot";
 import type { BotContext } from "./ComputerPlayer";
 import type { Rng } from "./rng";
 
@@ -227,5 +233,53 @@ describe("createEasyBot", () => {
     board.addPiece(new GamePiece("s", PieceType.STRIKER, pos(0, 9), Player.NEGRAS));
     const action = bot.choosePlayAction(makeCtx(board, Player.NEGRAS, new PlayerState("bot")));
     expect(action.kind).toBe("move");
+  });
+});
+
+describe("getLastDecisionInfo", () => {
+  it("null antes de jugar; tras jugar, la elegida está en el top con su eval", () => {
+    const board = emptyBoard();
+    board.addPiece(new GamePiece("s", PieceType.STRIKER, pos(0, 9), Player.NEGRAS));
+    board.addPiece(new GamePiece("f", PieceType.FORT, pos(4, 7), Player.NEGRAS));
+    const bot = createEasyBot(() => 0.9999);
+    expect(bot.getLastDecisionInfo?.() ?? null).toBeNull();
+    const action = bot.choosePlayAction(makeCtx(board, Player.NEGRAS, new PlayerState("bot")));
+    const info = bot.getLastDecisionInfo!();
+    expect(info).not.toBeNull();
+    expect(info!.nodes).toBeGreaterThan(0);
+    expect(info!.top!.length).toBeGreaterThan(0);
+    expect(action.kind).toBe("move");
+    const hit = info!.top!.find(
+      (t) =>
+        t.action.kind === "move" &&
+        action.kind === "move" &&
+        t.action.pieceId === action.pieceId &&
+        t.action.to.equals(action.to),
+    );
+    expect(hit).toBeDefined();
+    expect(info!.eval).toBe(hit!.score);
+  });
+
+  it("sin azar (topK=1, randomMoveChance=0): top[0] coincide con la elegida", () => {
+    const board = emptyBoard();
+    board.addPiece(new GamePiece("s", PieceType.STRIKER, pos(0, 9), Player.NEGRAS));
+    board.addPiece(new GamePiece("f", PieceType.FORT, pos(4, 7), Player.NEGRAS));
+    const ctx = makeCtx(board, Player.NEGRAS, new PlayerState("bot"));
+    const { action, info } = choosePlayActionScored(ctx, {
+      ...EASY_BOT_CONFIG,
+      randomMoveChance: 0,
+      topK: 1,
+    });
+    expect(info.top![0]!.action).toEqual(action);
+    expect(info.eval).toBe(info.top![0]!.score);
+  });
+
+  it("pass sin candidatos: nodes=0 y top vacío", () => {
+    const bot = createEasyBot(() => 0.9999);
+    const action = bot.choosePlayAction(
+      makeCtx(emptyBoard(), Player.NEGRAS, new PlayerState("bot")),
+    );
+    expect(action).toEqual({ kind: "pass" });
+    expect(bot.getLastDecisionInfo!()).toEqual({ eval: undefined, nodes: 0, top: [] });
   });
 });

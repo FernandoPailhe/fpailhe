@@ -28,6 +28,22 @@ export type BotPlayAction =
   | { kind: "pass" };
 
 /**
+ * Diagnóstico uniforme de la última decisión de PLAYING de un bot
+ * (selfplay/estadísticas): qué evaluó, cuánto buscó y sus mejores
+ * alternativas. `eval` es desde el punto de vista del bot que decidió.
+ */
+export interface DecisionInfo {
+  eval?: number;
+  depth?: number;
+  nodes?: number;
+  ms?: number;
+  posture?: string;
+  personality?: string;
+  /** Candidatas ordenadas de mejor a peor (hasta 5). */
+  top?: { action: BotPlayAction; score: number }[];
+}
+
+/**
  * Todo lo que un bot puede consultar para decidir. En SETUP HIDDEN el board
  * solo muestra las piezas propias. El bot no conoce reglas por su cuenta:
  * las recibe acá (`rules`, `engine`) — nunca importa las constantes del juego.
@@ -70,6 +86,11 @@ export interface ComputerPlayer {
   prepareSetupAsync?(ctx: BotContext, signal: AbortSignal): Promise<void>;
   /** Libera recursos (Hard: termina el worker). Opcional. */
   dispose?(): void;
+  /**
+   * Diagnóstico de la última decisión de PLAYING; null si el bot aún no jugó.
+   * No afecta el determinismo de la jugada (ms es solo informativo).
+   */
+  getLastDecisionInfo?(): DecisionInfo | null;
 }
 
 const FACTORIES: Partial<Record<BotDifficulty, BotFactory>> = {
@@ -107,15 +128,20 @@ export function createComputerPlayer(
   return factory(rng, opts);
 }
 
+/** Resuelve la fábrica de una dificultad (sync o vía loader lazy como Hard). */
+export async function loadBotFactory(difficulty: BotDifficulty): Promise<BotFactory> {
+  const factory = FACTORIES[difficulty] ?? (await LOADERS[difficulty]?.());
+  if (!factory) {
+    throw new Error(`ComputerPlayer: dificultad no registrada "${difficulty}"`);
+  }
+  return factory;
+}
+
 /** Resuelve el bot: fábrica sync si existe, o el loader lazy (Hard). */
 export async function loadComputerPlayer(
   difficulty: BotDifficulty,
   rng: Rng,
   opts: BotFactoryOpts = DEFAULT_BOT_OPTS,
 ): Promise<ComputerPlayer> {
-  const factory = FACTORIES[difficulty] ?? (await LOADERS[difficulty]?.());
-  if (!factory) {
-    throw new Error(`ComputerPlayer: dificultad no registrada "${difficulty}"`);
-  }
-  return factory(rng, opts);
+  return (await loadBotFactory(difficulty))(rng, opts);
 }

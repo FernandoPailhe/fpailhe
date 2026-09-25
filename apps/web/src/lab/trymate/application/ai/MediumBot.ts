@@ -1,5 +1,5 @@
 import { analyzeBoard } from "./analysis/boardAnalysis";
-import type { BotContext, ComputerPlayer } from "./ComputerPlayer";
+import type { BotContext, ComputerPlayer, DecisionInfo } from "./ComputerPlayer";
 import { getRulesInsight, type RulesInsight } from "./introspection/profiles";
 import { chooseBenchPlacement } from "./medium/benchPlacement";
 import { MEDIUM_BOT_CONFIG, type Posture } from "./medium/config";
@@ -38,6 +38,20 @@ export function createMediumBot(_rng: Rng): MediumBot {
 
     get lastDecision() {
       return lastDecision;
+    },
+
+    getLastDecisionInfo(): DecisionInfo | null {
+      if (!lastDecision) return null;
+      return {
+        eval: lastDecision.top[0]?.score,
+        depth: lastDecision.depth,
+        nodes: lastDecision.nodes,
+        posture: lastDecision.posture,
+        top: lastDecision.top.map((t) => ({
+          action: { kind: "move", pieceId: t.move.pieceId, to: t.move.to },
+          score: t.score,
+        })),
+      };
     },
 
     chooseSetupPlacement(ctx) {

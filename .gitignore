@@ -7,3 +7,4 @@ dist/
 .turbo/
 weights.tune.checkpoint.json
 *.tsbuildinfo
+apps/web/.selfplay-dist/

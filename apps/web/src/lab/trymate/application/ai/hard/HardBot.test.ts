@@ -1,14 +1,20 @@
 import { describe, expect, it, vi } from "vitest";
 import { Position } from "../../../domain/entities/Position";
+import { Board } from "../../../domain/entities/Board";
+import { GamePiece } from "../../../domain/entities/GamePiece";
+import { PlayerState } from "../../../domain/entities/PlayerState";
 import { PieceType, Player } from "../../../domain/constants/PieceConstants";
 import { GamePhase, SetupTurnMode } from "../../../domain/constants/GameRules";
+import { CURRENT_RULES } from "../../../domain/config/RulesView";
 import { createGameStore } from "../../GameState";
+import { MovementRuleEngine } from "../../rules/MovementRuleEngine";
 import { canPlaceFromBench, getBenchPlacementSquares } from "../../rules/turnRules";
 import {
   createComputerPlayer,
   loadComputerPlayer,
   needsAsyncLoad,
   registerComputerPlayer,
+  type BotContext,
   type ComputerPlayer,
 } from "../ComputerPlayer";
 import { createHardBot } from "./HardBot";
@@ -153,4 +159,39 @@ describe("hard — partida completa (inline, presupuesto bajo)", () => {
     expect(S().gamePhase).toBe(GamePhase.GAME_OVER);
     S().botController?.dispose?.();
   }, 120_000);
+});
+
+describe("hard — getLastDecisionInfo", () => {
+  it("expone eval/depth/nodes/ms/personalidad tras la búsqueda inline", () => {
+    const board = new Board(CURRENT_RULES.width, CURRENT_RULES.height);
+    board.addPiece(new GamePiece("s", PieceType.STRIKER, pos(2, 8), Player.NEGRAS));
+    board.addPiece(new GamePiece("w", PieceType.FORT, pos(0, 3), Player.BLANCAS));
+    const bot = createHardBot(() => 0.5, {
+      personality: "offensive",
+      forceInline: true,
+      overrides: TEST_OVERRIDES,
+    });
+    expect(bot.getLastDecisionInfo?.() ?? null).toBeNull();
+    const ctx: BotContext = {
+      board,
+      bot: Player.NEGRAS,
+      botState: new PlayerState("bot"),
+      opponentState: new PlayerState("opp"),
+      engine: new MovementRuleEngine(),
+      rules: CURRENT_RULES,
+      setupMode: SetupTurnMode.ALTERNATING,
+      rng: () => 0.5,
+    };
+    const action = bot.choosePlayAction(ctx);
+    const info = bot.getLastDecisionInfo!();
+    expect(info).not.toBeNull();
+    expect(info!.depth).toBeGreaterThanOrEqual(1);
+    expect(info!.nodes).toBeGreaterThan(0);
+    expect(info!.ms).toBeGreaterThanOrEqual(0);
+    expect(info!.personality).toBe("offensive");
+    expect(typeof info!.eval).toBe("number");
+    if (action.kind !== "pass") {
+      expect(info!.top![0]!.action).toEqual(action);
+    }
+  });
 });

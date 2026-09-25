@@ -1,0 +1,13 @@
+{
+  "name": "smoke",
+  "games": 40,
+  "seed": 1,
+  "maxPlies": 400,
+  "workers": "auto",
+  "setupModes": { "ALTERNATING": 1, "HIDDEN": 1, "RANDOM": 1 },
+  "opening": { "randomPlies": 4, "epsilon": 0.15 },
+  "swapColors": true,
+  "recordPositions": true,
+  "matchups": [{ "white": { "bot": "easy" }, "black": { "bot": "easy" }, "weight": 1 }],
+  "rules": [{ "variant": "current" }]
+}

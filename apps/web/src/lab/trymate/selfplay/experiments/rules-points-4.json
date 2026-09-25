@@ -1,0 +1,48 @@
+{
+  "name": "rules-points-4",
+  "games": 4000,
+  "seed": 47,
+  "maxPlies": 500,
+  "workers": "auto",
+  "setupModes": {
+    "ALTERNATING": 2,
+    "HIDDEN": 1,
+    "RANDOM": 1
+  },
+  "opening": {
+    "randomPlies": 4,
+    "epsilon": 0.15
+  },
+  "swapColors": true,
+  "recordPositions": true,
+  "matchups": [
+    {
+      "white": {
+        "bot": "medium",
+        "budget": {
+          "kind": "nodes",
+          "n": 3000
+        }
+      },
+      "black": {
+        "bot": "medium",
+        "budget": {
+          "kind": "nodes",
+          "n": 3000
+        }
+      },
+      "weight": 1
+    }
+  ],
+  "rules": [
+    {
+      "variant": "current"
+    },
+    {
+      "variant": "points-4",
+      "rules": {
+        "POINTS_TO_WIN": 4
+      }
+    }
+  ]
+}

@@ -165,3 +165,28 @@ describe("createMediumBot — store", () => {
     expect(S().player2State.getBenchPieces()).toHaveLength(3);
   });
 });
+
+describe("getLastDecisionInfo", () => {
+  it("expone postura, depth, nodos y top coherente con la acción elegida", () => {
+    const board = emptyBoard();
+    board.addPiece(new GamePiece("s", PieceType.STRIKER, pos(2, 5), BOT));
+    board.addPiece(new GamePiece("w", PieceType.FORT, pos(0, 3), Player.BLANCAS));
+    const bot = createMediumBot(createSeededRng(1));
+    expect(bot.getLastDecisionInfo?.() ?? null).toBeNull();
+    const action = bot.choosePlayAction(makeCtx(board, new PlayerState("bot")));
+    const info = bot.getLastDecisionInfo!();
+    expect(info).not.toBeNull();
+    expect(info!.depth).toBeGreaterThanOrEqual(1);
+    expect(info!.nodes).toBeGreaterThan(0);
+    expect(["ATTACK", "DEFEND", "BALANCED"]).toContain(info!.posture);
+    if (action.kind === "move") {
+      const hit = info!.top!.find(
+        (t) =>
+          t.action.kind === "move" &&
+          t.action.pieceId === action.pieceId &&
+          t.action.to.equals(action.to),
+      );
+      expect(hit, "la acción elegida debe estar en el top").toBeDefined();
+    }
+  });
+});
