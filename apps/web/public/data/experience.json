@@ -2,7 +2,7 @@
   {
     "id": "techint",
     "title": "React Native Developer",
-    "company": "Softtek (client: Techint)",
+    "company": "Techint",
     "startDate": "2025-08",
     "endDate": null,
     "summary": "As Developer and Functional Analyst for Techint's internal mobile application (EQM), I stabilized a deprecated, offline-first codebase with no test coverage and restored release continuity: 3 versions in the first three months after a year without updates. I then led a migration plan that made AI-assisted development safe on business-critical software: a 2,000+ test suite built as the safety net, followed by the migration of the app's full core from JavaScript to TypeScript with AI agents in about a month, with zero regressions. From day one I earned the client's trust by proposing functional improvements weighed by cost and benefit, delivering value even while the app was still being stabilized — such as a dynamic stepper that lets users move through the whole document-creation process without unnecessary screens. I also own release management and led the first AI agent shipped inside the product.",
