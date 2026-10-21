@@ -9,8 +9,8 @@
     "featured": true
   },
   {
-    "id": "tune-up",
-    "name": "Tune-Up",
+    "id": "runlapse",
+    "name": "Runlapse",
     "context": "Personal",
     "tech": ["React Native", "Expo", "TypeScript", "Devin", "Windsurf"],
     "description": "A workout log that turns sessions into weekly summaries, built and launched solo on an agent-driven pipeline: planner, builder and reviewer agents, cost-aware model selection, and scheduled jobs that triage issues into release branches.",
@@ -19,7 +19,7 @@
     "links": [
       {
         "type": "playStore",
-        "url": "https://play.google.com/store/apps/details?id=com.ferpa.tuneup"
+        "url": "https://play.google.com/store/apps/details?id=com.ferpa.runlapse"
       }
     ],
     "showInCV": true

@@ -6,7 +6,7 @@ Media assets for project detail pages (`/projects/<id>`), referenced from
 ## Layout
 
 - `project-media/<projectId>/<file>` — one subfolder per project id
-  (e.g. `project-media/tune-up/weekly-summary.png`).
+  (e.g. `project-media/runlapse/weekly-summary.png`).
 
 ## Recommended workflow (Google Drive)
 
@@ -20,9 +20,9 @@ site. Download the assets from Drive, optimize them, and commit them here:
 ## Referencing from `project-details.json`
 
 ```json
-{ "type": "image", "src": "/project-media/tune-up/weekly-summary.png", "alt": "Weekly summary screen" }
-{ "type": "video", "src": "/project-media/tune-up/demo.mp4", "poster": "/project-media/tune-up/demo-poster.jpg", "caption": "30s demo" }
-{ "type": "embed", "src": "https://drive.google.com/file/d/<FILE_ID>/preview", "title": "Tune-Up demo", "caption": "Demo hosted on Drive" }
+{ "type": "image", "src": "/project-media/runlapse/weekly-summary.png", "alt": "Weekly summary screen" }
+{ "type": "video", "src": "/project-media/runlapse/demo.mp4", "poster": "/project-media/runlapse/demo-poster.jpg", "caption": "30s demo" }
+{ "type": "embed", "src": "https://drive.google.com/file/d/<FILE_ID>/preview", "title": "Runlapse demo", "caption": "Demo hosted on Drive" }
 ```
 
 For Drive embeds the file must be shared "Anyone with the link"; use the

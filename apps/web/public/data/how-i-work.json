@@ -2,7 +2,7 @@
   "panels": [
     {
       "heading": "Starting from zero",
-      "body": "Tune-Up, El Puma Contigo, Argnetina Campeon del Mundo, Machine Stock — built from a blank screen, with a clean architecture decided on day one. On Tune-Up that includes the agent pipeline itself: shared skills, planner / builder / reviewer roles, and the right model for each task to keep costs in check."
+      "body": "Runlapse, El Puma Contigo, Argnetina Campeon del Mundo, Machine Stock — built from a blank screen, with a clean architecture decided on day one. On Runlapse that includes the agent pipeline itself: shared skills, planner / builder / reviewer roles, and the right model for each task to keep costs in check."
     },
     {
       "heading": "Starting from someone else's mess",

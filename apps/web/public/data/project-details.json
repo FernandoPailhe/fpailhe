@@ -1,10 +1,10 @@
 [
   {
-    "projectId": "tune-up",
+    "projectId": "runlapse",
     "product": {
       "heading": "The product",
       "paragraphs": [
-        "Tune-Up is a personal training log that turns raw workout entries into actionable weekly summaries. Instead of manually comparing spreadsheets, users open the app and see how this week compares to the last — volume, consistency, and progress across sessions."
+        "Runlapse is a personal training log that turns raw workout entries into actionable weekly summaries. Instead of manually comparing spreadsheets, users open the app and see how this week compares to the last — volume, consistency, and progress across sessions."
       ],
       "bullets": [
         "Workout logging with per-session detail",
@@ -42,7 +42,7 @@
     "links": [
       {
         "type": "playStore",
-        "url": "https://play.google.com/store/apps/details?id=com.ferpa.tuneup"
+        "url": "https://play.google.com/store/apps/details?id=com.ferpa.runlapse"
       }
     ],
     "media": []

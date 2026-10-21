@@ -91,7 +91,7 @@ export interface Project {
   /** @deprecated use `links` instead. Kept for backward compatibility during migration. */
   link?: string;
   links?: ProjectLink[];
-  /** Path to a screenshot under `/public/`, e.g. `/project-screenshots/tune-up.png`. */
+  /** Path to a screenshot under `/public/`, e.g. `/project-screenshots/runlapse.png`. */
   screenshot?: string;
   /** `true` = tarjeta en la grilla del Home; `false` = línea en "More projects". */
   featured: boolean;
@@ -117,7 +117,7 @@ export interface ProjectDetailSection {
 
 export interface ProjectMediaItem {
   type: "image" | "video" | "embed";
-  /** Path bajo `/public` (ej. `/project-media/tune-up/demo.mp4`) o URL externa para `embed`. */
+  /** Path bajo `/public` (ej. `/project-media/runlapse/demo.mp4`) o URL externa para `embed`. */
   src: string;
   /** Texto alternativo; obligatorio en la práctica para `image`. */
   alt?: string;

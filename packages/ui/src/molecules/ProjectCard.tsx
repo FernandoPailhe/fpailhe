@@ -16,7 +16,7 @@ export interface ProjectCardProps {
   link?: string;
   links?: ProjectCardLink[];
   imageUrl?: string;
-  /** Ruta interna a la página de detalle (ej. `/projects/tune-up`). Si existe, el nombre linkea ahí. */
+  /** Ruta interna a la página de detalle (ej. `/projects/runlapse`). Si existe, el nombre linkea ahí. */
   detailHref?: string;
 }
 
