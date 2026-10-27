@@ -1,0 +1,76 @@
+[
+  {
+    "id": "off_char_consejero",
+    "schemaVersion": 1,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "gameId": "off_game_demo_reino",
+    "key": "consejero",
+    "name": {
+      "default": "Aldric",
+      "translations": {
+        "en": "Aldric"
+      }
+    },
+    "title": {
+      "default": "Consejero real",
+      "translations": {
+        "en": "Royal counselor"
+      }
+    },
+    "themeTags": [
+      "corte",
+      "economia"
+    ],
+    "unlockedByDefault": true
+  },
+  {
+    "id": "off_char_enviado",
+    "schemaVersion": 1,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "gameId": "off_game_demo_reino",
+    "key": "enviado",
+    "name": {
+      "default": "Selene",
+      "translations": {
+        "en": "Selene"
+      }
+    },
+    "title": {
+      "default": "Enviada diplomática",
+      "translations": {
+        "en": "Diplomatic envoy"
+      }
+    },
+    "themeTags": [
+      "diplomacia"
+    ],
+    "unlockedByDefault": true
+  },
+  {
+    "id": "off_char_general",
+    "schemaVersion": 1,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "gameId": "off_game_demo_reino",
+    "key": "general",
+    "name": {
+      "default": "Bruna",
+      "translations": {
+        "en": "Bruna"
+      }
+    },
+    "title": {
+      "default": "General",
+      "translations": {
+        "en": "General"
+      }
+    },
+    "themeTags": [
+      "guerra",
+      "ejercito"
+    ],
+    "unlockedByDefault": false
+  }
+]

@@ -1,0 +1,60 @@
+{
+  "id": "off_card_015_estratega",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "gameId": "off_game_demo_reino",
+  "createdBy": "system",
+  "origin": "official",
+  "status": "published",
+  "text": {
+    "default": "La general Bruna propone un nuevo programa de entrenamiento para las tropas del reino."
+  },
+  "themeTags": [],
+  "difficulty": 4,
+  "options": [
+    {
+      "order": 1,
+      "label": {
+        "default": "Entrenamiento intensivo"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_ejercito",
+          "delta": 15
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": -8
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_015-estratega_1"
+    },
+    {
+      "order": 2,
+      "label": {
+        "default": "Mantener la rutina actual"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_pueblo",
+          "delta": 4
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_015-estratega_2"
+    }
+  ],
+  "availability": {},
+  "recurrence": {
+    "mode": "repeatable"
+  },
+  "baseWeight": 10,
+  "characterId": "off_char_general"
+}

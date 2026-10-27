@@ -1,0 +1,64 @@
+{
+  "id": "off_card_011_deuda",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "gameId": "off_game_demo_reino",
+  "createdBy": "system",
+  "origin": "official",
+  "status": "published",
+  "text": {
+    "default": "Los cobradores del usurero llaman a las puertas del palacio. La deuda venció."
+  },
+  "themeTags": [],
+  "difficulty": 4,
+  "options": [
+    {
+      "order": 1,
+      "label": {
+        "default": "Pagar lo debido"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": -12
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_011-deuda_1"
+    },
+    {
+      "order": 2,
+      "label": {
+        "default": "Negarse a pagar"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_prestigio",
+          "delta": -5
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_pueblo",
+          "delta": -5
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_011-deuda_2"
+    }
+  ],
+  "availability": {
+    "conditions": {
+      "type": "has_flag",
+      "flag": "deuda_pendiente"
+    }
+  },
+  "recurrence": {
+    "mode": "once"
+  },
+  "baseWeight": 10
+}

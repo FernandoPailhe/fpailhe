@@ -1,0 +1,69 @@
+{
+  "id": "off_card_010_usurero",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "gameId": "off_game_demo_reino",
+  "createdBy": "system",
+  "origin": "official",
+  "status": "published",
+  "text": {
+    "default": "Un usurero de la capital ofrece un préstamo generoso. Sus condiciones quedan para otra conversación."
+  },
+  "themeTags": [],
+  "difficulty": 3,
+  "options": [
+    {
+      "order": 1,
+      "label": {
+        "default": "Aceptar el préstamo"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": 15
+        },
+        {
+          "type": "set_flag",
+          "flag": "deuda_pendiente",
+          "value": true
+        },
+        {
+          "type": "enqueue_card",
+          "cardId": "off_card_011_deuda",
+          "delayTurns": 2
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_010-usurero_1"
+    },
+    {
+      "order": 2,
+      "label": {
+        "default": "Rechazarlo con disgusto"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": -5
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_pueblo",
+          "delta": 3
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_010-usurero_2"
+    }
+  ],
+  "availability": {},
+  "recurrence": {
+    "mode": "once"
+  },
+  "baseWeight": 10
+}

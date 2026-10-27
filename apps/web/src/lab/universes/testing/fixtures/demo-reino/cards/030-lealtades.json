@@ -1,0 +1,76 @@
+{
+  "id": "off_card_030_lealtades",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "gameId": "off_game_demo_reino",
+  "createdBy": "system",
+  "origin": "official",
+  "status": "published",
+  "text": {
+    "default": "Los vasallos aguardan señales. Puedes premiar su lealtad o apretar el lazo del tributo."
+  },
+  "themeTags": [],
+  "difficulty": 5,
+  "options": [
+    {
+      "order": 1,
+      "label": {
+        "default": "Premiar a los vasallos"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": -10
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_prestigio",
+          "delta": 10
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_pueblo",
+          "delta": 5
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_030-lealtades_1"
+    },
+    {
+      "order": 2,
+      "label": {
+        "default": "Exigir el tributo completo"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": 12
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_pueblo",
+          "delta": -10
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_prestigio",
+          "delta": -5
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_030-lealtades_2"
+    }
+  ],
+  "availability": {
+    "minStageOrder": 2
+  },
+  "recurrence": {
+    "mode": "repeatable"
+  },
+  "baseWeight": 10
+}

@@ -18,6 +18,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { buildUniverseShells } from "./universeShells.mjs";
 
 // --- Espejo de @ferpa/data-model (mantener en sync) ---
 
@@ -71,6 +72,7 @@ const SHELL_ROUTES = [
     title: "TryMate — Fernando Pailhe",
     html: `<main id="main-content" tabindex="-1" class="mx-auto max-w-[880px] px-[clamp(20px,5vw,32px)] py-20"><p class="font-ui text-xs uppercase tracking-widest text-gold-bright">Lab</p><h1 class="mt-2 font-display text-3xl font-bold text-ink">TryMate</h1><p class="mt-2 font-ui text-base leading-relaxed text-ink-dim">Experimental module: chess-like tactics on a 5×11 rugby field. This interactive module requires JavaScript.</p><p class="mt-6"><a href="/" class="border-b border-ink font-ui text-ink transition-colors hover:border-gold hover:text-gold">← Back to home</a></p></main>`,
   },
+  ...buildUniverseShells(),
 ];
 
 function readJson(name) {

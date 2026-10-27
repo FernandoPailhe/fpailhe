@@ -1,0 +1,56 @@
+{
+  "_help": "Plantilla de la versión ejecutable de la guía de tensiones (§5 de la biblia). Reemplazar parameters/tensionPairs/threatTags por los del universo; borrar los campos que empiezan con _help.",
+  "version": 1,
+  "slug": "{{slug}}",
+  "parameters": [
+    { "key": "param_1", "weight": 1, "expectedBias": 0, "_help": "weight: importancia relativa en el balance neto. expectedBias: Δ medio esperado por opción (negativo = el parámetro tiende a caer)." },
+    { "key": "param_2", "weight": 1, "expectedBias": 0 },
+    { "key": "param_3", "weight": 1, "expectedBias": 0 },
+    { "key": "param_4", "weight": 1, "expectedBias": 0 }
+  ],
+  "tensionPairs": [
+    { "a": "param_1", "b": "param_2", "intensity": 3, "note": "por qué chocan en este mundo" },
+    { "a": "param_3", "b": "param_4", "intensity": 2, "note": "" }
+  ],
+  "magnitude": {
+    "tiers": { "minor": [3, 6], "medium": [7, 12], "major": [13, 20], "critical": [21, 30] }
+  },
+  "difficultyRules": [
+    { "difficulty": 1, "maxTier": "minor", "maxParams": 2, "netMax": 4 },
+    { "difficulty": 2, "maxTier": "minor", "maxParams": 2, "netMax": 5 },
+    { "difficulty": 3, "maxTier": "medium", "maxParams": 2, "netMax": 6 },
+    { "difficulty": 4, "maxTier": "medium", "maxParams": 3, "netMax": 7 },
+    { "difficulty": 5, "maxTier": "medium", "maxParams": 3, "netMax": 8 },
+    { "difficulty": 6, "maxTier": "major", "maxParams": 3, "netMax": 9 },
+    { "difficulty": 7, "maxTier": "major", "maxParams": 3, "netMax": 10 },
+    { "difficulty": 8, "maxTier": "major", "maxParams": 4, "netMax": 11 },
+    { "difficulty": 9, "maxTier": "critical", "maxParams": 4, "netMax": 12 },
+    { "difficulty": 10, "maxTier": "critical", "maxParams": 4, "netMax": 14 }
+  ],
+  "options": {
+    "requireTradeoff": true,
+    "pureEffectTags": ["windfall", "crisis"],
+    "maxPureRatio": 0.1,
+    "balance": { "maxAbsDelta": 4, "maxParams": 2 }
+  },
+  "bias": { "tolerance": 1.0 },
+  "coverage": { "pairMinOptions": 3 },
+  "threatTags": [],
+  "quotas": {
+    "total": { "min": 0 },
+    "byStageOrder": { "1": { "min": 0 } },
+    "byOptionsCount": {
+      "1": { "maxRatio": 0.15 },
+      "2": { "minRatio": 0.3 },
+      "3": { "minRatio": 0.2 }
+    }
+  },
+  "content": {
+    "requiredLocales": ["es"],
+    "strictLocales": false,
+    "maxCardChars": 420,
+    "maxLabelChars": 90,
+    "maxOutcomeChars": 260,
+    "blockedTerms": []
+  }
+}

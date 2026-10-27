@@ -1,0 +1,68 @@
+[
+  {
+    "id": "off_badge_primer_decreto",
+    "schemaVersion": 1,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "gameId": "off_game_demo_reino",
+    "key": "primer_decreto",
+    "name": {
+      "default": "Primer decreto",
+      "translations": {
+        "en": "First decree"
+      }
+    },
+    "description": {
+      "default": "Tu reinado comenzó.",
+      "translations": {
+        "en": "Your reign began."
+      }
+    },
+    "iconId": "off_icon_primer_decreto",
+    "rarity": "common"
+  },
+  {
+    "id": "off_badge_pueblo_pleno",
+    "schemaVersion": 1,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "gameId": "off_game_demo_reino",
+    "key": "pueblo_pleno",
+    "name": {
+      "default": "Pueblo pleno",
+      "translations": {
+        "en": "Full people"
+      }
+    },
+    "description": {
+      "default": "El pueblo llegó a 100.",
+      "translations": {
+        "en": "The people reached 100."
+      }
+    },
+    "iconId": "off_icon_pueblo_pleno",
+    "rarity": "rare"
+  },
+  {
+    "id": "off_badge_pacificador",
+    "schemaVersion": 1,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "gameId": "off_game_demo_reino",
+    "key": "pacificador",
+    "name": {
+      "default": "Pacificador",
+      "translations": {
+        "en": "Peacemaker"
+      }
+    },
+    "description": {
+      "default": "Firmaste la paz duradera.",
+      "translations": {
+        "en": "You signed the lasting peace."
+      }
+    },
+    "iconId": "off_icon_pacificador",
+    "rarity": "epic"
+  }
+]

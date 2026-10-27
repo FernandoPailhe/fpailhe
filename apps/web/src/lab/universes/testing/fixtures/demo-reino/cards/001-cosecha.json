@@ -1,0 +1,82 @@
+{
+  "id": "off_card_001_cosecha",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "gameId": "off_game_demo_reino",
+  "createdBy": "system",
+  "origin": "official",
+  "status": "published",
+  "text": {
+    "default": "La cosecha fue abundante este año. Los graneros rebosan y hay que decidir qué hacer con el excedente.",
+    "translations": {
+      "en": "The harvest was abundant this year. The granaries overflow and you must decide what to do with the surplus."
+    }
+  },
+  "themeTags": [],
+  "difficulty": 2,
+  "options": [
+    {
+      "order": 1,
+      "label": {
+        "default": "Vender el excedente a los mercaderes",
+        "translations": {
+          "en": "Sell the surplus to the merchants"
+        }
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": 8
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_pueblo",
+          "delta": -5
+        },
+        {
+          "type": "add_score",
+          "points": 1
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_001-cosecha_1"
+    },
+    {
+      "order": 2,
+      "label": {
+        "default": "Repartirlo entre el pueblo",
+        "translations": {
+          "en": "Share it among the people"
+        }
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_pueblo",
+          "delta": 8
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": -5
+        },
+        {
+          "type": "add_score",
+          "points": 1
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_001-cosecha_2"
+    }
+  ],
+  "availability": {},
+  "recurrence": {
+    "mode": "repeatable"
+  },
+  "baseWeight": 10,
+  "characterId": "off_char_consejero"
+}

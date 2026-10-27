@@ -115,6 +115,28 @@ Skills: `trymate-rules-agnostic` (reglas y motor), `trymate-computer-player` (bo
 (store, dominio y revisión del módulo). Planes: `doc/detailed-plan/trymate-*`.
 Datos de selfplay: fuera del repo (`~/TryMateData/selfplay/` o `TRYMATE_DATA_DIR`).
 
+## Módulo `apps/web/src/lab/universes/` (ruta `/lab/universes`)
+
+Plataforma de juegos narrativos por decisiones (cartas de situación con parámetros en tensión). Motor, contenido, estado, rutas y UI implementados según `doc/detailed-plan/universes-engine/plan.md` y `doc/detailed-plan/universes-ui/plan.md` (ver `ACCEPTANCE.md` en cada plan).
+
+| Qué | Dónde |
+|---|---|
+| Motor puro y modelo | `apps/web/src/lab/universes/domain/` (`models.ts` es copia verbatim de `doc/specs/lab/universes/narrative-game-models.ts`) |
+| Contenido de juego (JSON, entra al build) | `apps/web/src/lab/universes/content/<slug>/` (ruta configurable: `.devin/universes.config.json`) |
+| Universo de pruebas `demo-reino` (solo DEV/test) | `apps/web/src/lab/universes/testing/fixtures/demo-reino/` |
+| Infraestructura (registry, bundles, storage) | `apps/web/src/lab/universes/infrastructure/` |
+| Hooks/contrato para la UI (`useNarrativeGame`) | `apps/web/src/lab/universes/application/` |
+| Rutas + componentes UI tematizados | `apps/web/src/lab/universes/routes/` · `apps/web/src/lab/universes/components/` · tema: `theme/` |
+| Documentos de cada universo (brief, investigación, biblia, tensiones, QA) — **no entran al build** | `doc/universes/<slug>/` |
+| Material propio para alimentar un universo | `doc/universes/<slug>/inputs/*.md` |
+| Specs (modelo de datos, estética, visión) | `doc/specs/lab/universes/` |
+| Skills | `create-universe` (orquestador; empezar por acá), `universe-batch`, `universe-interview`, `universe-research`, `universe-bible`, `design-tension-system`, `design-universe-entities`, `plan-universe-content`, `design-universe-aesthetics`, `generate-situation-cards`, `localize-universe`, `universe-qa` |
+| Guía completa (empezar acá) | `doc/universes/README.md` |
+| Planes de implementación (motor + rutas / UI) | `doc/detailed-plan/universes-engine/plan.md` · `doc/detailed-plan/universes-ui/plan.md` |
+| Agentes | `.devin/agents/*.md` · visión general: `.devin/skills/create-universe/references/system-overview.md` |
+
+Convenciones: módulo autocontenido como `lab/trymate` (no usa `packages/data-model`; así se puede extraer a otro repo sin tocar el sitio). Publicar un universo = `status: "published"` en `game.json` + `pnpm universes:validate`. Cada ruta `/lab/*` necesita su shell de prerender (`buildUniverseShells` en `apps/web/scripts/universeShells.mjs` para los universos publicados).
+
 ## Scopes de paquetes
 
 | Package | Scope | Directorio |
@@ -131,6 +153,7 @@ Datos de selfplay: fuera del repo (`~/TryMateData/selfplay/` o `TRYMATE_DATA_DIR
 | `pnpm build` | Build producción (data-model → ui → web) |
 | `pnpm typecheck` | TypeScript check en los 3 paquetes |
 | `pnpm preview` | Serve del build de producción |
-| `pnpm lint` / `pnpm test` | ESLint (incluye guardas de agnosticismo en `lab/trymate/application/ai/**`) / Vitest |
+| `pnpm lint` / `pnpm test` | ESLint (incluye guardas de agnosticismo en `lab/trymate/application/ai/**` y capas de `lab/universes`) / Vitest |
+| `pnpm universes:validate` | Valida contenido + estética de universos publicados (corre dentro de `pnpm build`) |
 | `pnpm trymate:selfplay --config <preset>` | 🗓 Auto-juego bot-vs-bot (ver skill `trymate-selfplay`) |
 | `pnpm trymate:report <batch>` / `trymate:compare <A> <B>` / `trymate:validate <batch>` | 🗓 Reporte, comparación y validación de batches |

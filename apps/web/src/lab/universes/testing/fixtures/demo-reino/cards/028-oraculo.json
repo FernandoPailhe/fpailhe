@@ -1,0 +1,71 @@
+{
+  "id": "off_card_028_oraculo",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "gameId": "off_game_demo_reino",
+  "createdBy": "system",
+  "origin": "official",
+  "status": "published",
+  "text": {
+    "default": "Una oráculo errante anuncia que tu nombre brillará si sigues la senda de la profecía."
+  },
+  "themeTags": [],
+  "difficulty": 9,
+  "options": [
+    {
+      "order": 1,
+      "label": {
+        "default": "Seguir la profecía"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "set_flag",
+          "flag": "profecia",
+          "value": true
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_prestigio",
+          "delta": 15
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": -15
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_028-oraculo_1"
+    },
+    {
+      "order": 2,
+      "label": {
+        "default": "Gobernar con la razón"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": 10
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_prestigio",
+          "delta": -5
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_028-oraculo_2"
+    }
+  ],
+  "availability": {
+    "minStageOrder": 3
+  },
+  "recurrence": {
+    "mode": "once"
+  },
+  "baseWeight": 10
+}

@@ -1,0 +1,180 @@
+[
+  {
+    "id": "off_param_tesoro",
+    "schemaVersion": 1,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "gameId": "off_game_demo_reino",
+    "key": "tesoro",
+    "name": {
+      "default": "Tesoro",
+      "translations": {
+        "en": "Treasury"
+      }
+    },
+    "description": {
+      "default": "0 = bancarrota, 100 = riquezas legendarias.",
+      "translations": {
+        "en": "0 = bankrupt, 100 = legendary riches."
+      }
+    },
+    "iconId": "off_icon_tesoro",
+    "min": 0,
+    "max": 100,
+    "initialValue": 50,
+    "thresholds": [
+      {
+        "id": "off_thr_tesoro_cero",
+        "comparator": "lte",
+        "value": 0,
+        "effects": [
+          {
+            "type": "end_game",
+            "outcome": "defeat",
+            "endingKey": "sin_tesoro"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "off_param_pueblo",
+    "schemaVersion": 1,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "gameId": "off_game_demo_reino",
+    "key": "pueblo",
+    "name": {
+      "default": "Pueblo",
+      "translations": {
+        "en": "People"
+      }
+    },
+    "description": {
+      "default": "0 = rebelión, 100 = fervor absoluto.",
+      "translations": {
+        "en": "0 = rebellion, 100 = absolute fervor."
+      }
+    },
+    "iconId": "off_icon_pueblo",
+    "min": 0,
+    "max": 100,
+    "initialValue": 50,
+    "thresholds": [
+      {
+        "id": "off_thr_pueblo_cero",
+        "comparator": "lte",
+        "value": 0,
+        "effects": [
+          {
+            "type": "end_game",
+            "outcome": "defeat",
+            "endingKey": "sin_pueblo"
+          }
+        ],
+        "threatTags": [
+          "internal_threat"
+        ]
+      },
+      {
+        "id": "off_thr_pueblo_lleno",
+        "comparator": "gte",
+        "value": 100,
+        "effects": [
+          {
+            "type": "award_badge",
+            "badgeId": "off_badge_pueblo_pleno"
+          }
+        ],
+        "once": true
+      }
+    ]
+  },
+  {
+    "id": "off_param_ejercito",
+    "schemaVersion": 1,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "gameId": "off_game_demo_reino",
+    "key": "ejercito",
+    "name": {
+      "default": "Ejército",
+      "translations": {
+        "en": "Army"
+      }
+    },
+    "description": {
+      "default": "0 = indefenso, 100 = legiones invencibles.",
+      "translations": {
+        "en": "0 = defenseless, 100 = invincible legions."
+      }
+    },
+    "iconId": "off_icon_ejercito",
+    "min": 0,
+    "max": 100,
+    "initialValue": 50,
+    "thresholds": [
+      {
+        "id": "off_thr_ejercito_cero",
+        "comparator": "lte",
+        "value": 0,
+        "effects": [
+          {
+            "type": "end_game",
+            "outcome": "defeat",
+            "endingKey": "invasion"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "off_param_prestigio",
+    "schemaVersion": 1,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "gameId": "off_game_demo_reino",
+    "key": "prestigio",
+    "name": {
+      "default": "Prestigio",
+      "translations": {
+        "en": "Prestige"
+      }
+    },
+    "description": {
+      "default": "0 = olvido, 100 = coronación eterna.",
+      "translations": {
+        "en": "0 = oblivion, 100 = eternal coronation."
+      }
+    },
+    "min": 0,
+    "max": 100,
+    "initialValue": 30,
+    "thresholds": [
+      {
+        "id": "off_thr_prestigio_cero",
+        "comparator": "lte",
+        "value": 0,
+        "effects": [
+          {
+            "type": "end_game",
+            "outcome": "defeat",
+            "endingKey": "olvido"
+          }
+        ]
+      },
+      {
+        "id": "off_thr_prestigio_corona",
+        "comparator": "gte",
+        "value": 100,
+        "effects": [
+          {
+            "type": "end_game",
+            "outcome": "victory",
+            "endingKey": "coronacion"
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,67 @@
+{
+  "id": "off_card_024_paz_eterna",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "gameId": "off_game_demo_reino",
+  "createdBy": "system",
+  "origin": "official",
+  "status": "published",
+  "text": {
+    "default": "El tratado de paz duradera espera tu sello. Firmarlo quedaría en las crónicas."
+  },
+  "themeTags": [],
+  "difficulty": 6,
+  "options": [
+    {
+      "order": 1,
+      "label": {
+        "default": "Sellar la paz"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "award_badge",
+          "badgeId": "off_badge_pacificador"
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_prestigio",
+          "delta": 10
+        },
+        {
+          "type": "add_score",
+          "points": 3
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_024-paz-eterna_1"
+    },
+    {
+      "order": 2,
+      "label": {
+        "default": "Dilatar la firma"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_prestigio",
+          "delta": -5
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_024-paz-eterna_2"
+    }
+  ],
+  "availability": {
+    "branchIds": [
+      "off_branch_diplomacia"
+    ],
+    "minStageOrder": 2
+  },
+  "recurrence": {
+    "mode": "once"
+  },
+  "baseWeight": 10
+}

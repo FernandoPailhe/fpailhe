@@ -1,0 +1,70 @@
+{
+  "id": "off_card_009_encrucijada",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "gameId": "off_game_demo_reino",
+  "createdBy": "system",
+  "origin": "official",
+  "status": "published",
+  "text": {
+    "default": "El reino llega a una encrucijada: expandirse por la fuerza o tejer alianzas duraderas. La decisión marcará la historia."
+  },
+  "themeTags": [],
+  "difficulty": 3,
+  "options": [
+    {
+      "order": 1,
+      "label": {
+        "default": "Camino de guerra"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "enter_branch",
+          "branchId": "off_branch_guerra"
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_ejercito",
+          "delta": 10
+        },
+        {
+          "type": "add_score",
+          "points": 2
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_009-encrucijada_1"
+    },
+    {
+      "order": 2,
+      "label": {
+        "default": "Camino de diplomacia"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "enter_branch",
+          "branchId": "off_branch_diplomacia"
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_prestigio",
+          "delta": 5
+        },
+        {
+          "type": "add_score",
+          "points": 2
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_009-encrucijada_2"
+    }
+  ],
+  "availability": {},
+  "recurrence": {
+    "mode": "once"
+  },
+  "baseWeight": 10
+}

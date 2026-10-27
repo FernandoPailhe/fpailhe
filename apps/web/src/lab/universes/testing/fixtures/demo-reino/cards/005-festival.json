@@ -1,0 +1,69 @@
+{
+  "id": "off_card_005_festival",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "gameId": "off_game_demo_reino",
+  "createdBy": "system",
+  "origin": "official",
+  "status": "published",
+  "text": {
+    "default": "Se acerca la fecha del festival de primavera. Un buen festín calmaría los ánimos."
+  },
+  "themeTags": [],
+  "difficulty": 2,
+  "options": [
+    {
+      "order": 1,
+      "label": {
+        "default": "Celebrar el festival a lo grande"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": -8
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_pueblo",
+          "delta": 12
+        },
+        {
+          "type": "add_score",
+          "points": 1
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_005-festival_1"
+    },
+    {
+      "order": 2,
+      "label": {
+        "default": "Aplazarlo hasta mejor época"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": 2
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_pueblo",
+          "delta": -4
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_005-festival_2"
+    }
+  ],
+  "availability": {},
+  "recurrence": {
+    "mode": "repeatable",
+    "cooldownTurns": 4
+  },
+  "baseWeight": 10
+}

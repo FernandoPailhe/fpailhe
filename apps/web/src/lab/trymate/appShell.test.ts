@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import appSource from "../../App.tsx?raw";
 import prerenderSource from "../../../scripts/prerender.mjs?raw";
+import universeShellsSource from "../../../scripts/universeShells.mjs?raw";
 
 /**
  * Regresión de #17/#19: el hosting es estático con 404 real para rutas sin
@@ -23,9 +24,12 @@ function spaRoutes(): string[] {
 
 function emittedRoutes(): Set<string> {
   // `route: "/..."` cubre tanto las pages prerendered como SHELL_ROUTES.
+  // Los shells por universo viven en universeShells.mjs (importado por prerender).
   const emitted = new Set<string>();
-  for (const match of prerenderSource.matchAll(/route:\s*"([^"]+)"/g)) {
-    emitted.add(match[1]!);
+  for (const source of [prerenderSource, universeShellsSource]) {
+    for (const match of source.matchAll(/route:\s*"([^"]+)"/g)) {
+      emitted.add(match[1]!);
+    }
   }
   return emitted;
 }

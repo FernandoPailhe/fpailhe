@@ -1,0 +1,66 @@
+{
+  "id": "off_card_016_murallas",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "gameId": "off_game_demo_reino",
+  "createdBy": "system",
+  "origin": "official",
+  "status": "published",
+  "text": {
+    "default": "La general pide reforzar las murallas: obra costosa, pero el reino dormiría más tranquilo."
+  },
+  "themeTags": [],
+  "difficulty": 5,
+  "options": [
+    {
+      "order": 1,
+      "label": {
+        "default": "Construir las defensas"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_ejercito",
+          "delta": 10
+        },
+        {
+          "type": "add_score",
+          "points": 2
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": -15
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_016-murallas_1"
+    },
+    {
+      "order": 2,
+      "label": {
+        "default": "Posponer la obra"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": 3
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_016-murallas_2"
+    }
+  ],
+  "availability": {
+    "minStageOrder": 2
+  },
+  "recurrence": {
+    "mode": "repeatable"
+  },
+  "baseWeight": 10,
+  "characterId": "off_char_general"
+}

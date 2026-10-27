@@ -1,0 +1,76 @@
+{
+  "id": "off_card_025_guerra_frontera",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "gameId": "off_game_demo_reino",
+  "createdBy": "system",
+  "origin": "official",
+  "status": "published",
+  "text": {
+    "default": "Escaramuzas en la frontera norte. Los capitanes piden permiso para responder con fuerza."
+  },
+  "themeTags": [],
+  "difficulty": 6,
+  "options": [
+    {
+      "order": 1,
+      "label": {
+        "default": "Invadir el territorio rival"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_prestigio",
+          "delta": 10
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_ejercito",
+          "delta": -15
+        },
+        {
+          "type": "add_score",
+          "points": 2
+        }
+      ],
+      "whenUnavailable": "hide",
+      "threatTags": [
+        "internal_threat"
+      ],
+      "id": "off_opt_025-guerra-frontera_1"
+    },
+    {
+      "order": 2,
+      "label": {
+        "default": "Defender sin avanzar"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_ejercito",
+          "delta": 5
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_pueblo",
+          "delta": -5
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_025-guerra-frontera_2"
+    }
+  ],
+  "availability": {
+    "branchIds": [
+      "off_branch_guerra"
+    ]
+  },
+  "recurrence": {
+    "mode": "repeatable",
+    "cooldownTurns": 3
+  },
+  "baseWeight": 10
+}

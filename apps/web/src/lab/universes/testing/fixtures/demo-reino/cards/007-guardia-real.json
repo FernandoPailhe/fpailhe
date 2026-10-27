@@ -1,0 +1,61 @@
+{
+  "id": "off_card_007_guardia_real",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "gameId": "off_game_demo_reino",
+  "createdBy": "system",
+  "origin": "official",
+  "status": "published",
+  "text": {
+    "default": "Un veterano de mil batallas propone formar una guardia personal para el trono."
+  },
+  "themeTags": [],
+  "difficulty": 2,
+  "options": [
+    {
+      "order": 1,
+      "label": {
+        "default": "Reclutar la guardia real"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": -6
+        },
+        {
+          "type": "grant_power",
+          "powerId": "off_power_guardia",
+          "charges": 1
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_007-guardia-real_1"
+    },
+    {
+      "order": 2,
+      "label": {
+        "default": "El trono no necesita sombras"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": 2
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_007-guardia-real_2"
+    }
+  ],
+  "availability": {},
+  "recurrence": {
+    "mode": "repeatable",
+    "cooldownTurns": 4,
+    "maxPerSession": 3
+  },
+  "baseWeight": 10
+}

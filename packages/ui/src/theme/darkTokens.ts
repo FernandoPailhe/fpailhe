@@ -49,6 +49,14 @@ export const darkTokens: ThemeTokens = {
     parchmentInk: "oklch(17% 0.010 75)",
     parchmentInkDim: "oklch(35% 0.010 75)",
     parchmentLine: "oklch(80% 0.010 75)",
+
+    // Semánticos de estado — fallback de tema para lab/universes (ColorScheme)
+    accentContrast: "#ffffff",
+    positive: "#4cbf7e",
+    negative: "#e56c5e",
+    warning: "#e0a83f",
+    info: "#6aa5e8",
+    overlay: "rgba(10, 10, 8, 0.85)",
   },
   font: {
     display: "'Spectral', Georgia, serif",

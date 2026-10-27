@@ -1,0 +1,74 @@
+{
+  "id": "off_card_029_sabiduria",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "gameId": "off_game_demo_reino",
+  "createdBy": "system",
+  "origin": "official",
+  "status": "published",
+  "text": {
+    "default": "Dos caminos se abren ante el dilema del puerto: uno audaz, otro medido con sabiduría."
+  },
+  "themeTags": [],
+  "difficulty": 4,
+  "options": [
+    {
+      "order": 1,
+      "label": {
+        "default": "El plan audaz"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": -10
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_prestigio",
+          "delta": 12
+        },
+        {
+          "type": "add_score",
+          "points": 2
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_029-sabiduria_1"
+    },
+    {
+      "order": 2,
+      "label": {
+        "default": "El camino sabio"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": 3
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_pueblo",
+          "delta": 3
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_prestigio",
+          "delta": 3
+        }
+      ],
+      "whenUnavailable": "show_locked",
+      "unlockTag": "sabiduria",
+      "id": "off_opt_029-sabiduria_2"
+    }
+  ],
+  "availability": {},
+  "recurrence": {
+    "mode": "repeatable"
+  },
+  "baseWeight": 10
+}

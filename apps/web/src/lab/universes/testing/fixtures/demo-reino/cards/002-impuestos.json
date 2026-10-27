@@ -1,0 +1,70 @@
+{
+  "id": "off_card_002_impuestos",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "gameId": "off_game_demo_reino",
+  "createdBy": "system",
+  "origin": "official",
+  "status": "published",
+  "text": {
+    "default": "Los recaudadores aguardan instrucciones. El tesoro podría engordar, pero el pueblo ya murmura."
+  },
+  "themeTags": [],
+  "difficulty": 2,
+  "options": [
+    {
+      "order": 1,
+      "label": {
+        "default": "Subir los impuestos"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": 12
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_pueblo",
+          "delta": -10
+        },
+        {
+          "type": "add_score",
+          "points": 2
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_002-impuestos_1"
+    },
+    {
+      "order": 2,
+      "label": {
+        "default": "Perdonar el tributo del año"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_pueblo",
+          "delta": 6
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": -4
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_002-impuestos_2"
+    }
+  ],
+  "availability": {},
+  "recurrence": {
+    "mode": "repeatable",
+    "cooldownTurns": 3
+  },
+  "baseWeight": 10,
+  "characterId": "off_char_consejero"
+}

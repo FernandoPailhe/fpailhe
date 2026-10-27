@@ -1,0 +1,65 @@
+{
+  "_help": "Plantilla de SituationCard. Borrar los campos _help. Un archivo por carta: cards/NNN-slug.json. Ver card-writing-guide.md.",
+  "id": "off_card_001",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "createdBy": "system",
+  "origin": "official",
+  "status": "published",
+  "gameId": "off_<slug_con_guiones_bajos>",
+  "characterId": "off_char_<key>",
+  "themeTags": ["<tag_del_personaje>", "<tag_tematico>"],
+  "difficulty": 3,
+  "text": {
+    "default": "Situación en la voz del universo. Plantea el problema y deja ver lo que está en juego sin nombrar parámetros."
+  },
+  "options": [
+    {
+      "id": "off_card_001_o1",
+      "order": 1,
+      "kind": "standard",
+      "label": { "default": "Acción concreta A" },
+      "outcomeText": { "default": "Consecuencia narrativa de A en una o dos oraciones." },
+      "effects": [
+        { "type": "modify_parameter", "parameterId": "off_param_<a>", "delta": 8 },
+        { "type": "modify_parameter", "parameterId": "off_param_<b>", "delta": -6 }
+      ],
+      "whenUnavailable": "hide"
+    },
+    {
+      "id": "off_card_001_o2",
+      "order": 2,
+      "kind": "standard",
+      "label": { "default": "Acción concreta B" },
+      "outcomeText": { "default": "Consecuencia narrativa de B." },
+      "effects": [
+        { "type": "modify_parameter", "parameterId": "off_param_<b>", "delta": 7 },
+        { "type": "modify_parameter", "parameterId": "off_param_<a>", "delta": -5 }
+      ],
+      "threatTags": ["<amenaza_opcional>"],
+      "whenUnavailable": "hide"
+    },
+    {
+      "id": "off_card_001_o3",
+      "order": 3,
+      "kind": "balance",
+      "label": { "default": "Opción de equilibrio (solo si el plan la prevé)" },
+      "outcomeText": { "default": "Sale a medias: poco costo, poco beneficio." },
+      "effects": [
+        { "type": "modify_parameter", "parameterId": "off_param_<a>", "delta": 2 },
+        { "type": "modify_parameter", "parameterId": "off_param_<b>", "delta": 2 }
+      ],
+      "unlockTag": "<tag_de_option_unlock>",
+      "availability": { "type": "has_power", "powerId": "off_power_<key>" },
+      "whenUnavailable": "show_locked"
+    }
+  ],
+  "availability": {
+    "minStageOrder": 1,
+    "maxStageOrder": 2,
+    "branchIds": []
+  },
+  "recurrence": { "mode": "once" },
+  "baseWeight": 1
+}

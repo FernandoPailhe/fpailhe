@@ -1,0 +1,190 @@
+{
+  "id": "off_aesthetic_demo_reino",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "gameId": "off_game_demo_reino",
+  "key": "demo_reino",
+  "name": {
+    "default": "Reino sobrio",
+    "translations": {
+      "en": "Sober realm"
+    }
+  },
+  "version": 1,
+  "artDirection": {
+    "styleSummary": "Grabados sobrios de corte medieval con paleta dorada.",
+    "basePrompt": "sober medieval court engraving, muted gold palette, clean composition",
+    "negativePrompt": "photo, text, watermark, modern objects",
+    "keywords": [
+      "grabado",
+      "medieval",
+      "sobrio"
+    ],
+    "mood": [
+      "solemne",
+      "templado"
+    ],
+    "paletteHint": "dorado envejecido sobre azul noche",
+    "templates": {},
+    "consistencyRules": [
+      "sin texto en la imagen"
+    ]
+  },
+  "tokens": {
+    "defaultScheme": "dark",
+    "dark": {
+      "background": "#12141a",
+      "surface": "#1a1e28",
+      "surfaceAlt": "#232938",
+      "border": "#3a4256",
+      "textPrimary": "#f2f4f8",
+      "textSecondary": "#b8c0d0",
+      "accent": "#d4a94e",
+      "accentContrast": "#1a1405",
+      "positive": "#5fce8a",
+      "negative": "#e0685f",
+      "warning": "#e5b45e",
+      "info": "#6db3e8",
+      "overlay": "#0a0c12cc"
+    },
+    "light": {
+      "background": "#f5f3ee",
+      "surface": "#ffffff",
+      "surfaceAlt": "#eceae2",
+      "border": "#c9c4b8",
+      "textPrimary": "#1c2028",
+      "textSecondary": "#4a5160",
+      "accent": "#7a5c12",
+      "accentContrast": "#fffdf5",
+      "positive": "#1e7a44",
+      "negative": "#b03428",
+      "warning": "#8a5f0e",
+      "info": "#1d5fa8",
+      "overlay": "#1c2028cc"
+    },
+    "parameterColors": {
+      "off_param_tesoro": "#8f7419",
+      "off_param_pueblo": "#2e7a4a",
+      "off_param_ejercito": "#b85c4a",
+      "off_param_prestigio": "#7a5fb0"
+    },
+    "radius": {
+      "sm": 4,
+      "md": 8,
+      "lg": 14
+    },
+    "borderWidth": 1,
+    "spacingUnit": 4,
+    "shadows": {
+      "card": "0 8px 24px rgba(0,0,0,0.35)",
+      "modal": "0 16px 48px rgba(0,0,0,0.5)"
+    },
+    "motion": {
+      "durationFast": 120,
+      "durationBase": 240,
+      "durationSlow": 420,
+      "easing": "ease-out",
+      "cardTransition": "fade"
+    }
+  },
+  "typography": {
+    "fonts": {
+      "display": {
+        "family": "Iowan Old Style",
+        "source": "system",
+        "weights": [
+          400,
+          700
+        ],
+        "fallback": [
+          "Georgia",
+          "serif"
+        ]
+      },
+      "body": {
+        "family": "system-ui",
+        "source": "system",
+        "weights": [
+          400,
+          500,
+          700
+        ],
+        "fallback": [
+          "sans-serif"
+        ]
+      },
+      "accent": {
+        "family": "Menlo",
+        "source": "system",
+        "weights": [
+          400,
+          600
+        ],
+        "fallback": [
+          "monospace"
+        ]
+      }
+    },
+    "scale": {
+      "title": {
+        "font": "display",
+        "size": 30,
+        "lineHeight": 1.2,
+        "weight": 700
+      },
+      "cardText": {
+        "font": "body",
+        "size": 18,
+        "lineHeight": 1.55,
+        "weight": 400
+      },
+      "option": {
+        "font": "body",
+        "size": 16,
+        "lineHeight": 1.4,
+        "weight": 500
+      },
+      "label": {
+        "font": "body",
+        "size": 13,
+        "lineHeight": 1.3,
+        "weight": 500
+      },
+      "number": {
+        "font": "accent",
+        "size": 15,
+        "lineHeight": 1.2,
+        "weight": 600
+      },
+      "caption": {
+        "font": "body",
+        "size": 11,
+        "lineHeight": 1.35,
+        "weight": 400
+      }
+    }
+  },
+  "iconStyle": {
+    "variant": "line",
+    "gridSize": 24,
+    "strokeWidth": 2,
+    "corners": "round",
+    "format": "svg",
+    "colorMode": "currentColor"
+  },
+  "overrides": [
+    {
+      "id": "off_override_guerra",
+      "when": {
+        "type": "in_branch",
+        "branchId": "off_branch_guerra"
+      },
+      "colors": {
+        "accent": "#c96a55",
+        "accentContrast": "#140f0c"
+      },
+      "artDirectionAppend": "war tones, ember red accents"
+    }
+  ]
+}

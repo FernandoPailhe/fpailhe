@@ -81,4 +81,80 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    // El módulo universes es autónomo: no usa @ferpa/data-model (decisión #1 del plan).
+    // Va antes del bloque de domain: para archivos de domain/ gana el bloque
+    // siguiente, cuyas restricciones ya incluyen `@ferpa/*`.
+    files: ["apps/web/src/lab/universes/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@ferpa/data-model"],
+              message: "El módulo universes es autónomo: no importa @ferpa/data-model.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    // El dominio de universes es puro: no importa React, la app ni otras capas.
+    files: ["apps/web/src/lab/universes/domain/**/*.ts"],
+    ignores: [
+      "apps/web/src/lab/universes/domain/**/*.test.ts",
+      "apps/web/src/lab/universes/domain/engine/testing.ts",
+    ],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "react",
+                "react-dom",
+                "react-router-dom",
+                "zustand",
+                "@tanstack/*",
+                "firebase",
+                "firebase/*",
+                "@ferpa/*",
+                "**/application/**",
+                "**/infrastructure/**",
+                "**/components/**",
+                "**/routes/**",
+              ],
+              message: "domain es puro: no importa React, la app ni otras capas.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    // El motor es puro: azar/reloj/ids entran por EngineContext.
+    files: ["apps/web/src/lab/universes/domain/engine/**/*.ts"],
+    ignores: [
+      "apps/web/src/lab/universes/domain/engine/**/*.test.ts",
+      "apps/web/src/lab/universes/domain/engine/testing.ts",
+    ],
+    rules: {
+      "no-restricted-properties": [
+        "error",
+        { object: "Math", property: "random", message: "El motor es puro: azar/reloj/ids entran por EngineContext." },
+        { object: "Date", property: "now", message: "El motor es puro: azar/reloj/ids entran por EngineContext." },
+      ],
+      "no-restricted-globals": [
+        "error",
+        { name: "window", message: "El motor es puro: azar/reloj/ids entran por EngineContext." },
+        { name: "document", message: "El motor es puro: azar/reloj/ids entran por EngineContext." },
+        { name: "localStorage", message: "El motor es puro: azar/reloj/ids entran por EngineContext." },
+        { name: "navigator", message: "El motor es puro: azar/reloj/ids entran por EngineContext." },
+        { name: "crypto", message: "El motor es puro: azar/reloj/ids entran por EngineContext." },
+      ],
+    },
+  },
 );

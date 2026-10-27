@@ -11,7 +11,7 @@
   "packageManager": "pnpm@10.28.0",
   "scripts": {
     "dev": "pnpm build:packages && pnpm --filter @ferpa/web dev",
-    "build": "pnpm build:packages && pnpm --filter @ferpa/web build",
+    "build": "pnpm universes:validate && pnpm build:packages && pnpm --filter @ferpa/web build",
     "build:packages": "pnpm --filter @ferpa/data-model build && pnpm --filter @ferpa/ui build",
     "typecheck": "pnpm build:packages && pnpm -r typecheck",
     "lint": "eslint .",
@@ -24,6 +24,7 @@
     "trymate:build-selfplay": "pnpm build:packages && pnpm --filter @ferpa/web exec vite build -c vite.selfplay.config.ts",
     "trymate:selfplay": "pnpm trymate:build-selfplay && node apps/web/.selfplay-dist/cli.js selfplay",
     "trymate:report": "pnpm trymate:build-selfplay && node apps/web/.selfplay-dist/cli.js report",
+    "universes:validate": "vitest run --project web src/lab/universes/testing",
     "trymate:compare": "pnpm trymate:build-selfplay && node apps/web/.selfplay-dist/cli.js compare",
     "trymate:validate": "pnpm trymate:build-selfplay && node apps/web/.selfplay-dist/cli.js validate"
   },

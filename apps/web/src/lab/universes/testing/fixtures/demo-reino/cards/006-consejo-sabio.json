@@ -1,0 +1,60 @@
+{
+  "id": "off_card_006_consejo_sabio",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "gameId": "off_game_demo_reino",
+  "createdBy": "system",
+  "origin": "official",
+  "status": "published",
+  "text": {
+    "default": "Un anciano sabio llega a la corte ofreciendo su consejo. Pide un pequeño estipendio."
+  },
+  "themeTags": [],
+  "difficulty": 1,
+  "options": [
+    {
+      "order": 1,
+      "label": {
+        "default": "Contratarlo como consejero"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": -10
+        },
+        {
+          "type": "grant_power",
+          "powerId": "off_power_consejo_sabio",
+          "charges": 1
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_006-consejo-sabio_1"
+    },
+    {
+      "order": 2,
+      "label": {
+        "default": "Declinar su oferta"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_pueblo",
+          "delta": 3
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_006-consejo-sabio_2"
+    }
+  ],
+  "availability": {},
+  "recurrence": {
+    "mode": "once"
+  },
+  "baseWeight": 10,
+  "characterId": "off_char_consejero"
+}

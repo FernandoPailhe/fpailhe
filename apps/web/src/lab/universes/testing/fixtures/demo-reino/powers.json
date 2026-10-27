@@ -1,0 +1,75 @@
+[
+  {
+    "id": "off_power_guardia",
+    "schemaVersion": 1,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "gameId": "off_game_demo_reino",
+    "key": "guardia",
+    "name": {
+      "default": "Guardia real",
+      "translations": {
+        "en": "Royal guard"
+      }
+    },
+    "description": {
+      "default": "Absorbe una amenaza interna contra el trono.",
+      "translations": {
+        "en": "Absorbs one internal threat to the throne."
+      }
+    },
+    "iconId": "off_icon_guardia",
+    "maxCharges": 3,
+    "kind": "shield",
+    "blocksThreatTags": [
+      "internal_threat"
+    ]
+  },
+  {
+    "id": "off_power_consejo_sabio",
+    "schemaVersion": 1,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "gameId": "off_game_demo_reino",
+    "key": "consejo_sabio",
+    "name": {
+      "default": "Consejo sabio",
+      "translations": {
+        "en": "Wise counsel"
+      }
+    },
+    "description": {
+      "default": "Habilita las opciones de equilibrio.",
+      "translations": {
+        "en": "Enables balance options."
+      }
+    },
+    "iconId": "off_icon_consejo",
+    "kind": "option_unlock",
+    "unlocksOptionTag": "sabiduria"
+  },
+  {
+    "id": "off_power_recaudacion",
+    "schemaVersion": 1,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "gameId": "off_game_demo_reino",
+    "key": "recaudacion",
+    "name": {
+      "default": "Buen recaudador",
+      "translations": {
+        "en": "Good taxman"
+      }
+    },
+    "description": {
+      "default": "+50% a los ingresos del tesoro.",
+      "translations": {
+        "en": "+50% to treasury gains."
+      }
+    },
+    "kind": "modifier",
+    "parameterId": "off_param_tesoro",
+    "multiplier": 1.5,
+    "appliesTo": "positive"
+  }
+]

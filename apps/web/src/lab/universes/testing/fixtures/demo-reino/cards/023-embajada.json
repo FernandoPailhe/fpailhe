@@ -1,0 +1,69 @@
+{
+  "id": "off_card_023_embajada",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "gameId": "off_game_demo_reino",
+  "createdBy": "system",
+  "origin": "official",
+  "status": "published",
+  "text": {
+    "default": "Selene regresa de la embajada con dos propuestas sobre la mesa: comercio o alianza plena."
+  },
+  "themeTags": [],
+  "difficulty": 5,
+  "options": [
+    {
+      "order": 1,
+      "label": {
+        "default": "Tratado comercial"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": 15
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_prestigio",
+          "delta": 10
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_023-embajada_1"
+    },
+    {
+      "order": 2,
+      "label": {
+        "default": "Alianza perpetua"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_prestigio",
+          "delta": 15
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": -10
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_023-embajada_2"
+    }
+  ],
+  "availability": {
+    "branchIds": [
+      "off_branch_diplomacia"
+    ]
+  },
+  "recurrence": {
+    "mode": "repeatable"
+  },
+  "baseWeight": 10,
+  "characterId": "off_char_enviado"
+}

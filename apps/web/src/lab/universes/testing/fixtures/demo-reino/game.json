@@ -1,0 +1,130 @@
+{
+  "id": "off_game_demo_reino",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "createdBy": "system",
+  "origin": "official",
+  "status": "published",
+  "slug": "demo-reino",
+  "kind": "kingdom",
+  "title": {
+    "default": "Reino de pruebas",
+    "translations": {
+      "en": "Test Realm"
+    }
+  },
+  "description": {
+    "default": "Gobernás un pequeño reino: cada decisión mueve el tesoro, el pueblo, el ejército y el prestigio.",
+    "translations": {
+      "en": "You rule a small realm: every decision moves the treasury, the people, the army and the prestige."
+    }
+  },
+  "defaultLocale": "es",
+  "supportedLocales": [
+    "es",
+    "en"
+  ],
+  "aestheticId": "off_aesthetic_demo_reino",
+  "visibility": "public",
+  "config": {
+    "recentCardsWindow": 6,
+    "initialActiveParameterIds": [
+      "off_param_tesoro",
+      "off_param_pueblo"
+    ],
+    "initialUnlockedCharacterIds": [],
+    "initialBranchIds": [],
+    "initialPowers": [],
+    "allowCardFeedback": true
+  },
+  "metadata": {
+    "placeholder": true,
+    "endings": {
+      "sin_tesoro": {
+        "title": {
+          "default": "Bancarrota",
+          "translations": {
+            "en": "Bankrupt"
+          }
+        },
+        "text": {
+          "default": "El tesoro quedó vacío y el reino se disolvió entre acreedores.",
+          "translations": {
+            "en": "The treasury ran dry and the realm dissolved among creditors."
+          }
+        }
+      },
+      "sin_pueblo": {
+        "title": {
+          "default": "El pueblo se alza",
+          "translations": {
+            "en": "The people rise"
+          }
+        },
+        "text": {
+          "default": "Sin nadie que lo sostenga, el trono cayó en una sola noche.",
+          "translations": {
+            "en": "With no one left to hold it up, the throne fell in a single night."
+          }
+        }
+      },
+      "invasion": {
+        "title": {
+          "default": "Invasión",
+          "translations": {
+            "en": "Invasion"
+          }
+        },
+        "text": {
+          "default": "Sin ejército, las murallas fueron solo una sugerencia.",
+          "translations": {
+            "en": "With no army, the walls were merely a suggestion."
+          }
+        }
+      },
+      "olvido": {
+        "title": {
+          "default": "Olvido",
+          "translations": {
+            "en": "Oblivion"
+          }
+        },
+        "text": {
+          "default": "El reino se apagó sin que nadie escribiera su nombre.",
+          "translations": {
+            "en": "The realm faded without anyone writing down its name."
+          }
+        }
+      },
+      "coronacion": {
+        "title": {
+          "default": "Coronación eterna",
+          "translations": {
+            "en": "Eternal coronation"
+          }
+        },
+        "text": {
+          "default": "Tu nombre quedó grabado en cada piedra del reino.",
+          "translations": {
+            "en": "Your name was carved into every stone of the realm."
+          }
+        }
+      },
+      "no_cards": {
+        "title": {
+          "default": "Silencio en la corte",
+          "translations": {
+            "en": "Silence at court"
+          }
+        },
+        "text": {
+          "default": "No quedan más decisiones que tomar. La historia se detiene.",
+          "translations": {
+            "en": "There are no more decisions to make. The story stops."
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "id": "off_card_020_decreto",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "gameId": "off_game_demo_reino",
+  "createdBy": "system",
+  "origin": "official",
+  "status": "published",
+  "text": {
+    "default": "Tu primer decreto como soberano queda firmado. Los escribas lo copian para cada aldea."
+  },
+  "themeTags": [],
+  "difficulty": 1,
+  "options": [
+    {
+      "order": 1,
+      "label": {
+        "default": "Que así sea"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "add_score",
+          "points": 1
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_020-decreto_1"
+    }
+  ],
+  "availability": {},
+  "recurrence": {
+    "mode": "once"
+  },
+  "baseWeight": 10
+}

@@ -1,0 +1,78 @@
+{
+  "id": "off_card_026_conquista",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "gameId": "off_game_demo_reino",
+  "createdBy": "system",
+  "origin": "official",
+  "status": "published",
+  "text": {
+    "default": "La gran ciudadela rival está al alcance. Una conquista total cambiaría el mapa para siempre."
+  },
+  "themeTags": [],
+  "difficulty": 8,
+  "options": [
+    {
+      "order": 1,
+      "label": {
+        "default": "Ordenar la gran conquista"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_prestigio",
+          "delta": 20
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_ejercito",
+          "delta": -20
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": -15
+        },
+        {
+          "type": "add_score",
+          "points": 3
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_026-conquista_1"
+    },
+    {
+      "order": 2,
+      "label": {
+        "default": "Pactar una paz honrosa"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_ejercito",
+          "delta": 10
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_prestigio",
+          "delta": 3
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_026-conquista_2"
+    }
+  ],
+  "availability": {
+    "branchIds": [
+      "off_branch_guerra"
+    ],
+    "minStageOrder": 3
+  },
+  "recurrence": {
+    "mode": "once"
+  },
+  "baseWeight": 10
+}

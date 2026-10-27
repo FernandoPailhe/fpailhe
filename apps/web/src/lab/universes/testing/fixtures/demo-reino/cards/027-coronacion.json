@@ -1,0 +1,66 @@
+{
+  "id": "off_card_027_coronacion",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "gameId": "off_game_demo_reino",
+  "createdBy": "system",
+  "origin": "official",
+  "status": "published",
+  "text": {
+    "default": "Los cronistas sugieren una segunda coronación: grande, solemne, inolvidable para todo el reino."
+  },
+  "themeTags": [],
+  "difficulty": 8,
+  "options": [
+    {
+      "order": 1,
+      "label": {
+        "default": "Ceremonia grandiosa"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": -20
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_prestigio",
+          "delta": 25
+        },
+        {
+          "type": "add_score",
+          "points": 3
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_027-coronacion_1"
+    },
+    {
+      "order": 2,
+      "label": {
+        "default": "Ceremonia modesta"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_prestigio",
+          "delta": 8
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_027-coronacion_2"
+    }
+  ],
+  "availability": {
+    "minStageOrder": 3
+  },
+  "recurrence": {
+    "mode": "repeatable",
+    "cooldownTurns": 4
+  },
+  "baseWeight": 10
+}

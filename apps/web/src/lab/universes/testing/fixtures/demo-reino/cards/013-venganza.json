@@ -1,0 +1,65 @@
+{
+  "id": "off_card_013_venganza",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "gameId": "off_game_demo_reino",
+  "createdBy": "system",
+  "origin": "official",
+  "status": "published",
+  "text": {
+    "default": "El ladrón que encarcelaste escapó y jura venganza contra la corona. Los guardias lo buscan."
+  },
+  "themeTags": [],
+  "difficulty": 4,
+  "options": [
+    {
+      "order": 1,
+      "label": {
+        "default": "Aplacarlo con una compensación"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": -10
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_pueblo",
+          "delta": 4
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_013-venganza_1"
+    },
+    {
+      "order": 2,
+      "label": {
+        "default": "Ignorar sus amenazas"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_pueblo",
+          "delta": -10
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_013-venganza_2"
+    }
+  ],
+  "availability": {
+    "conditions": {
+      "type": "card_seen",
+      "cardId": "off_card_012_ladron",
+      "optionId": "off_opt_012_encarcelar"
+    }
+  },
+  "recurrence": {
+    "mode": "once"
+  },
+  "baseWeight": 10
+}

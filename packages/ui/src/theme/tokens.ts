@@ -57,6 +57,14 @@ export const themeTokens = {
     parchmentInk: "oklch(94% 0.010 75)",
     parchmentInkDim: "oklch(80% 0.010 75)",
     parchmentLine: "oklch(35% 0.010 75)",
+
+    // Semánticos de estado — fallback de tema para lab/universes (ColorScheme)
+    accentContrast: "#ffffff",
+    positive: "#1e7a44",
+    negative: "#b3271f",
+    warning: "#8a5f0e",
+    info: "#1d5fa8",
+    overlay: "rgba(23, 22, 18, 0.8)",
   },
   font: {
     // Titulares

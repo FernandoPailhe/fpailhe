@@ -1,0 +1,75 @@
+[
+  {
+    "id": "off_stage_coronacion",
+    "schemaVersion": 1,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "gameId": "off_game_demo_reino",
+    "order": 1,
+    "name": {
+      "default": "Coronación",
+      "translations": {
+        "en": "Coronation"
+      }
+    },
+    "minScore": 0,
+    "activatesParameterIds": [
+      "off_param_tesoro",
+      "off_param_pueblo"
+    ],
+    "onEnter": [
+      {
+        "type": "award_badge",
+        "badgeId": "off_badge_primer_decreto"
+      }
+    ],
+    "difficultyRange": {
+      "min": 1,
+      "max": 4
+    }
+  },
+  {
+    "id": "off_stage_expansion",
+    "schemaVersion": 1,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "gameId": "off_game_demo_reino",
+    "order": 2,
+    "name": {
+      "default": "Expansión",
+      "translations": {
+        "en": "Expansion"
+      }
+    },
+    "minScore": 8,
+    "activatesParameterIds": [
+      "off_param_ejercito"
+    ],
+    "difficultyRange": {
+      "min": 3,
+      "max": 7
+    }
+  },
+  {
+    "id": "off_stage_legado",
+    "schemaVersion": 1,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "gameId": "off_game_demo_reino",
+    "order": 3,
+    "name": {
+      "default": "Legado",
+      "translations": {
+        "en": "Legacy"
+      }
+    },
+    "minScore": 20,
+    "activatesParameterIds": [
+      "off_param_prestigio"
+    ],
+    "difficultyRange": {
+      "min": 5,
+      "max": 10
+    }
+  }
+]

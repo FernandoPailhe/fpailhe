@@ -1,0 +1,70 @@
+{
+  "id": "off_card_019_retrato",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "gameId": "off_game_demo_reino",
+  "createdBy": "system",
+  "origin": "official",
+  "status": "published",
+  "text": {
+    "default": "Un pintor de la corte propone un gran retrato oficial que mostrará tu grandeza a los emisarios.",
+    "translations": {
+      "en": "A court painter proposes a grand official portrait that will show your greatness to the envoys."
+    }
+  },
+  "themeTags": [],
+  "difficulty": 2,
+  "options": [
+    {
+      "order": 1,
+      "label": {
+        "default": "Encargar el retrato",
+        "translations": {
+          "en": "Commission the portrait"
+        }
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": -8
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_prestigio",
+          "delta": 10
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_019-retrato_1"
+    },
+    {
+      "order": 2,
+      "label": {
+        "default": "Es un gasto innecesario",
+        "translations": {
+          "en": "It is an unnecessary expense"
+        }
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": 2
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_019-retrato_2"
+    }
+  ],
+  "availability": {},
+  "recurrence": {
+    "mode": "repeatable"
+  },
+  "baseWeight": 10,
+  "characterId": "off_char_enviado",
+  "assetId": "off_asset_demo_card"
+}

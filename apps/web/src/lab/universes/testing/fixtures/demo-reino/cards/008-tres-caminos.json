@@ -1,0 +1,97 @@
+{
+  "id": "off_card_008_tres_caminos",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "gameId": "off_game_demo_reino",
+  "createdBy": "system",
+  "origin": "official",
+  "status": "published",
+  "text": {
+    "default": "El consejo presenta tres posturas ante la crisis del granero. Cada una tiene su precio."
+  },
+  "themeTags": [],
+  "difficulty": 3,
+  "options": [
+    {
+      "order": 1,
+      "label": {
+        "default": "Mano dura con los acaparadores"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_pueblo",
+          "delta": -10
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": 12
+        },
+        {
+          "type": "add_score",
+          "points": 2
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_008-tres-caminos_1"
+    },
+    {
+      "order": 2,
+      "label": {
+        "default": "Un punto medio, medido y justo"
+      },
+      "kind": "balance",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": 2
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_pueblo",
+          "delta": 2
+        },
+        {
+          "type": "add_score",
+          "points": 1
+        }
+      ],
+      "whenUnavailable": "show_locked",
+      "availability": {
+        "type": "has_power",
+        "powerId": "off_power_consejo_sabio"
+      },
+      "id": "off_opt_008-tres-caminos_2"
+    },
+    {
+      "order": 3,
+      "label": {
+        "default": "Complacer al pueblo llano"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": -10
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_pueblo",
+          "delta": 12
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_008-tres-caminos_3"
+    }
+  ],
+  "availability": {},
+  "recurrence": {
+    "mode": "repeatable"
+  },
+  "baseWeight": 10
+}

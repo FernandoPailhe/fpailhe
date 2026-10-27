@@ -1,0 +1,70 @@
+{
+  "id": "off_card_021_torneo",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "gameId": "off_game_demo_reino",
+  "createdBy": "system",
+  "origin": "official",
+  "status": "published",
+  "text": {
+    "default": "Los heraldos proponen un gran torneo. Los caballeros de reinos vecinos asistirían si el premio es bueno."
+  },
+  "themeTags": [],
+  "difficulty": 5,
+  "options": [
+    {
+      "order": 1,
+      "label": {
+        "default": "Torneo real con gran premio"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": -15
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_prestigio",
+          "delta": 15
+        },
+        {
+          "type": "add_score",
+          "points": 3
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_021-torneo_1"
+    },
+    {
+      "order": 2,
+      "label": {
+        "default": "Justas menores de barrio"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": -5
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_prestigio",
+          "delta": 5
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_021-torneo_2"
+    }
+  ],
+  "availability": {
+    "minStageOrder": 2
+  },
+  "recurrence": {
+    "mode": "repeatable"
+  },
+  "baseWeight": 10
+}

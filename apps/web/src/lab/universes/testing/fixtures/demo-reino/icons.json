@@ -1,0 +1,162 @@
+[
+  {
+    "id": "off_icon_tesoro",
+    "schemaVersion": 1,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "gameId": "off_game_demo_reino",
+    "key": "tesoro",
+    "label": {
+      "default": "Tesoro",
+      "translations": {
+        "en": "Treasury"
+      }
+    },
+    "semanticTags": [
+      "tesoro",
+      "dinero",
+      "cofre"
+    ],
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"8\" width=\"18\" height=\"12\" rx=\"2\"/><path d=\"M3 8l3-4h12l3 4\"/><circle cx=\"12\" cy=\"14\" r=\"2\"/></svg>"
+  },
+  {
+    "id": "off_icon_pueblo",
+    "schemaVersion": 1,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "gameId": "off_game_demo_reino",
+    "key": "pueblo",
+    "label": {
+      "default": "Pueblo",
+      "translations": {
+        "en": "People"
+      }
+    },
+    "semanticTags": [
+      "pueblo",
+      "gente",
+      "multitud"
+    ],
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"8\" cy=\"9\" r=\"3\"/><circle cx=\"16\" cy=\"9\" r=\"3\"/><path d=\"M3 19c0-3 2.5-5 5-5s5 2 5 5\"/><path d=\"M11 19c0-3 2.5-5 5-5s5 2 5 5\"/></svg>"
+  },
+  {
+    "id": "off_icon_ejercito",
+    "schemaVersion": 1,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "gameId": "off_game_demo_reino",
+    "key": "ejercito",
+    "label": {
+      "default": "Ejército",
+      "translations": {
+        "en": "Army"
+      }
+    },
+    "semanticTags": [
+      "ejercito",
+      "espada",
+      "guerra"
+    ],
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 20L20 4\"/><path d=\"M14 4h6v6\"/><path d=\"M4 14v6h6\"/></svg>"
+  },
+  {
+    "id": "off_icon_guardia",
+    "schemaVersion": 1,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "gameId": "off_game_demo_reino",
+    "key": "guardia",
+    "label": {
+      "default": "Guardia",
+      "translations": {
+        "en": "Guard"
+      }
+    },
+    "semanticTags": [
+      "escudo",
+      "defensa",
+      "guardia"
+    ],
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z\"/></svg>"
+  },
+  {
+    "id": "off_icon_consejo",
+    "schemaVersion": 1,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "gameId": "off_game_demo_reino",
+    "key": "consejo",
+    "label": {
+      "default": "Consejo",
+      "translations": {
+        "en": "Counsel"
+      }
+    },
+    "semanticTags": [
+      "sabiduria",
+      "consejo",
+      "libro"
+    ],
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 5a2 2 0 012-2h14v18H6a2 2 0 01-2-2z\"/><path d=\"M8 7h8\"/><path d=\"M8 11h8\"/></svg>"
+  },
+  {
+    "id": "off_icon_pueblo_pleno",
+    "schemaVersion": 1,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "gameId": "off_game_demo_reino",
+    "key": "pueblo_pleno",
+    "label": {
+      "default": "Pueblo pleno",
+      "translations": {
+        "en": "Full people"
+      }
+    },
+    "semanticTags": [
+      "insignia",
+      "pueblo",
+      "corona"
+    ],
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 18h18\"/><path d=\"M5 18l-2-8 5 4 4-7 4 7 5-4-2 8z\"/></svg>"
+  },
+  {
+    "id": "off_icon_pacificador",
+    "schemaVersion": 1,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "gameId": "off_game_demo_reino",
+    "key": "pacificador",
+    "label": {
+      "default": "Pacificador",
+      "translations": {
+        "en": "Peacemaker"
+      }
+    },
+    "semanticTags": [
+      "insignia",
+      "paz",
+      "paloma"
+    ],
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 21c-4 0-7-3-7-7 0-5 4-8 7-11 3 3 7 6 7 11 0 4-3 7-7 7z\"/><path d=\"M12 12v6\"/></svg>"
+  },
+  {
+    "id": "off_icon_primer_decreto",
+    "schemaVersion": 1,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "gameId": "off_game_demo_reino",
+    "key": "primer_decreto",
+    "label": {
+      "default": "Primer decreto",
+      "translations": {
+        "en": "First decree"
+      }
+    },
+    "semanticTags": [
+      "insignia",
+      "decreto",
+      "pergamino"
+    ],
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M6 3h9l3 3v15H6z\"/><path d=\"M9 10h6\"/><path d=\"M9 14h6\"/></svg>"
+  }
+]

@@ -1,0 +1,58 @@
+{
+  "id": "off_card_014_general",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "gameId": "off_game_demo_reino",
+  "createdBy": "system",
+  "origin": "official",
+  "status": "published",
+  "text": {
+    "default": "Bruna, una veterana condecorada en tres campañas, ofrece su espada al servicio del reino."
+  },
+  "themeTags": [],
+  "difficulty": 2,
+  "options": [
+    {
+      "order": 1,
+      "label": {
+        "default": "Nombrarla general del reino"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": -5
+        },
+        {
+          "type": "unlock_character",
+          "characterId": "off_char_general"
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_014-general_1"
+    },
+    {
+      "order": 2,
+      "label": {
+        "default": "Rechazar sus servicios"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_prestigio",
+          "delta": -2
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_014-general_2"
+    }
+  ],
+  "availability": {},
+  "recurrence": {
+    "mode": "once"
+  },
+  "baseWeight": 10
+}

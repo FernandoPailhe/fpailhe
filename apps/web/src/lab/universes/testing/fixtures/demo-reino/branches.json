@@ -1,0 +1,44 @@
+[
+  {
+    "id": "off_branch_guerra",
+    "schemaVersion": 1,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "gameId": "off_game_demo_reino",
+    "key": "guerra",
+    "name": {
+      "default": "Camino de guerra",
+      "translations": {
+        "en": "Path of war"
+      }
+    },
+    "description": {
+      "default": "El reino se expande por la fuerza.",
+      "translations": {
+        "en": "The realm expands by force."
+      }
+    },
+    "exclusiveGroup": "camino"
+  },
+  {
+    "id": "off_branch_diplomacia",
+    "schemaVersion": 1,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "gameId": "off_game_demo_reino",
+    "key": "diplomacia",
+    "name": {
+      "default": "Camino de diplomacia",
+      "translations": {
+        "en": "Path of diplomacy"
+      }
+    },
+    "description": {
+      "default": "El reino crece por acuerdos y matrimonios.",
+      "translations": {
+        "en": "The realm grows through pacts and marriages."
+      }
+    },
+    "exclusiveGroup": "camino"
+  }
+]

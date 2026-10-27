@@ -1,0 +1,23 @@
+[
+  {
+    "id": "off_asset_demo_card",
+    "schemaVersion": 1,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "gameId": "off_game_demo_reino",
+    "createdBy": "system",
+    "origin": "official",
+    "status": "published",
+    "type": "image",
+    "url": "/universes/demo-card.svg",
+    "mimeType": "image/svg+xml",
+    "altText": {
+      "default": "Ilustración de una carta del reino",
+      "translations": {
+        "en": "Illustration of a realm card"
+      }
+    },
+    "width": 400,
+    "height": 240
+  }
+]

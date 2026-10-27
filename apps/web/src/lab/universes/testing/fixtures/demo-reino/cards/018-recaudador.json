@@ -1,0 +1,55 @@
+{
+  "id": "off_card_018_recaudador",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "gameId": "off_game_demo_reino",
+  "createdBy": "system",
+  "origin": "official",
+  "status": "published",
+  "text": {
+    "default": "Aldric conoce a un recaudador de fama excelente. Su sistema triplicaría la eficiencia fiscal."
+  },
+  "themeTags": [],
+  "difficulty": 3,
+  "options": [
+    {
+      "order": 1,
+      "label": {
+        "default": "Nombrarlo recaudador real"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "grant_power",
+          "powerId": "off_power_recaudacion",
+          "charges": 1
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_018-recaudador_1"
+    },
+    {
+      "order": 2,
+      "label": {
+        "default": "Prefieres las cuentas actuales"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_pueblo",
+          "delta": 3
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_018-recaudador_2"
+    }
+  ],
+  "availability": {},
+  "recurrence": {
+    "mode": "once"
+  },
+  "baseWeight": 10,
+  "characterId": "off_char_consejero"
+}

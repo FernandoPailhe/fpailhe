@@ -1,0 +1,63 @@
+{
+  "id": "off_card_003_mercader",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "gameId": "off_game_demo_reino",
+  "createdBy": "system",
+  "origin": "official",
+  "status": "published",
+  "text": {
+    "default": "Un mercader errante ofrece mapas de rutas comerciales secretas a cambio de unas monedas."
+  },
+  "themeTags": [],
+  "difficulty": 1,
+  "options": [
+    {
+      "order": 1,
+      "label": {
+        "default": "Comprar los mapas"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": -6
+        },
+        {
+          "type": "add_score",
+          "points": 2
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_003-mercader_1"
+    },
+    {
+      "order": 2,
+      "label": {
+        "default": "Echarlo de la corte"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": 2
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_pueblo",
+          "delta": -2
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_003-mercader_2"
+    }
+  ],
+  "availability": {},
+  "recurrence": {
+    "mode": "repeatable"
+  },
+  "baseWeight": 10
+}

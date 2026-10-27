@@ -1,0 +1,73 @@
+{
+  "id": "off_card_017_consejo_guerra",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "gameId": "off_game_demo_reino",
+  "createdBy": "system",
+  "origin": "official",
+  "status": "published",
+  "text": {
+    "default": "En el consejo de guerra, Bruna despliega los mapas: una ofensiva rápida podría rendir gloria."
+  },
+  "themeTags": [],
+  "difficulty": 6,
+  "options": [
+    {
+      "order": 1,
+      "label": {
+        "default": "Lanzar la ofensiva"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_ejercito",
+          "delta": -10
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_prestigio",
+          "delta": 8
+        },
+        {
+          "type": "add_score",
+          "points": 3
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_017-consejo-guerra_1"
+    },
+    {
+      "order": 2,
+      "label": {
+        "default": "Reforzar la defensa"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_ejercito",
+          "delta": 5
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": -5
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_017-consejo-guerra_2"
+    }
+  ],
+  "availability": {
+    "branchIds": [
+      "off_branch_guerra"
+    ]
+  },
+  "recurrence": {
+    "mode": "repeatable"
+  },
+  "baseWeight": 10,
+  "characterId": "off_char_general"
+}

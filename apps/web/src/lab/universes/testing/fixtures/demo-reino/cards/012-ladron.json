@@ -1,0 +1,60 @@
+{
+  "id": "off_card_012_ladron",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "gameId": "off_game_demo_reino",
+  "createdBy": "system",
+  "origin": "official",
+  "status": "published",
+  "text": {
+    "default": "Atraparon a un ladrón en las cocinas reales. Era un muchacho hambriento. La ley pide castigo."
+  },
+  "themeTags": [],
+  "difficulty": 2,
+  "options": [
+    {
+      "order": 1,
+      "label": {
+        "default": "Perdonarlo y darle trabajo"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_pueblo",
+          "delta": 6
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_012-ladron_1"
+    },
+    {
+      "order": 2,
+      "label": {
+        "default": "Encarcelarlo según la ley"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": 4
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_pueblo",
+          "delta": -3
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_012-ladron_2"
+    }
+  ],
+  "availability": {},
+  "recurrence": {
+    "mode": "once"
+  },
+  "baseWeight": 10,
+  "characterId": "off_char_consejero"
+}

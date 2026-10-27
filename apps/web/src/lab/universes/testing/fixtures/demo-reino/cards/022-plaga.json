@@ -1,0 +1,69 @@
+{
+  "id": "off_card_022_plaga",
+  "schemaVersion": 1,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "gameId": "off_game_demo_reino",
+  "createdBy": "system",
+  "origin": "official",
+  "status": "published",
+  "text": {
+    "default": "Una plaga avanza por los barrios bajos. Los médicos piden medidas drásticas."
+  },
+  "themeTags": [],
+  "difficulty": 7,
+  "options": [
+    {
+      "order": 1,
+      "label": {
+        "default": "Decretar cuarentena total"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_pueblo",
+          "delta": -15
+        },
+        {
+          "type": "add_score",
+          "points": 2
+        }
+      ],
+      "whenUnavailable": "hide",
+      "threatTags": [
+        "internal_threat"
+      ],
+      "id": "off_opt_022-plaga_1"
+    },
+    {
+      "order": 2,
+      "label": {
+        "default": "Pagar curanderos de la capital"
+      },
+      "kind": "standard",
+      "effects": [
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_tesoro",
+          "delta": -20
+        },
+        {
+          "type": "modify_parameter",
+          "parameterId": "off_param_pueblo",
+          "delta": 5
+        }
+      ],
+      "whenUnavailable": "hide",
+      "id": "off_opt_022-plaga_2"
+    }
+  ],
+  "availability": {
+    "minStageOrder": 2
+  },
+  "recurrence": {
+    "mode": "repeatable",
+    "cooldownTurns": 6
+  },
+  "baseWeight": 10
+}
