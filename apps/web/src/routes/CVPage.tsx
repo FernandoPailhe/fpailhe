@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { CVSectionHeading, FilledButton } from "@ferpa/ui";
 import {
   useCoursesQuery,
@@ -45,6 +46,25 @@ export function CVPage() {
   const sortedJobs = useSortedExperience(experience.data);
   const cvJobs = useCVJobs(sortedJobs);
   const cvProjects = useCVProjects(projects.data);
+
+  // El header que el navegador imprime en el PDF toma document.title: lo
+  // reducimos al nombre mientras dura la impresión y lo restauramos después.
+  const cvTitle = profile.data?.name ?? "Fernando Pailhe";
+  useEffect(() => {
+    const original = document.title;
+    const setPrintTitle = () => {
+      document.title = cvTitle;
+    };
+    const restoreTitle = () => {
+      document.title = original;
+    };
+    window.addEventListener("beforeprint", setPrintTitle);
+    window.addEventListener("afterprint", restoreTitle);
+    return () => {
+      window.removeEventListener("beforeprint", setPrintTitle);
+      window.removeEventListener("afterprint", restoreTitle);
+    };
+  }, [cvTitle]);
 
   const queries = [profile, experience, education, courses, projects, skills, languages];
   if (queries.some((q) => q.isLoading)) return <LoadingState />;
